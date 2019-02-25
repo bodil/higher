@@ -34,6 +34,15 @@ pub use crate::ap::Ap;
 mod monad;
 pub use crate::monad::Monad;
 
+mod extend;
+pub use crate::extend::Extend;
+
+mod extract;
+pub use crate::extract::Extract;
+
+mod comonad;
+pub use crate::comonad::Comonad;
+
 #[cfg(test)]
 mod tests {
     use super::*;
