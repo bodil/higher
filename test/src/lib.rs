@@ -1,6 +1,6 @@
 #[allow(unused_imports)] // but why?
-use higher::Functor;
-use higher_derive::{Functor, Lift};
+use higher::{Bifunctor, Bilift, Functor};
+use higher_derive::{Bilift, Functor, Lift};
 
 #[derive(Lift, Functor, PartialEq, Debug)]
 pub struct NamedStruct<A> {
@@ -60,10 +60,23 @@ fn simple_derive() {
     );
 }
 
-#[derive(Lift, Functor, PartialEq, Debug)]
+#[derive(Lift, Bilift, Functor, PartialEq, Debug)]
 pub enum Either<A, B> {
     Left(A),
     Right(B),
+}
+
+impl<A, B, C, D> Bifunctor<A, B, C, D> for Either<A, B> {
+    fn bimap<L, R>(self, left: L, right: R) -> <Self as Bilift<A, B, C, D>>::Target
+    where
+        L: Fn(A) -> C,
+        R: Fn(B) -> D,
+    {
+        match self {
+            Either::Left(a) => Either::Left(left(a)),
+            Either::Right(b) => Either::Right(right(b)),
+        }
+    }
 }
 
 #[test]
@@ -71,4 +84,15 @@ fn derive_with_extra_vars() {
     let either_int: Either<u8, ()> = Either::Left(1);
     let either_str = either_int.map(|i| i.to_string());
     assert_eq!(Either::Left("1".to_string()), either_str);
+
+    let either_left: Either<u8, u8> = Either::Left(1);
+    assert_eq!(
+        Either::Left("1".to_string()),
+        either_left.bimap(|i| i.to_string(), |i| i.to_string())
+    );
+    let either_right: Either<u8, u8> = Either::Right(1);
+    assert_eq!(
+        Either::Right("1".to_string()),
+        either_right.bimap(|i| i.to_string(), |i| i.to_string())
+    );
 }

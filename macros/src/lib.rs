@@ -32,62 +32,62 @@ pub fn derive_lift(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let generic_type: GenericParam = generic_type.clone().into();
 
     let mut impl_vars_2 = input.generics.params.clone();
-    impl_vars_2.push(parse_quote!(LiftTarget2));
+    impl_vars_2.push(parse_quote!(LiftTarget1));
 
-    let mut impl_vars_3 = input.generics.params.clone();
+    let mut impl_vars_3 = impl_vars_2.clone();
     impl_vars_3.push(parse_quote!(LiftTarget2));
-    impl_vars_3.push(parse_quote!(LiftTarget3));
-
-    let mut impl_vars_4 = input.generics.params.clone();
-    impl_vars_4.push(parse_quote!(LiftTarget2));
-    impl_vars_4.push(parse_quote!(LiftTarget3));
-    impl_vars_4.push(parse_quote!(LiftTarget4));
-
-    let mut impl_vars_5 = input.generics.params.clone();
-    impl_vars_5.push(parse_quote!(LiftTarget2));
-    impl_vars_5.push(parse_quote!(LiftTarget3));
-    impl_vars_5.push(parse_quote!(LiftTarget4));
-    impl_vars_5.push(parse_quote!(LiftTarget5));
 
     let mut target_vars_2 = input.generics.params.clone();
-    replace(&mut target_vars_2, &generic_type, parse_quote!(LiftTarget2));
+    replace(&mut target_vars_2, &generic_type, parse_quote!(LiftTarget1));
 
     let mut target_vars_3 = input.generics.params.clone();
-    replace(&mut target_vars_3, &generic_type, parse_quote!(LiftTarget3));
-
-    let mut target_vars_4 = input.generics.params.clone();
-    replace(&mut target_vars_4, &generic_type, parse_quote!(LiftTarget4));
-
-    let mut target_vars_5 = input.generics.params.clone();
-    replace(&mut target_vars_5, &generic_type, parse_quote!(LiftTarget5));
+    replace(&mut target_vars_3, &generic_type, parse_quote!(LiftTarget2));
 
     let (_, type_generics, where_clause) = input.generics.split_for_impl();
 
     let out = quote! {
-        impl<#impl_vars_2> ::higher::Lift<#generic_type, LiftTarget2>
+        impl<#impl_vars_2> ::higher::Lift<#generic_type, LiftTarget1>
         for #name #type_generics #where_clause {
-            type Target = #name<#target_vars_2>;
+            type Target1 = #name<#target_vars_2>;
         }
 
-        impl<#impl_vars_3> ::higher::Lift3<#generic_type, LiftTarget2, LiftTarget3>
+        impl<#impl_vars_3> ::higher::Lift3<#generic_type, LiftTarget2, LiftTarget1>
         for #name #type_generics #where_clause {
-            type Target2 = #name<#target_vars_2>;
-            type Target3 = #name<#target_vars_3>;
+            type Target2 = #name<#target_vars_3>;
         }
+    };
+    proc_macro::TokenStream::from(out)
+}
 
-        impl<#impl_vars_4> ::higher::Lift4<#generic_type, LiftTarget2, LiftTarget3, LiftTarget4>
-        for #name #type_generics #where_clause {
-            type Target2 = #name<#target_vars_2>;
-            type Target3 = #name<#target_vars_3>;
-            type Target4 = #name<#target_vars_4>;
-        }
+#[proc_macro_derive(Bilift)]
+pub fn derive_bilift(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
 
-        impl<#impl_vars_5> ::higher::Lift5<#generic_type, LiftTarget2, LiftTarget3, LiftTarget4, LiftTarget5>
+    let mut types = input.generics.type_params();
+    let left_type = types
+        .next()
+        .expect("can't Bilift a type without type parameters");
+    let left_type: GenericParam = left_type.clone().into();
+    let right_type = types
+        .next()
+        .expect("can't Bilift a type with less than two type parameters");
+    let right_type: GenericParam = right_type.clone().into();
+
+    let mut impl_vars = input.generics.params.clone();
+    impl_vars.push(parse_quote!(LiftTarget1));
+    impl_vars.push(parse_quote!(LiftTarget2));
+
+    let mut target_vars = input.generics.params.clone();
+    replace(&mut target_vars, &left_type, parse_quote!(LiftTarget1));
+    replace(&mut target_vars, &right_type, parse_quote!(LiftTarget2));
+
+    let (_, type_generics, where_clause) = input.generics.split_for_impl();
+
+    let out = quote! {
+        impl<#impl_vars> ::higher::Bilift<#left_type, #right_type, LiftTarget1, LiftTarget2>
         for #name #type_generics #where_clause {
-            type Target2 = #name<#target_vars_2>;
-            type Target3 = #name<#target_vars_3>;
-            type Target4 = #name<#target_vars_4>;
-            type Target5 = #name<#target_vars_5>;
+            type Target = #name<#target_vars>;
         }
     };
     proc_macro::TokenStream::from(out)
@@ -148,7 +148,7 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     };
     quote!(
         impl<#type_params, TargetType> ::higher::Functor<#generic_type, TargetType> for #name<#type_params> #where_clause {
-            fn map<F>(self, f: F) -> <Self as ::higher::Lift<#generic_type, TargetType>>::Target
+            fn map<F>(self, f: F) -> <Self as ::higher::Lift<#generic_type, TargetType>>::Target1
             where
                 F: Fn(#generic_type) -> TargetType
             {
