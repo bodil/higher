@@ -1,4 +1,5 @@
 pub trait Pure<A> {
+    /// Lift a value of type `A` into a `F<A>: Pure`.
     fn pure(value: A) -> Self;
 }
 

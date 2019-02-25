@@ -1,6 +1,7 @@
 use crate::Lift;
 
 pub trait Bind<A, B>: Lift<A, B> {
+    /// Use the value inside an `M<A>: Bind` to create an `M<B>: Bind`.
     fn bind<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
         F: Fn(A) -> <Self as Lift<A, B>>::Target1;
