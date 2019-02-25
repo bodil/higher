@@ -1,0 +1,7 @@
+[package]
+name = "higher"
+version = "0.1.0"
+authors = ["Bodil Stokke <bodil@bodil.org>"]
+edition = "2018"
+
+[dependencies]

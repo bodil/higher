@@ -1,0 +1,9 @@
+[package]
+name = "higher-tests"
+version = "0.1.0"
+authors = ["Bodil Stokke <bodil@bodil.org>"]
+edition = "2018"
+
+[dependencies]
+higher = { path = "../lib" }
+higher-derive = { path = "../macros" }

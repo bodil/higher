@@ -1,0 +1,13 @@
+[package]
+name = "higher-derive"
+version = "0.1.0"
+authors = ["Bodil Stokke <bodil@bodil.org>"]
+edition = "2018"
+
+[lib]
+proc_macro = true
+
+[dependencies]
+syn = { version = "0.15.26", features = ["derive", "extra-traits"] }
+quote = "0.6.11"
+proc-macro2 = "0.4.27"
