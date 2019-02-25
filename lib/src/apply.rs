@@ -1,36 +1,58 @@
-use crate::{Bind, Functor, Lift, Lift3};
+use std::collections::{LinkedList, VecDeque};
 
-pub trait Apply<A, B, C>: Functor<A, C> + Lift3<A, B, C>
+use crate::{Ap, Functor, Lift, Lift3};
+
+pub trait Apply<A, F, B>: Functor<A, B> + Lift3<A, F, B>
 where
-    B: Fn(A) -> C,
+    F: Fn(A) -> B,
 {
-    fn apply(self, f: <Self as Lift3<A, B, C>>::Target2) -> <Self as Lift<A, C>>::Target1;
+    fn apply(self, f: <Self as Lift3<A, F, B>>::Target2) -> <Self as Lift<A, B>>::Target1;
 }
 
-impl<A, B, C> Apply<A, B, C> for Option<A>
+impl<A, F, B> Apply<A, F, B> for Option<A>
 where
-    B: Fn(A) -> C,
+    F: Fn(A) -> B,
 {
-    fn apply(self, f: <Self as Lift3<A, B, C>>::Target2) -> <Self as Lift<A, C>>::Target1 {
+    fn apply(self, f: <Self as Lift3<A, F, B>>::Target2) -> <Self as Lift<A, B>>::Target1 {
         self.and_then(|v| f.map(|f| f(v)))
     }
 }
 
-impl<A, B, C, E> Apply<A, B, C> for Result<A, E>
+impl<A, F, B, E> Apply<A, F, B> for Result<A, E>
 where
-    B: Fn(A) -> C,
+    F: Fn(A) -> B,
 {
-    fn apply(self, f: <Self as Lift3<A, B, C>>::Target2) -> <Self as Lift<A, C>>::Target1 {
+    fn apply(self, f: <Self as Lift3<A, F, B>>::Target2) -> <Self as Lift<A, B>>::Target1 {
         self.and_then(|v| f.map(|f| f(v)))
     }
 }
 
-impl<A, B, C> Apply<A, B, C> for Vec<A>
+impl<A, F, B> Apply<A, F, B> for Vec<A>
 where
     A: Clone,
-    B: Fn(A) -> C + Clone,
+    F: Fn(A) -> B + Clone,
 {
-    fn apply(self, f: <Self as Lift3<A, B, C>>::Target2) -> <Self as Lift<A, C>>::Target1 {
-        self.bind(|v: A| f.clone().map(|f2| f2(v.clone())))
+    fn apply(self, f: <Self as Lift3<A, F, B>>::Target2) -> <Self as Lift<A, B>>::Target1 {
+        self.ap(f)
+    }
+}
+
+impl<A, F, B> Apply<A, F, B> for VecDeque<A>
+where
+    A: Clone,
+    F: Fn(A) -> B + Clone,
+{
+    fn apply(self, f: <Self as Lift3<A, F, B>>::Target2) -> <Self as Lift<A, B>>::Target1 {
+        self.ap(f)
+    }
+}
+
+impl<A, F, B> Apply<A, F, B> for LinkedList<A>
+where
+    A: Clone,
+    F: Fn(A) -> B + Clone,
+{
+    fn apply(self, f: <Self as Lift3<A, F, B>>::Target2) -> <Self as Lift<A, B>>::Target1 {
+        self.ap(f)
     }
 }

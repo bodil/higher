@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, BinaryHeap, HashSet, LinkedList, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
 
 pub trait Lift<A, B> {
     type Target1;
@@ -39,6 +39,14 @@ impl<A, B> Lift<A, B> for BTreeSet<A> {
     type Target1 = BTreeSet<B>;
 }
 
+impl<A, B, C, D, S> Lift<(A, B), (C, D)> for HashMap<A, B, S> {
+    type Target1 = HashMap<C, D, S>;
+}
+
+impl<A, B, C, D> Lift<(A, B), (C, D)> for BTreeMap<A, B> {
+    type Target1 = BTreeMap<C, D>;
+}
+
 impl<A, B> Lift<A, B> for VecDeque<A> {
     type Target1 = VecDeque<B>;
 }
@@ -61,4 +69,24 @@ impl<A, B, C, E> Lift3<A, B, C> for Result<A, E> {
 
 impl<A, B, C> Lift3<A, B, C> for Vec<A> {
     type Target2 = Vec<B>;
+}
+
+impl<A, B, C, S> Lift3<A, B, C> for HashSet<A, S> {
+    type Target2 = HashSet<B, S>;
+}
+
+impl<A, B, C> Lift3<A, B, C> for BTreeSet<A> {
+    type Target2 = BTreeSet<B>;
+}
+
+impl<A, B, C> Lift3<A, B, C> for VecDeque<A> {
+    type Target2 = VecDeque<B>;
+}
+
+impl<A, B, C> Lift3<A, B, C> for LinkedList<A> {
+    type Target2 = LinkedList<B>;
+}
+
+impl<A, B, C> Lift3<A, B, C> for BinaryHeap<A> {
+    type Target2 = BinaryHeap<B>;
 }

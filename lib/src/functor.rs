@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, BinaryHeap, HashSet, LinkedList, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
 use std::hash::{BuildHasher, Hash};
 
 use crate::Lift;
@@ -60,6 +60,37 @@ where
     fn map<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
         F: Fn(A) -> B,
+    {
+        self.into_iter().map(f).collect()
+    }
+}
+
+impl<A, B, C, D, S> Functor<(A, B), (C, D)> for HashMap<A, B, S>
+where
+    A: Hash + Eq,
+    B: Hash + Eq,
+    C: Hash + Eq,
+    D: Hash + Eq,
+    S: BuildHasher + Default,
+{
+    fn map<F>(self, f: F) -> <Self as Lift<(A, B), (C, D)>>::Target1
+    where
+        F: Fn((A, B)) -> (C, D),
+    {
+        self.into_iter().map(f).collect()
+    }
+}
+
+impl<A, B, C, D> Functor<(A, B), (C, D)> for BTreeMap<A, B>
+where
+    A: Ord,
+    B: Ord,
+    C: Ord,
+    D: Ord,
+{
+    fn map<F>(self, f: F) -> <Self as Lift<(A, B), (C, D)>>::Target1
+    where
+        F: Fn((A, B)) -> (C, D),
     {
         self.into_iter().map(f).collect()
     }
