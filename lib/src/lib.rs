@@ -43,6 +43,16 @@ pub use crate::extract::Extract;
 mod comonad;
 pub use crate::comonad::Comonad;
 
+/// You'd better be sure about what you're doing before using this.
+pub(crate) fn unsafe_coerce<A, B>(mut a: A) -> B {
+    unsafe {
+        let ptr = &mut a as *mut _ as *mut B;
+        let out = ::std::ptr::read(ptr);
+        ::std::mem::forget(a);
+        out
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

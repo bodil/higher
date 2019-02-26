@@ -7,15 +7,12 @@ pub trait Lift<A, B> {
 pub trait Lift3<A, B, C>: Lift<A, C> {
     type Target2;
     fn cast(
-        mut from: <<Self as Lift3<A, B, C>>::Target2 as Lift<B, C>>::Target1,
+        from: <<Self as Lift3<A, B, C>>::Target2 as Lift<B, C>>::Target1,
     ) -> <Self as Lift<A, C>>::Target1
     where
         <Self as Lift3<A, B, C>>::Target2: Lift<B, C>,
     {
-        unsafe {
-            let ptr = &mut from as *mut _ as *mut <Self as Lift<A, C>>::Target1;
-            ::std::ptr::read(ptr)
-        }
+        crate::unsafe_coerce(from)
     }
 }
 
