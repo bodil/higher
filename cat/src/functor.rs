@@ -1,10 +1,17 @@
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
 use std::hash::{BuildHasher, Hash};
 
-use crate::Lift;
+use higher::Lift;
 
+/// A `Functor` lets you change the type parameter of a generic type.
+///
 /// A `Functor` defines a method `map` on a type `F<_>: Functor` which converts
-/// an `F<A>` to `F<B>` using a function `Fn(A) -> B`.
+/// an `F<A>` to `F<B>` using a function `Fn(A) -> B` applied to the `A`s inside
+/// it.
+///
+/// You can also use this just to modify the values inside your container value
+/// without changing their type, if the mapping function returns a value of the
+/// same type.  This is called an "endofunctor."
 pub trait Functor<A, B>: Lift<A, B> {
     fn map<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where

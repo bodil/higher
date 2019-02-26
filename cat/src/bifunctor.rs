@@ -1,8 +1,14 @@
-use crate::Bilift;
 use std::collections::{BTreeMap, HashMap};
 use std::hash::{BuildHasher, Hash};
 
-/// A `Functor` over two arguments.
+use higher::Bilift;
+
+/// A `Bifunctor` lets you change the types of a generic type with two type
+/// parameters.
+///
+/// A `Bifunctor` works just like a `Functor`, but for types with two type
+/// parameters. It will convert a `F<_, _>: Bifunctor` from `F<A, B>` to
+/// `F<C, D>` using two functions, one `Fn(A) -> C` and the other `Fn(B) -> D`.
 pub trait Bifunctor<A, B, C, D>: Bilift<A, B, C, D> {
     fn bimap<L, R>(self, left: L, right: R) -> <Self as Bilift<A, B, C, D>>::Target
     where

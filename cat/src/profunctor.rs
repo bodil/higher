@@ -1,7 +1,10 @@
-use crate::{Bifunctor, Bilift};
+use crate::Bifunctor;
+use higher::Bilift;
 
 /// A `Profunctor` is just a `Bifunctor` that is contravariant over its first
 /// argument and covariant over its second argument.
+///
+/// What's the problem?
 pub trait Profunctor<A, B, C, D>: Bilift<A, B, C, D> + Bifunctor<C, B, A, D> {
     fn dimap<L, R>(self, left: L, right: R) -> <Self as Bilift<A, B, C, D>>::Target
     where

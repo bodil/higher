@@ -1,5 +1,6 @@
+use higher::Bilift;
 #[allow(unused_imports)] // but why?
-use higher::{Bifunctor, Bilift, Functor};
+use higher_cat::{Bifunctor, Functor};
 use higher_derive::{Bilift, Functor, Lift};
 
 #[derive(Lift, Functor, PartialEq, Debug)]

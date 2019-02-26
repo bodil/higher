@@ -1,10 +1,15 @@
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
 use std::hash::{BuildHasher, Hash};
 
-use crate::Lift;
+use higher::Lift;
 
+/// `Bind` lets you chain computations together.
+///
+/// It takes a function `Fn(A) -> M<B>` and applies it to the `A` inside `M<A>`.
+/// You can think of this as a callback function for when the value of `A` is
+/// ready to be processed, returning the next computation in the sequence.
 pub trait Bind<A, B>: Lift<A, B> {
-    /// Use the value inside an `M<A>: Bind` to create an `M<B>: Bind`.
+    /// Use the value inside an `M<A>: Bind` to create an `M<B>`.
     fn bind<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
         F: Fn(A) -> <Self as Lift<A, B>>::Target1;

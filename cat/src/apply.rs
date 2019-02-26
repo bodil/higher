@@ -1,7 +1,10 @@
 use std::collections::{LinkedList, VecDeque};
 
-use crate::{Ap, Functor, Lift, Lift3};
+use crate::{Ap, Functor};
+use higher::{Lift, Lift3};
 
+/// `Apply` takes an `F<Fn(A) -> B>` and applies it to an `F<A>` to produce an
+/// `F<B>`.
 pub trait Apply<A, F, B>: Functor<A, B> + Lift3<A, F, B>
 where
     F: Fn(A) -> B,

@@ -3,6 +3,13 @@ name = "higher-derive"
 version = "0.1.0"
 authors = ["Bodil Stokke <bodil@bodil.org>"]
 edition = "2018"
+license = "MPL-2.0+"
+description = "Custom derives for `higher`"
+repository = "https://github.com/bodil/higher"
+documentation = "http://docs.rs/higher-derive"
+readme = "../README.md"
+categories = []
+keywords = ["hkt"]
 
 [lib]
 proc_macro = true

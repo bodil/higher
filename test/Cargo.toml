@@ -6,4 +6,5 @@ edition = "2018"
 
 [dependencies]
 higher = { path = "../lib" }
+higher-cat = { path = "../cat" }
 higher-derive = { path = "../macros" }

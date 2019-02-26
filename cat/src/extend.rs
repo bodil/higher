@@ -1,5 +1,7 @@
-use crate::{Functor, Lift};
+use crate::Functor;
+use higher::Lift;
 
+/// `Extend` is the opposite of `Bind`.
 pub trait Extend<A, B>: Functor<A, B> + Sized {
     fn extend<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where

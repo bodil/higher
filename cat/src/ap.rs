@@ -1,5 +1,8 @@
-use crate::{Bind, Lift, Lift3, Pure};
+use crate::{Bind, Pure};
+use higher::{Lift, Lift3};
 
+/// `Ap` provides an implementation for `Apply::apply` using only `Bind` and
+/// `Pure`.
 pub trait Ap<A, F, B>: Lift3<A, F, B> + Bind<A, B>
 where
     A: Clone,
@@ -7,8 +10,6 @@ where
     <<Self as Lift3<A, F, B>>::Target2 as Lift<F, B>>::Target1: Pure<B>,
     F: Fn(A) -> B,
 {
-    /// `ap` provides an implementation for `Apply::apply` using only
-    /// `Bind` and `Pure`.
     fn ap(self, f: <Self as Lift3<A, F, B>>::Target2) -> <Self as Lift<A, B>>::Target1;
 }
 

@@ -2,8 +2,9 @@ use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedL
 use std::hash::{BuildHasher, Hash};
 use std::iter;
 
+/// `Pure` lets you construct a value of type `F<A>` using a single value of
+/// `A`.
 pub trait Pure<A> {
-    /// Lift a value of type `A` into a `F<A>: Pure`.
     fn pure(value: A) -> Self;
 }
 

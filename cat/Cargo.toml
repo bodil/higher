@@ -1,0 +1,19 @@
+[package]
+name = "higher-cat"
+version = "0.1.0"
+authors = ["Bodil Stokke <bodil@bodil.org>"]
+edition = "2018"
+license = "MPL-2.0+"
+description = "Functors, Applicatives, Monads and other bad ideas"
+repository = "https://github.com/bodil/higher"
+documentation = "http://docs.rs/higher-cat"
+readme = "../README.md"
+categories = ["data-structures"]
+keywords = ["functor", "bifunctor", "profunctor", "applicative", "monad", "comonad"]
+
+[dependencies]
+higher = { path = "../lib" }
+
+[dev-dependencies]
+proptest = "0.9.1"
+higher-derive = { path = "../macros" }

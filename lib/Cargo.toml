@@ -3,6 +3,16 @@ name = "higher"
 version = "0.1.0"
 authors = ["Bodil Stokke <bodil@bodil.org>"]
 edition = "2018"
+license = "MPL-2.0+"
+description = "Higher kinded types, in a way"
+repository = "https://github.com/bodil/higher"
+documentation = "http://docs.rs/higher"
+readme = "../README.md"
+categories = []
+keywords = ["hkt"]
+
+[badges]
+circle-ci = { repository = "bodil/higher" }
 
 [dependencies]
 

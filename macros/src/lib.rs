@@ -1,5 +1,13 @@
 #![recursion_limit = "256"]
 
+//! Custom derives for the [`higher`][higher] and [`higher-cat`][higher-cat]
+//! crates.
+//!
+//! Please see the relevant crates for documentation on each derive.
+//!
+//! [higher]: https://docs.rs/crate/higher
+//! [higher-cat]: https://docs.rs/crate/higher-cat
+
 extern crate proc_macro;
 
 use proc_macro2::{Span, TokenStream};
@@ -48,6 +56,7 @@ pub fn derive_lift(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let out = quote! {
         impl<#impl_vars_2> ::higher::Lift<#generic_type, LiftTarget1>
         for #name #type_generics #where_clause {
+            type Source = Self;
             type Target1 = #name<#target_vars_2>;
         }
 
@@ -87,6 +96,7 @@ pub fn derive_bilift(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
     let out = quote! {
         impl<#impl_vars> ::higher::Bilift<#left_type, #right_type, LiftTarget1, LiftTarget2>
         for #name #type_generics #where_clause {
+            type Source = Self;
             type Target = #name<#target_vars>;
         }
     };
@@ -147,7 +157,7 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
         Data::Union(_) => panic!("can't derive Functor for a union type"),
     };
     quote!(
-        impl<#type_params, TargetType> ::higher::Functor<#generic_type, TargetType> for #name<#type_params> #where_clause {
+        impl<#type_params, TargetType> ::higher_cat::Functor<#generic_type, TargetType> for #name<#type_params> #where_clause {
             fn map<F>(self, f: F) -> <Self as ::higher::Lift<#generic_type, TargetType>>::Target1
             where
                 F: Fn(#generic_type) -> TargetType
