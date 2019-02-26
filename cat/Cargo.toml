@@ -9,11 +9,13 @@ repository = "https://github.com/bodil/higher"
 documentation = "http://docs.rs/higher-cat"
 readme = "../README.md"
 categories = ["data-structures"]
-keywords = ["functor", "bifunctor", "profunctor", "applicative", "monad", "comonad"]
+keywords = ["functor", "applicative", "monad", "category-theory"]
 
 [dependencies]
-higher = { path = "../lib" }
+# higher = { path = "../lib" }
+higher = "0.1.0"
 
 [dev-dependencies]
 proptest = "0.9.1"
-higher-derive = { path = "../macros" }
+# higher-derive = { path = "../macros" }
+higher-derive = "0.1.0"
