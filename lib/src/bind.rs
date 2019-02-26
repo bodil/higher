@@ -125,3 +125,28 @@ where
         self.into_iter().flat_map(|v| f(v).into_iter()).collect()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::Pure;
+    use proptest::collection::vec;
+    use proptest::num::u8;
+    use proptest::proptest;
+
+    #[test]
+    fn bind_vec() {
+        let v = vec![1, 2, 3];
+        let o = v.bind(|i| vec![i, i + 1]);
+        assert_eq!(vec![1, 2, 2, 3, 3, 4], o);
+    }
+
+    proptest! {
+        #[test]
+        fn identity(v in vec(u8::ANY, 0..1000)) {
+            let orig = v.clone();
+            let result = v.bind(Pure::pure);
+            assert_eq!(orig, result);
+        }
+    }
+}

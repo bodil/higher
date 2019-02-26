@@ -52,17 +52,3 @@ pub(crate) fn unsafe_coerce<A, B>(mut a: A) -> B {
         out
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn flatmap_that_shit() {
-        assert_eq!(
-            Some("1337".to_string()),
-            Some(1337).bind(|n| Some(format!("{}", n)))
-        );
-        assert_eq!(vec![1, 1, 2, 2, 3, 3], vec![1, 2, 3].bind(|v| vec![v, v]))
-    }
-}
