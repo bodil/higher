@@ -99,3 +99,6 @@ pub use crate::comonad::Comonad;
 
 mod contra;
 pub use crate::contra::Contravariant;
+
+mod monoid;
+pub use crate::monoid::Monoid;
