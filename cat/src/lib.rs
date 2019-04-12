@@ -96,3 +96,6 @@ pub use crate::extract::Extract;
 
 mod comonad;
 pub use crate::comonad::Comonad;
+
+mod contra;
+pub use crate::contra::Contravariant;

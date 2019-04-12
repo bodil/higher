@@ -31,6 +31,14 @@ pub trait Lift3<A, B, C>: Lift<A, C> {
     }
 }
 
+impl<F, A, B, C> Lift<A, B> for F
+where
+    F: Fn(A) -> C,
+{
+    type Source = Self;
+    type Target1 = Box<Fn(B) -> C>;
+}
+
 impl<A, B> Lift<A, B> for Option<A> {
     type Source = Self;
     type Target1 = Option<B>;
