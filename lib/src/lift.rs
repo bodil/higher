@@ -36,7 +36,7 @@ where
     F: Fn(A) -> C,
 {
     type Source = Self;
-    type Target1 = Box<Fn(B) -> C>;
+    type Target1 = Box<dyn Fn(B) -> C>;
 }
 
 impl<A, B> Lift<A, B> for Option<A> {
