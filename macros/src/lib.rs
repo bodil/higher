@@ -14,7 +14,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{
     parse_macro_input, parse_quote, punctuated::Punctuated, Data, DataEnum, DeriveInput, Field,
-    Fields, FieldsNamed, FieldsUnnamed, GenericParam, Ident, Type, TypeParam,
+    Fields, FieldsNamed, FieldsUnnamed, GenericParam, Ident, Index, Type, TypeParam,
 };
 
 fn replace<A: PartialEq, P>(list: &mut Punctuated<A, P>, target: &A, value: A) {
@@ -201,6 +201,7 @@ fn derive_functor_unnamed_struct(
     generic_type: &TypeParam,
 ) -> TokenStream {
     let fields = fields.unnamed.iter().enumerate().map(|(index, field)| {
+        let index = Index::from(index);
         if match_type_param(generic_type, &field.ty) {
             quote! { f(self.#index), }
         } else {
