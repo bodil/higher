@@ -8,10 +8,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### ADDED
+## FIXED
 
-- Monoids.
-- Contravariant functors.
+- Updated code to remove some deprecated syntax.
 
 ## [0.1.0] - 2019-02-26
 
