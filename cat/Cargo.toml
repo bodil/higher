@@ -1,6 +1,6 @@
 [package]
 name = "higher-cat"
-version = "0.1.1-alpha.0"
+version = "0.1.1"
 authors = ["Bodil Stokke <bodil@bodil.org>"]
 edition = "2018"
 license = "MPL-2.0+"
@@ -12,10 +12,8 @@ categories = ["data-structures"]
 keywords = ["functor", "applicative", "monad", "category-theory"]
 
 [dependencies]
-higher = { path = "../lib" }
-# higher = "0.1.0"
+higher = "0.1.1"
 
 [dev-dependencies]
 proptest = "0.9.1"
-higher-derive = { path = "../macros" }
-# higher-derive = "0.1.0"
+higher-derive = "0.1.1"
