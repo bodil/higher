@@ -1,4 +1,6 @@
+#[cfg(feature = "std")]
 use std::collections::{BTreeMap, HashMap};
+#[cfg(feature = "std")]
 use std::hash::{BuildHasher, Hash};
 
 use higher::Bilift;
@@ -65,6 +67,7 @@ impl<A, B, C, D> Bifunctor<A, B, C, D> for Result<A, B> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D, S> Bifunctor<A, B, C, D> for HashMap<A, B, S>
 where
     A: Eq + Hash,
@@ -80,6 +83,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D> Bifunctor<A, B, C, D> for BTreeMap<A, B>
 where
     A: Ord,

@@ -81,6 +81,8 @@
 //!
 //! [higher-derive]: https://docs.rs/crate/higher-derive
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 mod lift;
 pub use crate::lift::{Lift, Lift3};
 
@@ -91,8 +93,8 @@ pub use crate::bilift::Bilift;
 pub(crate) fn unsafe_coerce<A, B>(mut a: A) -> B {
     unsafe {
         let ptr = &mut a as *mut _ as *mut B;
-        let out = ::std::ptr::read(ptr);
-        ::std::mem::forget(a);
+        let out = ::core::ptr::read(ptr);
+        ::core::mem::forget(a);
         out
     }
 }

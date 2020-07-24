@@ -1,3 +1,4 @@
+#[cfg(feature = "std")]
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
 
 /// `Lift` lets you construct a type `T<B>` from a type `T<A>`.
@@ -31,6 +32,7 @@ pub trait Lift3<A, B, C>: Lift<A, C> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<F, A, B, C> Lift<A, B> for F
 where
     F: Fn(A) -> C,
@@ -49,41 +51,49 @@ impl<A, B, E> Lift<A, B> for Result<A, E> {
     type Target1 = Result<B, E>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Lift<A, B> for Vec<A> {
     type Source = Self;
     type Target1 = Vec<B>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, S> Lift<A, B> for HashSet<A, S> {
     type Source = Self;
     type Target1 = HashSet<B, S>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Lift<A, B> for BTreeSet<A> {
     type Source = Self;
     type Target1 = BTreeSet<B>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D, S> Lift<(A, B), (C, D)> for HashMap<A, B, S> {
     type Source = Self;
     type Target1 = HashMap<C, D, S>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D> Lift<(A, B), (C, D)> for BTreeMap<A, B> {
     type Source = Self;
     type Target1 = BTreeMap<C, D>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Lift<A, B> for VecDeque<A> {
     type Source = Self;
     type Target1 = VecDeque<B>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Lift<A, B> for LinkedList<A> {
     type Source = Self;
     type Target1 = LinkedList<B>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Lift<A, B> for BinaryHeap<A> {
     type Source = Self;
     type Target1 = BinaryHeap<B>;
@@ -97,26 +107,32 @@ impl<A, B, C, E> Lift3<A, B, C> for Result<A, E> {
     type Target2 = Result<B, E>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C> Lift3<A, B, C> for Vec<A> {
     type Target2 = Vec<B>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, S> Lift3<A, B, C> for HashSet<A, S> {
     type Target2 = HashSet<B, S>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C> Lift3<A, B, C> for BTreeSet<A> {
     type Target2 = BTreeSet<B>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C> Lift3<A, B, C> for VecDeque<A> {
     type Target2 = VecDeque<B>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C> Lift3<A, B, C> for LinkedList<A> {
     type Target2 = LinkedList<B>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C> Lift3<A, B, C> for BinaryHeap<A> {
     type Target2 = BinaryHeap<B>;
 }

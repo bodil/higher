@@ -1,4 +1,6 @@
+#[cfg(feature = "std")]
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
+#[cfg(feature = "std")]
 use std::hash::{BuildHasher, Hash};
 
 use higher::Lift;
@@ -36,6 +38,7 @@ impl<A, B, E> Functor<A, B> for Result<A, E> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Functor<A, B> for Vec<A> {
     fn map<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
@@ -45,6 +48,7 @@ impl<A, B> Functor<A, B> for Vec<A> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B, S> Functor<A, B> for HashSet<A, S>
 where
     A: Hash + Eq,
@@ -59,6 +63,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Functor<A, B> for BTreeSet<A>
 where
     A: Ord,
@@ -72,6 +77,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D, S> Functor<(A, B), (C, D)> for HashMap<A, B, S>
 where
     A: Hash + Eq,
@@ -88,6 +94,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D> Functor<(A, B), (C, D)> for BTreeMap<A, B>
 where
     A: Ord,
@@ -103,6 +110,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Functor<A, B> for VecDeque<A> {
     fn map<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
@@ -112,6 +120,7 @@ impl<A, B> Functor<A, B> for VecDeque<A> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Functor<A, B> for LinkedList<A> {
     fn map<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
@@ -121,6 +130,7 @@ impl<A, B> Functor<A, B> for LinkedList<A> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Functor<A, B> for BinaryHeap<A>
 where
     A: Ord,
