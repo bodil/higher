@@ -1,4 +1,6 @@
+#[cfg(feature = "std")]
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
+#[cfg(feature = "std")]
 use std::hash::{BuildHasher, Hash};
 
 use higher::Lift;
@@ -33,6 +35,7 @@ impl<A, B, E> Bind<A, B> for Result<A, E> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Bind<A, B> for Vec<A> {
     fn bind<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
@@ -42,6 +45,7 @@ impl<A, B> Bind<A, B> for Vec<A> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Bind<A, B> for VecDeque<A> {
     fn bind<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
@@ -51,6 +55,7 @@ impl<A, B> Bind<A, B> for VecDeque<A> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Bind<A, B> for LinkedList<A> {
     fn bind<F>(self, f: F) -> <Self as Lift<A, B>>::Target1
     where
@@ -60,6 +65,7 @@ impl<A, B> Bind<A, B> for LinkedList<A> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Bind<A, B> for BinaryHeap<A>
 where
     A: Ord,
@@ -73,6 +79,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Bind<A, B> for BTreeSet<A>
 where
     A: Ord,
@@ -86,6 +93,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B, S> Bind<A, B> for HashSet<A, S>
 where
     A: Hash + Eq,
@@ -100,6 +108,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D, S> Bind<(A, B), (C, D)> for HashMap<A, B, S>
 where
     A: Hash + Eq,
@@ -116,6 +125,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D> Bind<(A, B), (C, D)> for BTreeMap<A, B>
 where
     A: Ord,
@@ -131,7 +141,7 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(feature = "std", test))]
 mod test {
     use super::*;
     use crate::Pure;

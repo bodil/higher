@@ -58,6 +58,8 @@
 //! [higher-derive]: https://docs.rs/crate/higher-derive
 //! [bartosz]: https://bartoszmilewski.com/2014/10/28/category-theory-for-programmers-the-preface/
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 mod functor;
 pub use crate::functor::Functor;
 

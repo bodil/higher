@@ -1,3 +1,4 @@
+#[cfg(feature = "std")]
 use std::collections::{BTreeMap, HashMap};
 
 /// `Bilift` lets you construct a type `T<C, D>` from a type `T<A, B>`.
@@ -14,11 +15,13 @@ impl<A, B, C, D> Bilift<A, B, C, D> for Result<A, B> {
     type Target = Result<C, D>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D, S> Bilift<A, B, C, D> for HashMap<A, B, S> {
     type Source = Self;
     type Target = HashMap<C, D, S>;
 }
 
+#[cfg(feature = "std")]
 impl<A, B, C, D> Bilift<A, B, C, D> for BTreeMap<A, B> {
     type Source = Self;
     type Target = BTreeMap<C, D>;

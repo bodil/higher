@@ -8,6 +8,7 @@ pub trait Extend<A, B>: Functor<A, B> + Sized {
         F: Fn(Self) -> B;
 }
 
+#[cfg(feature = "std")]
 impl<A, B> Extend<A, B> for Vec<A>
 where
     A: Clone,

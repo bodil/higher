@@ -1,3 +1,4 @@
+#[cfg(feature = "std")]
 use std::collections::{LinkedList, VecDeque};
 
 use crate::{Ap, Functor};
@@ -30,6 +31,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, F, B> Apply<A, F, B> for Vec<A>
 where
     A: Clone,
@@ -40,6 +42,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, F, B> Apply<A, F, B> for VecDeque<A>
 where
     A: Clone,
@@ -50,6 +53,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<A, F, B> Apply<A, F, B> for LinkedList<A>
 where
     A: Clone,

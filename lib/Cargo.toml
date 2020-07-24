@@ -18,3 +18,7 @@ circle-ci = { repository = "bodil/higher" }
 
 [dev-dependencies]
 proptest = "0.9.1"
+
+[features]
+default = ["std"]
+std = []
