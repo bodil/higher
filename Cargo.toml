@@ -1,15 +1,2 @@
-[package]
-name = "higher"
-version = "0.2.0"
-edition = "2021"
-authors = ["Bodil Stokke <bodil@bodil.org>"]
-license = "MPL-2.0+"
-description = "Functors, Applicatives, Monads and other bad ideas"
-repository = "https://github.com/bodil/higher"
-documentation = "http://docs.rs/higher"
-# readme = "../README.md"
-categories = ["data-structures"]
-keywords = ["functor", "applicative", "monad", "category-theory"]
-
-[dependencies]
-futures = "0.3.25"
+[workspace]
+members = ["prelude"]
