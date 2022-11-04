@@ -36,8 +36,33 @@ impl<A, E> Functor<A> for Result<A, E> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A> Functor<A> for Vec<A> {
     type Target<T> = Vec<T>;
+
+    fn fmap<B, F>(self, f: F) -> Self::Target<B>
+    where
+        F: Fn(A) -> B,
+    {
+        self.into_iter().map(f).collect()
+    }
+}
+
+#[cfg(feature = "std")]
+impl<A> Functor<A> for std::collections::VecDeque<A> {
+    type Target<T> = std::collections::VecDeque<T>;
+
+    fn fmap<B, F>(self, f: F) -> Self::Target<B>
+    where
+        F: Fn(A) -> B,
+    {
+        self.into_iter().map(f).collect()
+    }
+}
+
+#[cfg(feature = "std")]
+impl<A> Functor<A> for std::collections::LinkedList<A> {
+    type Target<T> = std::collections::LinkedList<T>;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
@@ -56,5 +81,19 @@ mod test {
         let a = Option::Some(31337);
         let b = a.fmap(|x| format!("{}", x));
         assert_eq!(b, Option::Some("31337".to_string()));
+    }
+
+    #[test]
+    fn vec_endofunctor() {
+        let a = vec![1, 2, 3, 4, 5];
+        let b = a.fmap(|x| x * 2);
+        assert_eq!(b, vec![2, 4, 6, 8, 10]);
+    }
+
+    #[test]
+    fn vec_exofunctor() {
+        let a = vec![1, 2, 3];
+        let b = a.fmap(|x| x.to_string());
+        assert_eq!(b, vec!["1".to_string(), "2".to_string(), "3".to_string()]);
     }
 }

@@ -32,6 +32,7 @@ impl<A, E> Bind<A> for Result<A, E> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A> Bind<A> for Vec<A> {
     type Target<T> = Vec<T>;
 

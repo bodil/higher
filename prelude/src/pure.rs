@@ -16,6 +16,7 @@ impl<A, E> Pure<A> for Result<A, E> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A> Pure<A> for Vec<A> {
     fn pure(value: A) -> Self {
         vec![value]

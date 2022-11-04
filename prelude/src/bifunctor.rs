@@ -1,4 +1,4 @@
-use std::convert::identity;
+use core::convert::identity;
 
 /// A `Bifunctor` lets you change the types of a generic type with two type
 /// parameters.

@@ -31,6 +31,7 @@ impl<A, E> Apply<A> for Result<A, E> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<A> Apply<A> for Vec<A>
 where
     Vec<A>: Clone,
