@@ -1,17 +1,26 @@
 [package]
-name = "higher-cat"
-version = "0.1.1"
+name = "higher"
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.65"
 authors = ["Bodil Stokke <bodil@bodil.org>"]
-edition = "2018"
 license = "MPL-2.0+"
 description = "Functors, Applicatives, Monads and other bad ideas"
 repository = "https://github.com/bodil/higher"
-documentation = "http://docs.rs/higher-cat"
+documentation = "http://docs.rs/higher"
 readme = "../README.md"
 categories = ["data-structures"]
-keywords = ["functor", "applicative", "monad", "category-theory"]
+keywords = ["functor", "applicative", "monad", "category-theory", "haskell"]
+exclude = ["release.toml"]
+
+[features]
+default = ["std"]
+std = []
+test = ["std"]
 
 [dependencies]
+<<<<<<< HEAD:prelude/Cargo.toml
+=======
 higher = "0.1.1"
 
 [dev-dependencies]
@@ -21,3 +30,4 @@ higher-derive = "0.1.1"
 [features]
 default = ["std"]
 std = []
+>>>>>>> master:cat/Cargo.toml
