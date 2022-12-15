@@ -15,7 +15,7 @@ pub trait Semigroup {
     fn mappend(self, other: Self) -> Self;
 }
 
-#[cfg(features = "std")]
+#[cfg(feature = "std")]
 impl<A> Semigroup for Vec<A> {
     fn mappend(mut self, other: Self) -> Self {
         self.extend(other);
@@ -23,7 +23,7 @@ impl<A> Semigroup for Vec<A> {
     }
 }
 
-#[cfg(features = "std")]
+#[cfg(feature = "std")]
 impl Semigroup for String {
     fn mappend(self, other: Self) -> Self {
         self + &other

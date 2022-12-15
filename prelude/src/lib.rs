@@ -3,53 +3,50 @@
 #![warn(unreachable_pub, missing_debug_implementations)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-mod semigroup;
+pub mod semigroup;
 pub use crate::semigroup::Semigroup;
 
-mod monoid;
+pub mod monoid;
 pub use crate::monoid::Monoid;
 
-mod functor;
+pub mod semiring;
+pub use crate::semiring::Semiring;
+
+pub mod functor;
 pub use crate::functor::Functor;
 
-mod contra;
+pub mod contra;
 pub use crate::contra::Contravariant;
 
-mod bifunctor;
+pub mod bifunctor;
 pub use crate::bifunctor::Bifunctor;
 
-mod profunctor;
+pub mod profunctor;
 pub use crate::profunctor::Profunctor;
 
-mod pure;
+pub mod pure;
 pub use crate::pure::Pure;
 
-mod apply;
+pub mod apply;
 pub use crate::apply::Apply;
 
-mod bind;
+pub mod bind;
 pub use crate::bind::Bind;
 
-mod applicative;
+pub mod applicative;
 pub use crate::applicative::Applicative;
 
-mod monad;
+pub mod monad;
 pub use crate::monad::Monad;
 
-mod extract;
+pub mod extract;
 pub use crate::extract::Extract;
 
-mod extend;
+pub mod extend;
 pub use crate::extend::Extend;
 
-mod comonad;
+pub mod comonad;
 pub use crate::comonad::Comonad;
-
-mod ap;
-pub use crate::ap::ap;
-
-mod liftm1;
-pub use crate::liftm1::lift_m1;
 
 pub mod foldable;
 pub use crate::foldable::Foldable;

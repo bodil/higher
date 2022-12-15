@@ -1,6 +1,9 @@
 use core::convert::identity;
 
-use crate::{Bind, Monad, Monoid};
+use crate::{
+    apply::{apply_second, ApplyFn},
+    Applicative, Apply, Bind, Functor, Monad, Monoid, Pure, Semiring,
+};
 
 pub trait Foldable<A> {
     fn foldr<B, F>(self, f: F, init: B) -> B
@@ -41,7 +44,53 @@ where
     l.foldl(|acc, x| acc.mappend(f(x)), Default::default())
 }
 
-#[cfg(features = "std")]
+pub fn traverse_<A, B, L, MB, MU, MF, F>(func: F, l: L) -> MU
+where
+    L: Foldable<A>,
+    MB: Applicative<B> + Apply<B, Target<ApplyFn<B, ()>> = MF> + Apply<B, Target<()> = MU>,
+    MU: Applicative<()>
+        + Apply<(), Target<B> = MB>
+        + Apply<(), Target<ApplyFn<B, ()>> = MF>
+        + Functor<(), Target<ApplyFn<B, ()>> = MF>,
+    MF: Apply<ApplyFn<B, ()>, Target<B> = MB>,
+    F: Fn(A) -> MB,
+{
+    l.foldr(
+        |x, y| apply_second(func(x), y),
+        Pure::pure(Default::default()),
+    )
+}
+
+pub fn sequence_<A, L, MA, MU, MF>(l: L) -> MU
+where
+    L: Foldable<MA>,
+    MA: Applicative<A> + Apply<A, Target<()> = MU> + Apply<A, Target<ApplyFn<A, ()>> = MF>,
+    MU: Applicative<()>
+        + Apply<(), Target<A> = MA>
+        + Apply<(), Target<ApplyFn<A, ()>> = MF>
+        + Functor<(), Target<ApplyFn<A, ()>> = MF>,
+    MF: Apply<ApplyFn<A, ()>> + Apply<ApplyFn<A, ()>, Target<A> = MA>,
+{
+    traverse_(identity, l)
+}
+
+pub fn sum<A, L>(l: L) -> A
+where
+    A: Semiring,
+    L: Foldable<A>,
+{
+    l.foldl(|a, b| a.add(b), A::ZERO)
+}
+
+pub fn product<A, L>(l: L) -> A
+where
+    A: Semiring,
+    L: Foldable<A>,
+{
+    l.foldl(|a, b| a.mul(b), A::ONE)
+}
+
+#[cfg(feature = "std")]
 impl<A> Foldable<A> for Vec<A> {
     fn foldl<B, F>(self, f: F, init: B) -> B
     where
@@ -66,7 +115,7 @@ impl<A> Foldable<A> for Vec<A> {
     }
 }
 
-#[cfg(all(test, features = "std"))]
+#[cfg(all(test, feature = "std"))]
 mod test {
     use crate::Foldable;
 
