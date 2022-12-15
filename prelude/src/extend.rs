@@ -9,11 +9,7 @@ pub trait Extend<A>: Functor<A> {
 }
 
 #[cfg(feature = "std")]
-<<<<<<< HEAD:prelude/src/extend.rs
 impl<A> Extend<A> for Vec<A>
-=======
-impl<A, B> Extend<A, B> for Vec<A>
->>>>>>> master:cat/src/extend.rs
 where
     A: Clone,
 {

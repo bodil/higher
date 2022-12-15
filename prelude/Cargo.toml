@@ -19,15 +19,3 @@ std = []
 test = ["std"]
 
 [dependencies]
-<<<<<<< HEAD:prelude/Cargo.toml
-=======
-higher = "0.1.1"
-
-[dev-dependencies]
-proptest = "0.9.1"
-higher-derive = "0.1.1"
-
-[features]
-default = ["std"]
-std = []
->>>>>>> master:cat/Cargo.toml
