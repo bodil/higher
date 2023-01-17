@@ -1,8 +1,10 @@
+use core::convert::Infallible;
+
 /// A `Semigroup` is a type with an associative operation. In plain terms, this
 /// means you can take two values of this type and add them together into a
 /// different value of the same type. The most obvious example of this is
-/// addition of numbers: `2 + 2 = 4`, another is string concatenation: `"Hello "
-/// + "Joe" = "Hello Joe"`.
+/// addition of numbers: `2 + 2 = 4`, another is string concatenation:
+/// `"Hello " + "Joe" = "Hello Joe"`.
 ///
 /// Semigroups must follow the law of associativity:
 /// * `(x + y) + z = x + (y + z)`
@@ -27,6 +29,18 @@ impl<A> Semigroup for Vec<A> {
 impl Semigroup for String {
     fn mappend(self, other: Self) -> Self {
         self + &other
+    }
+}
+
+impl Semigroup for () {
+    fn mappend(self, _other: Self) -> Self {
+        ()
+    }
+}
+
+impl Semigroup for Infallible {
+    fn mappend(self, _other: Self) -> Self {
+        unreachable!()
     }
 }
 
