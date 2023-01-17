@@ -55,6 +55,7 @@ where
     MF: Apply<ApplyFn<B, ()>, Target<B> = MB>,
     F: Fn(A) -> MB,
 {
+    #[allow(clippy::unit_arg)]
     l.foldr(
         |x, y| apply_second(func(x), y),
         Pure::pure(Default::default()),

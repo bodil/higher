@@ -1,5 +1,11 @@
-/// `Pure` lets you construct a value of type `F<A>` using a single value of
+/// `Pure` lets you construct a value of type `F<A>` from a single value of
 /// `A`.
+///
+/// For instance:
+///
+/// * `Option::pure(5)` returns `Some(5)`.
+/// * `Result::pure(5)` returns `Ok(5)`.
+/// * `Vec::pure(5)` returns `vec![5]`.
 pub trait Pure<A> {
     fn pure(value: A) -> Self;
 }

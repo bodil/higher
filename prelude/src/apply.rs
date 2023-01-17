@@ -81,7 +81,7 @@ where
     a.apply(b.fmap(|x: B| f(move |_| x.clone())))
 }
 
-pub fn lift2<'a, A, B, C, MA, MB, MC, MF, F>(fun: F, a: MA, b: MB) -> MC
+pub fn lift2<A, B, C, MA, MB, MC, MF, F>(fun: F, a: MA, b: MB) -> MC
 where
     F: Fn(A, B) -> C + 'static,
     A: Clone + 'static,
