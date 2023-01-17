@@ -51,6 +51,9 @@ pub use crate::comonad::Comonad;
 pub mod foldable;
 pub use crate::foldable::Foldable;
 
+pub mod heytingalgebra;
+pub use crate::heytingalgebra::HeytingAlgebra;
+
 #[macro_export]
 macro_rules! run {
     (yield $result:expr) => {
