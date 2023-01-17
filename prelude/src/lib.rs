@@ -3,6 +3,8 @@
 #![warn(unreachable_pub, missing_debug_implementations)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use higher_derive::{Bifunctor, Functor};
+
 pub mod semigroup;
 pub use crate::semigroup::Semigroup;
 

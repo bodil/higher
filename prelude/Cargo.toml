@@ -19,3 +19,4 @@ std = []
 test = ["std"]
 
 [dependencies]
+higher-derive = { path = "../macros" }

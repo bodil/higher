@@ -1,0 +1,24 @@
+[package]
+name = "higher-derive"
+version = "0.2.0"
+authors = ["Bodil Stokke <bodil@bodil.org>"]
+edition = "2021"
+license = "MPL-2.0+"
+description = "Custom derives for `higher`"
+repository = "https://github.com/bodil/higher"
+documentation = "http://docs.rs/higher-derive"
+readme = "../README.md"
+categories = []
+keywords = ["functor", "applicative", "monad", "category-theory", "haskell"]
+exclude = ["release.toml"]
+
+[lib]
+proc_macro = true
+
+[dependencies]
+syn = { version = "1.0.107", features = ["derive", "extra-traits"] }
+quote = "1.0.23"
+proc-macro2 = "1.0.50"
+
+[dev-dependencies]
+higher = { path = "../prelude" }
