@@ -12,7 +12,7 @@ pub trait Bind<A> {
         F: Fn(A) -> Self::Target<B>;
 }
 
-/// `LiftM1` provides a default implementation for `Functor::map` using
+/// `lift_m1` provides a default implementation for `Functor::map` using
 /// only `Bind` and `Pure`.
 pub fn lift_m1<MA, MB, A, B, F>(f: F, a: MA) -> MB
 where
