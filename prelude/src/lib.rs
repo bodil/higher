@@ -14,6 +14,27 @@ pub use crate::monoid::Monoid;
 pub mod semiring;
 pub use crate::semiring::Semiring;
 
+pub mod ring;
+pub use crate::ring::Ring;
+
+pub mod commutative_ring;
+pub use crate::commutative_ring::CommutativeRing;
+
+pub mod euclidean_ring;
+pub use crate::euclidean_ring::EuclideanRing;
+
+pub mod division_ring;
+pub use crate::division_ring::DivisionRing;
+
+pub mod field;
+pub use crate::field::Field;
+
+pub mod heyting_algebra;
+pub use crate::heyting_algebra::HeytingAlgebra;
+
+pub mod boolean_algebra;
+pub use crate::boolean_algebra::BooleanAlgebra;
+
 pub mod functor;
 pub use crate::functor::Functor;
 
@@ -52,9 +73,6 @@ pub use crate::comonad::Comonad;
 
 pub mod foldable;
 pub use crate::foldable::Foldable;
-
-pub mod heytingalgebra;
-pub use crate::heytingalgebra::HeytingAlgebra;
 
 #[macro_export]
 macro_rules! run {
