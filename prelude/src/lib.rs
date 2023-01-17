@@ -81,18 +81,6 @@ pub mod monad;
 #[doc(inline)]
 pub use crate::monad::Monad;
 
-pub mod extract;
-#[doc(inline)]
-pub use crate::extract::Extract;
-
-pub mod extend;
-#[doc(inline)]
-pub use crate::extend::Extend;
-
-pub mod comonad;
-#[doc(inline)]
-pub use crate::comonad::Comonad;
-
 pub mod foldable;
 #[doc(inline)]
 pub use crate::foldable::Foldable;
