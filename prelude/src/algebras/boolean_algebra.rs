@@ -1,4 +1,4 @@
-use crate::HeytingAlgebra;
+use super::HeytingAlgebra;
 
 pub trait BooleanAlgebra: HeytingAlgebra {}
 

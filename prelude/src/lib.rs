@@ -13,14 +13,6 @@ pub mod monoid;
 #[doc(inline)]
 pub use crate::monoid::Monoid;
 
-pub mod heyting_algebra;
-#[doc(inline)]
-pub use crate::heyting_algebra::HeytingAlgebra;
-
-pub mod boolean_algebra;
-#[doc(inline)]
-pub use crate::boolean_algebra::BooleanAlgebra;
-
 pub mod functor;
 #[doc(inline)]
 pub use crate::functor::Functor;
@@ -61,6 +53,7 @@ pub mod foldable;
 #[doc(inline)]
 pub use crate::foldable::Foldable;
 
+pub mod algebras;
 pub mod rings;
 
 /// Monadic do notation.
