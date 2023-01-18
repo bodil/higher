@@ -2,7 +2,8 @@ use core::convert::identity;
 
 use crate::{
     apply::{apply_second, ApplyFn},
-    Applicative, Apply, Bind, Functor, Monad, Monoid, Pure, Semiring,
+    rings::Semiring,
+    Applicative, Apply, Bind, Functor, Monad, Monoid, Pure,
 };
 
 pub trait Foldable<A> {

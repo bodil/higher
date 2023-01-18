@@ -1,8 +1,9 @@
 use crate::{Bind, Functor, Pure};
 
 /// An `ApplyFn` is a function from `A` to `B` wrapped in something Rust's type
-/// system can more easily digest. Arguments for [Apply::apply()] are required
-/// to be of this type rather than an arbitrary type matching `Fn(A) -> B`.
+/// system can more easily digest. Arguments for
+/// [`Apply::apply()`](Apply::apply) are required to be of this type rather than
+/// an arbitrary type matching `Fn(A) -> B`.
 pub struct ApplyFn<A, B> {
     function: Box<dyn Fn(A) -> B>,
 }
@@ -35,6 +36,7 @@ impl<A, B> core::fmt::Debug for ApplyFn<A, B> {
     }
 }
 
+// Construct an [`ApplyFn`](ApplyFn) from a plain function.
 pub fn f<A, B, F>(func: F) -> ApplyFn<A, B>
 where
     F: 'static + Fn(A) -> B,

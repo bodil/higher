@@ -1,4 +1,4 @@
-use crate::{DivisionRing, EuclideanRing};
+use super::{DivisionRing, EuclideanRing};
 
 pub trait Field: EuclideanRing + DivisionRing {}
 

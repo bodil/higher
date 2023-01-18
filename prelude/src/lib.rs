@@ -13,30 +13,6 @@ pub mod monoid;
 #[doc(inline)]
 pub use crate::monoid::Monoid;
 
-pub mod semiring;
-#[doc(inline)]
-pub use crate::semiring::Semiring;
-
-pub mod ring;
-#[doc(inline)]
-pub use crate::ring::Ring;
-
-pub mod commutative_ring;
-#[doc(inline)]
-pub use crate::commutative_ring::CommutativeRing;
-
-pub mod euclidean_ring;
-#[doc(inline)]
-pub use crate::euclidean_ring::EuclideanRing;
-
-pub mod division_ring;
-#[doc(inline)]
-pub use crate::division_ring::DivisionRing;
-
-pub mod field;
-#[doc(inline)]
-pub use crate::field::Field;
-
 pub mod heyting_algebra;
 #[doc(inline)]
 pub use crate::heyting_algebra::HeytingAlgebra;
@@ -84,6 +60,8 @@ pub use crate::monad::Monad;
 pub mod foldable;
 #[doc(inline)]
 pub use crate::foldable::Foldable;
+
+pub mod rings;
 
 /// Monadic do notation.
 ///
@@ -232,6 +210,17 @@ mod test {
                 2u32.checked_div(1)
             },
             None
+        );
+
+        // Options with different types.
+        assert_eq!(
+            run! {
+                s <= Some("64");
+                x <= s.parse::<u32>().ok();
+                y <= x.checked_div(2);
+                yield y
+            },
+            Some(32)
         );
     }
 }

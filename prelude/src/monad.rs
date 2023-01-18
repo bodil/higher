@@ -1,7 +1,7 @@
 use crate::{Applicative, Bind};
 
-/// A `Monad` is like a burrito, and also anything which implements `Bind` and
-/// `Applicative`.
+/// A `Monad` is like a burrito, and also anything which implements
+/// [`Bind`](Bind) and [`Applicative`](Applicative).
 pub trait Monad<A>: Bind<A> + Applicative<A> {}
 
 impl<M, A> Monad<A> for M where M: Bind<A> + Applicative<A> {}

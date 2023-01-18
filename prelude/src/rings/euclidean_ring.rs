@@ -1,4 +1,4 @@
-use crate::CommutativeRing;
+use super::CommutativeRing;
 
 pub trait EuclideanRing: CommutativeRing {
     fn degree(self) -> usize;

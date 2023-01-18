@@ -1,4 +1,4 @@
-use crate::Semiring;
+use super::Semiring;
 
 pub trait Ring: Semiring {
     fn sub(self, other: Self) -> Self;

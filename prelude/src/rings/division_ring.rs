@@ -1,4 +1,4 @@
-use crate::Ring;
+use super::Ring;
 
 pub trait DivisionRing: Ring {
     fn recip(self) -> Self;
