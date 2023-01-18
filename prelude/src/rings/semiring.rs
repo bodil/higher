@@ -11,13 +11,9 @@ impl Semiring for () {
 
     const ONE: Self = ();
 
-    fn add(self, _other: Self) -> Self {
-        ()
-    }
+    fn add(self, _other: Self) -> Self {}
 
-    fn mul(self, _other: Self) -> Self {
-        ()
-    }
+    fn mul(self, _other: Self) -> Self {}
 }
 
 macro_rules! define_semiring_int {

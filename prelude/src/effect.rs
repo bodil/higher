@@ -142,6 +142,6 @@ where
     }
 }
 
-pub fn run_effect<'a, A>(effect: Effect<'a, A>) -> A {
+pub fn run_effect<A>(effect: Effect<'_, A>) -> A {
     LocalPool::new().run_until(effect.into_future())
 }

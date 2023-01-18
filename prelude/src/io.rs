@@ -104,10 +104,7 @@ impl<'a, A, E> IO<'a, A, E> {
     }
 
     pub fn is_err(&self) -> bool {
-        match self {
-            Self::Error(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Error(_))
     }
 }
 
@@ -202,7 +199,7 @@ impl<'a, A: 'a, E: 'a> Apply<'a, A> for IO<'a, A, E> {
     }
 }
 
-pub fn run_io<'a, A, E>(io: IO<'a, A, E>) -> Result<A, E> {
+pub fn run_io<A, E>(io: IO<'_, A, E>) -> Result<A, E> {
     LocalPool::new().run_until(io.into_future())
 }
 

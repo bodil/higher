@@ -35,19 +35,11 @@ impl HeytingAlgebra for () {
 
     const FALSE: Self = ();
 
-    fn implies(self, _other: Self) -> Self {
-        ()
-    }
+    fn implies(self, _other: Self) -> Self {}
 
-    fn conj(self, _other: Self) -> Self {
-        ()
-    }
+    fn conj(self, _other: Self) -> Self {}
 
-    fn disj(self, _other: Self) -> Self {
-        ()
-    }
+    fn disj(self, _other: Self) -> Self {}
 
-    fn not(self) -> Self {
-        ()
-    }
+    fn not(self) -> Self {}
 }

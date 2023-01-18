@@ -27,7 +27,7 @@ fn type_params_replace(
     for param in output.iter_mut() {
         match param {
             GenericParam::Type(ref mut type_param) if type_param == replace => {
-                *(&mut type_param.ident) = with;
+                type_param.ident = with;
                 break;
             }
             _ => {}
@@ -40,9 +40,7 @@ fn report_error(span: Span, msg: &str) -> proc_macro::TokenStream {
     (quote_spanned! {span => compile_error! {#msg}}).into()
 }
 
-fn decide_functor_generic_type<'a>(
-    input: &'a DeriveInput,
-) -> Result<&'a TypeParam, proc_macro::TokenStream> {
+fn decide_functor_generic_type(input: &DeriveInput) -> Result<&TypeParam, proc_macro::TokenStream> {
     let mut generics_iter = input.generics.type_params();
     let generic_type = match generics_iter.next() {
         Some(t) => t,
@@ -61,12 +59,12 @@ fn decide_functor_generic_type<'a>(
         ));
     }
 
-    return Ok(generic_type);
+    Ok(generic_type)
 }
 
-fn decide_bifunctor_generic_types<'a>(
-    input: &'a DeriveInput,
-) -> Result<(&'a TypeParam, &'a TypeParam), proc_macro::TokenStream> {
+fn decide_bifunctor_generic_types(
+    input: &DeriveInput,
+) -> Result<(&TypeParam, &TypeParam), proc_macro::TokenStream> {
     let mut generics_iter = input.generics.type_params();
     let generic_type_a = match generics_iter.next() {
         Some(t) => t,
@@ -93,7 +91,7 @@ fn decide_bifunctor_generic_types<'a>(
         ));
     }
 
-    return Ok((generic_type_a, generic_type_b));
+    Ok((generic_type_a, generic_type_b))
 }
 
 #[proc_macro_derive(Bifunctor)]
@@ -227,8 +225,8 @@ fn match_type_param<'a>(params: &'a HashMap<Ident, Ident>, ty: &Type) -> Option<
     None
 }
 
-fn filter_fields<'a, P, F1, F2>(
-    fields: &'a Punctuated<Field, P>,
+fn filter_fields<P, F1, F2>(
+    fields: &Punctuated<Field, P>,
     ty: &HashMap<Ident, Ident>,
     transform: F1,
     copy: F2,

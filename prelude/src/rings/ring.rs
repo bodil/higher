@@ -5,9 +5,7 @@ pub trait Ring: Semiring {
 }
 
 impl Ring for () {
-    fn sub(self, _other: Self) -> Self {
-        ()
-    }
+    fn sub(self, _other: Self) -> Self {}
 }
 
 macro_rules! define_ring {

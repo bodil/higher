@@ -33,9 +33,7 @@ impl Semigroup for String {
 }
 
 impl Semigroup for () {
-    fn mappend(self, _other: Self) -> Self {
-        ()
-    }
+    fn mappend(self, _other: Self) -> Self {}
 }
 
 impl Semigroup for Infallible {
