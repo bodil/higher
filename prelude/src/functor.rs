@@ -7,14 +7,14 @@
 /// You can also use this just to modify the values inside your container value
 /// without changing their type, if the mapping function returns a value of the
 /// same type.  This is called an "endofunctor."
-pub trait Functor<A> {
+pub trait Functor<'a, A> {
     type Target<T>;
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
-        F: Fn(A) -> B;
+        F: Fn(A) -> B + 'a;
 }
 
-impl<A> Functor<A> for Option<A> {
+impl<A> Functor<'_, A> for Option<A> {
     type Target<T> = Option<T>;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
@@ -25,7 +25,7 @@ impl<A> Functor<A> for Option<A> {
     }
 }
 
-impl<A, E> Functor<A> for Result<A, E> {
+impl<A, E> Functor<'_, A> for Result<A, E> {
     type Target<T> = Result<T, E>;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
@@ -37,7 +37,7 @@ impl<A, E> Functor<A> for Result<A, E> {
 }
 
 #[cfg(feature = "std")]
-impl<A> Functor<A> for Vec<A> {
+impl<A> Functor<'_, A> for Vec<A> {
     type Target<T> = Vec<T>;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
@@ -49,7 +49,7 @@ impl<A> Functor<A> for Vec<A> {
 }
 
 #[cfg(feature = "std")]
-impl<A> Functor<A> for std::collections::VecDeque<A> {
+impl<A> Functor<'_, A> for std::collections::VecDeque<A> {
     type Target<T> = std::collections::VecDeque<T>;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
@@ -61,7 +61,7 @@ impl<A> Functor<A> for std::collections::VecDeque<A> {
 }
 
 #[cfg(feature = "std")]
-impl<A> Functor<A> for std::collections::LinkedList<A> {
+impl<A> Functor<'_, A> for std::collections::LinkedList<A> {
     type Target<T> = std::collections::LinkedList<T>;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>

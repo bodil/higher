@@ -5,11 +5,17 @@ use crate::Pure;
 /// It takes a function `Fn(A) -> M<B>` and applies it to the `A` inside `M<A>`.
 /// You can think of this as a callback function for when the value of `A` is
 /// ready to be processed, returning the next computation in the sequence.
-pub trait Bind<A> {
+///
+/// This is the primary component of the dreaded [`Monad`](crate::Monad) trait,
+/// but to be a [`Monad`](crate::Monad) a type must also implement
+/// [`Applicative`](crate::Applicative), which in turn requires implementations
+/// for [`Functor`](crate::Functor), [`Pure`](crate::Pure) and
+/// [`Apply`](crate::Apply).
+pub trait Bind<'a, A> {
     type Target<T>;
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
-        F: Fn(A) -> Self::Target<B>;
+        F: Fn(A) -> Self::Target<B> + 'a;
 }
 
 /// `lift_m1` provides a default implementation for
@@ -18,13 +24,13 @@ pub trait Bind<A> {
 pub fn lift_m1<MA, MB, A, B, F>(f: F, a: MA) -> MB
 where
     F: Fn(A) -> B,
-    MA: Bind<A, Target<B> = MB>,
+    MA: for<'a> Bind<'a, A, Target<B> = MB>,
     MB: Pure<B>,
 {
     a.bind::<B, _>(|x| MB::pure(f(x)))
 }
 
-impl<A> Bind<A> for Option<A> {
+impl<A> Bind<'_, A> for Option<A> {
     type Target<T> = Option<T>;
 
     fn bind<B, F>(self, f: F) -> Self::Target<B>
@@ -35,7 +41,7 @@ impl<A> Bind<A> for Option<A> {
     }
 }
 
-impl<A, E> Bind<A> for Result<A, E> {
+impl<A, E> Bind<'_, A> for Result<A, E> {
     type Target<T> = Result<T, E>;
 
     fn bind<B, F>(self, f: F) -> Self::Target<B>
@@ -47,7 +53,7 @@ impl<A, E> Bind<A> for Result<A, E> {
 }
 
 #[cfg(feature = "std")]
-impl<A> Bind<A> for Vec<A> {
+impl<A> Bind<'_, A> for Vec<A> {
     type Target<T> = Vec<T>;
 
     fn bind<B, F>(self, f: F) -> Self::Target<B>

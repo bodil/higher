@@ -150,7 +150,7 @@ pub fn derive_bifunctor(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     );
 
     quote!(
-        impl<#type_params> ::higher::Bifunctor<#generic_type_a, #generic_type_b> for #name<#type_params> #where_clause {
+        impl<#type_params> ::higher::Bifunctor<'_, #generic_type_a, #generic_type_b> for #name<#type_params> #where_clause {
             type Target<DerivedTargetTypeA, DerivedTargetTypeB> = #name<#type_params_generic>;
             fn bimap<DerivedTypeA, DerivedTypeB, L, R>(self, left: L, right: R) -> Self::Target<DerivedTypeA, DerivedTypeB>
             where
@@ -205,7 +205,7 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     );
 
     quote!(
-        impl<#type_params> ::higher::Functor<#generic_type> for #name<#type_params> #where_clause {
+        impl<#type_params> ::higher::Functor<'_, #generic_type> for #name<#type_params> #where_clause {
             type Target<DerivedTargetType> = #name<#type_params_with_t>;
             fn fmap<DerivedType, F>(self, f: F) -> Self::Target<DerivedType>
             where

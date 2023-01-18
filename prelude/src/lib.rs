@@ -132,11 +132,11 @@ macro_rules! run {
     };
 
     ($binding:ident <= $comp:expr; $($tail:tt)*) => {
-        $crate::Bind::bind($comp, |$binding| run!($($tail)*))
+        $crate::Bind::bind($comp, move |$binding| run!($($tail)*))
     };
 
     ($comp:expr; $($tail:tt)*) => {
-        $crate::Bind::bind($comp, |_| run!($($tail)*))
+        $crate::Bind::bind($comp, move |_| run!($($tail)*))
     }
 }
 

@@ -2,9 +2,14 @@ use crate::{Applicative, Bind};
 
 /// A `Monad` is like a burrito, and also anything which implements
 /// [`Bind`](Bind) and [`Applicative`](Applicative).
-pub trait Monad<A>: Bind<A> + Applicative<A> {}
+///
+/// A monad's primary function is to provide the [`Bind`](Bind) trait, but to
+/// count as a monad a type must also implement [`Applicative`](Applicative),
+/// which in turn requires you to implement [`Functor`](crate::Functor),
+/// [`Pure`](crate::Pure) and [`Apply`](crate::Apply).
+pub trait Monad<'a, A>: Bind<'a, A> + Applicative<'a, A> {}
 
-impl<M, A> Monad<A> for M where M: Bind<A> + Applicative<A> {}
+impl<'a, M, A> Monad<'a, A> for M where M: Bind<'a, A> + Applicative<'a, A> {}
 
 #[cfg(test)]
 mod test {

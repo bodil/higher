@@ -3,97 +3,113 @@ use core::convert::identity;
 use crate::{
     apply::{apply_second, ApplyFn},
     rings::Semiring,
-    Applicative, Apply, Bind, Functor, Monad, Monoid, Pure,
+    Applicative, Apply, Bind, Functor, Monoid, Pure,
 };
 
-pub trait Foldable<A> {
+pub trait Foldable<'a, A> {
     fn foldr<B, F>(self, f: F, init: B) -> B
     where
-        F: Fn(A, B) -> B;
+        F: Fn(A, B) -> B + 'a;
+    fn foldr_ref<B, F>(&'a self, f: F, init: B) -> B
+    where
+        A: 'a,
+        F: Fn(&'a A, B) -> B + 'a;
     fn foldl<B, F>(self, f: F, init: B) -> B
     where
-        F: Fn(B, A) -> B;
+        F: Fn(B, A) -> B + 'a;
+    fn foldl_ref<B, F>(&'a self, f: F, init: B) -> B
+    where
+        A: 'a,
+        F: Fn(B, &'a A) -> B + 'a;
     fn fold_map<F, M>(self, f: F) -> M
     where
-        F: Fn(A) -> M,
+        F: Fn(A) -> M + 'a,
         M: Monoid;
 }
 
-pub fn fold<L, A>(l: L) -> A
+pub fn fold<'a, L, A>(l: L) -> A
 where
-    L: Foldable<A>,
-    A: Monoid,
+    L: Foldable<'a, A>,
+    A: Monoid + 'a,
 {
     l.fold_map(identity)
 }
 
-pub fn fold_m<M, L, A, B, F>(f: F, init: B, l: L) -> M
+pub fn fold_m<'a, M, L, A, B, F>(f: &'a F, init: B, l: &'a L) -> M
 where
-    L: Foldable<A>,
-    M: Monad<B> + Bind<B, Target<B> = M>,
-    F: Fn(B, &A) -> M,
+    A: 'a,
+    L: Foldable<'a, A> + 'a,
+    M: Pure<B> + Bind<'a, B, Target<B> = M> + 'a,
+    F: Fn(B, &'a A) -> M + 'a,
 {
-    l.foldl(|m, a| m.bind::<B, _>(|b| f(b, &a)), M::pure(init))
+    l.foldl_ref(move |m, a| m.bind::<B, _>(move |b| f(b, a)), M::pure(init))
 }
 
-pub fn fold_map_default_l<A, L, M, F>(f: F, l: L) -> M
+pub fn fold_map_default_l<'a, A, L, M, F>(f: F, l: L) -> M
 where
-    L: Foldable<A>,
+    L: Foldable<'a, A>,
     M: Monoid,
-    F: Fn(A) -> M,
+    F: Fn(A) -> M + 'a,
 {
-    l.foldl(|acc, x| acc.mappend(f(x)), Default::default())
+    l.foldl(move |acc, x| acc.mappend(f(x)), Default::default())
 }
 
-pub fn traverse_<A, B, L, MB, MU, MF, F>(func: F, l: L) -> MU
+pub fn traverse_<'a, A, B, L, MB, MU, MF, F>(func: F, l: L) -> MU
 where
-    L: Foldable<A>,
-    MB: Applicative<B> + Apply<B, Target<ApplyFn<B, ()>> = MF> + Apply<B, Target<()> = MU>,
-    MU: Applicative<()>
-        + Apply<(), Target<B> = MB>
-        + Apply<(), Target<ApplyFn<B, ()>> = MF>
-        + Functor<(), Target<ApplyFn<B, ()>> = MF>,
-    MF: Apply<ApplyFn<B, ()>, Target<B> = MB>,
-    F: Fn(A) -> MB,
+    B: 'a,
+    L: Foldable<'a, A>,
+    MB: Applicative<'a, B>
+        + Apply<'a, B, Target<ApplyFn<'a, B, ()>> = MF>
+        + Apply<'a, B, Target<()> = MU>,
+    MU: Applicative<'a, ()>
+        + Apply<'a, (), Target<B> = MB>
+        + Apply<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
+        + Functor<'a, (), Target<ApplyFn<'a, B, ()>> = MF>,
+    MF: Apply<'a, ApplyFn<'a, B, ()>, Target<B> = MB>,
+    F: Fn(A) -> MB + 'a,
 {
     #[allow(clippy::unit_arg)]
     l.foldr(
-        |x, y| apply_second(func(x), y),
+        move |x, y| apply_second(func(x), y),
         Pure::pure(Default::default()),
     )
 }
 
-pub fn sequence_<A, L, MA, MU, MF>(l: L) -> MU
+pub fn sequence_<'a, A, L, MA, MU, MF>(l: L) -> MU
 where
-    L: Foldable<MA>,
-    MA: Applicative<A> + Apply<A, Target<()> = MU> + Apply<A, Target<ApplyFn<A, ()>> = MF>,
-    MU: Applicative<()>
-        + Apply<(), Target<A> = MA>
-        + Apply<(), Target<ApplyFn<A, ()>> = MF>
-        + Functor<(), Target<ApplyFn<A, ()>> = MF>,
-    MF: Apply<ApplyFn<A, ()>> + Apply<ApplyFn<A, ()>, Target<A> = MA>,
+    A: 'a,
+    L: Foldable<'a, MA>,
+    MA: Applicative<'a, A>
+        + Apply<'a, A, Target<()> = MU>
+        + Apply<'a, A, Target<ApplyFn<'a, A, ()>> = MF>
+        + 'a,
+    MU: Applicative<'a, ()>
+        + Apply<'a, (), Target<A> = MA>
+        + Apply<'a, (), Target<ApplyFn<'a, A, ()>> = MF>
+        + Functor<'a, (), Target<ApplyFn<'a, A, ()>> = MF>,
+    MF: Apply<'a, ApplyFn<'a, A, ()>> + Apply<'a, ApplyFn<'a, A, ()>, Target<A> = MA>,
 {
     traverse_(identity, l)
 }
 
-pub fn sum<A, L>(l: L) -> A
+pub fn sum<'a, A, L>(l: L) -> A
 where
     A: Semiring,
-    L: Foldable<A>,
+    L: Foldable<'a, A>,
 {
     l.foldl(|a, b| a.add(b), A::ZERO)
 }
 
-pub fn product<A, L>(l: L) -> A
+pub fn product<'a, A, L>(l: L) -> A
 where
     A: Semiring,
-    L: Foldable<A>,
+    L: Foldable<'a, A>,
 {
     l.foldl(|a, b| a.mul(b), A::ONE)
 }
 
 #[cfg(feature = "std")]
-impl<A> Foldable<A> for Vec<A> {
+impl<'a, A> Foldable<'a, A> for Vec<A> {
     fn foldl<B, F>(self, f: F, init: B) -> B
     where
         F: Fn(B, A) -> B,
@@ -114,6 +130,22 @@ impl<A> Foldable<A> for Vec<A> {
         M: Monoid,
     {
         fold_map_default_l(f, self)
+    }
+
+    fn foldr_ref<B, F>(&'a self, f: F, init: B) -> B
+    where
+        A: 'a,
+        F: Fn(&'a A, B) -> B + 'a,
+    {
+        self.iter().rfold(init, |a, b| f(b, a))
+    }
+
+    fn foldl_ref<B, F>(&'a self, f: F, init: B) -> B
+    where
+        A: 'a,
+        F: Fn(B, &'a A) -> B + 'a,
+    {
+        self.iter().fold(init, f)
     }
 }
 
