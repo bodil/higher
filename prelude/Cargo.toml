@@ -21,5 +21,5 @@ io = ["std", "futures"]
 test = ["std"]
 
 [dependencies]
-higher-derive = { path = "../macros" }
+higher-derive = "0.2.0"
 futures = { version = "0.3.25", optional = true, features = ["thread-pool"] }
