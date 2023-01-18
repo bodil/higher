@@ -14,9 +14,12 @@ keywords = ["functor", "applicative", "monad", "category-theory", "haskell"]
 exclude = ["release.toml"]
 
 [features]
-default = ["std"]
+default = ["std", "effect", "io"]
 std = []
+effect = ["futures"]
+io = ["std", "futures"]
 test = ["std"]
 
 [dependencies]
 higher-derive = { path = "../macros" }
+futures = { version = "0.3.25", optional = true, features = ["thread-pool"] }

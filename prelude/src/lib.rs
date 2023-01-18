@@ -54,7 +54,11 @@ pub mod foldable;
 pub use crate::foldable::Foldable;
 
 pub mod algebras;
+pub mod effect;
 pub mod rings;
+
+#[cfg(feature = "io")]
+pub mod io;
 
 /// Monadic do notation.
 ///
