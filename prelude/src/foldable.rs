@@ -120,13 +120,16 @@ where
 
 // # Implementations
 
-impl<'a, A: 'a, const N: usize> Foldable<'a, A> for [A; N] {
+impl<'a, A: 'a> Foldable<'a, A> for Option<A> {
     fn foldr<B, F>(self, f: F, init: B) -> B
     where
         B: 'a,
         F: Fn(A, B) -> B + 'a,
     {
-        self.into_iter().rfold(init, |a, b| f(b, a))
+        match self {
+            Some(value) => f(value, init),
+            None => init,
+        }
     }
 
     fn foldr_ref<B, F>(&'a self, f: F, init: B) -> B
@@ -134,7 +137,10 @@ impl<'a, A: 'a, const N: usize> Foldable<'a, A> for [A; N] {
         B: 'a,
         F: Fn(&'a A, B) -> B + 'a,
     {
-        self.iter().rfold(init, |a, b| f(b, a))
+        match self {
+            Some(value) => f(value, init),
+            None => init,
+        }
     }
 
     fn foldl<B, F>(self, f: F, init: B) -> B
@@ -142,7 +148,10 @@ impl<'a, A: 'a, const N: usize> Foldable<'a, A> for [A; N] {
         B: 'a,
         F: Fn(B, A) -> B + 'a,
     {
-        self.into_iter().fold(init, f)
+        match self {
+            Some(value) => f(init, value),
+            None => init,
+        }
     }
 
     fn foldl_ref<B, F>(&'a self, f: F, init: B) -> B
@@ -150,7 +159,10 @@ impl<'a, A: 'a, const N: usize> Foldable<'a, A> for [A; N] {
         B: 'a,
         F: Fn(B, &'a A) -> B + 'a,
     {
-        self.iter().fold(init, f)
+        match self {
+            Some(value) => f(init, value),
+            None => init,
+        }
     }
 
     fn fold_map<F, M>(self, f: F) -> M
@@ -158,49 +170,129 @@ impl<'a, A: 'a, const N: usize> Foldable<'a, A> for [A; N] {
         F: Fn(A) -> M + 'a,
         M: Monoid,
     {
-        fold_map_default_l(f, self)
+        match self {
+            Some(value) => f(value),
+            None => M::default(),
+        }
     }
 }
 
-#[cfg(feature = "std")]
-impl<'a, A: 'a> Foldable<'a, A> for Vec<A> {
-    fn foldl<B, F>(self, f: F, init: B) -> B
-    where
-        F: Fn(B, A) -> B,
-    {
-        self.into_iter().fold(init, f)
-    }
-
+impl<'a, A: 'a, E> Foldable<'a, A> for Result<A, E> {
     fn foldr<B, F>(self, f: F, init: B) -> B
     where
-        F: Fn(A, B) -> B,
+        B: 'a,
+        F: Fn(A, B) -> B + 'a,
     {
-        self.into_iter().rfold(init, |a, b| f(b, a))
-    }
-
-    fn fold_map<F, M>(self, f: F) -> M
-    where
-        F: Fn(A) -> M,
-        M: Monoid,
-    {
-        fold_map_default_l(f, self)
+        match self {
+            Ok(value) => f(value, init),
+            Err(_) => init,
+        }
     }
 
     fn foldr_ref<B, F>(&'a self, f: F, init: B) -> B
     where
-        A: 'a,
+        B: 'a,
         F: Fn(&'a A, B) -> B + 'a,
     {
-        self.iter().rfold(init, |a, b| f(b, a))
+        match self {
+            Ok(value) => f(value, init),
+            Err(_) => init,
+        }
+    }
+
+    fn foldl<B, F>(self, f: F, init: B) -> B
+    where
+        B: 'a,
+        F: Fn(B, A) -> B + 'a,
+    {
+        match self {
+            Ok(value) => f(init, value),
+            Err(_) => init,
+        }
     }
 
     fn foldl_ref<B, F>(&'a self, f: F, init: B) -> B
     where
-        A: 'a,
+        B: 'a,
         F: Fn(B, &'a A) -> B + 'a,
     {
-        self.iter().fold(init, f)
+        match self {
+            Ok(value) => f(init, value),
+            Err(_) => init,
+        }
     }
+
+    fn fold_map<F, M>(self, f: F) -> M
+    where
+        F: Fn(A) -> M + 'a,
+        M: Monoid,
+    {
+        match self {
+            Ok(value) => f(value),
+            Err(_) => M::default(),
+        }
+    }
+}
+
+macro_rules! impl_foldable_from_iter {
+    () => {
+        fn foldl<B, F>(self, f: F, init: B) -> B
+        where
+            F: Fn(B, A) -> B,
+        {
+            self.into_iter().fold(init, f)
+        }
+
+        fn foldr<B, F>(self, f: F, init: B) -> B
+        where
+            F: Fn(A, B) -> B,
+        {
+            self.into_iter().rfold(init, |a, b| f(b, a))
+        }
+
+        fn fold_map<F, M>(self, f: F) -> M
+        where
+            F: Fn(A) -> M,
+            M: Monoid,
+        {
+            fold_map_default_l(f, self)
+        }
+
+        fn foldr_ref<B, F>(&'a self, f: F, init: B) -> B
+        where
+            A: 'a,
+            F: Fn(&'a A, B) -> B + 'a,
+        {
+            self.iter().rfold(init, |a, b| f(b, a))
+        }
+
+        fn foldl_ref<B, F>(&'a self, f: F, init: B) -> B
+        where
+            A: 'a,
+            F: Fn(B, &'a A) -> B + 'a,
+        {
+            self.iter().fold(init, f)
+        }
+    };
+}
+
+impl<'a, A: 'a, const N: usize> Foldable<'a, A> for [A; N] {
+    impl_foldable_from_iter!();
+}
+
+#[cfg(feature = "std")]
+impl<'a, A: 'a> Foldable<'a, A> for Vec<A> {
+    impl_foldable_from_iter!();
+}
+
+#[cfg(feature = "std")]
+impl<'a, A: 'a> Foldable<'a, A> for std::collections::VecDeque<A> {
+    impl_foldable_from_iter!();
+}
+
+#[cfg(feature = "std")]
+impl<'a, A: 'a> Foldable<'a, A> for std::collections::LinkedList<A> {
+    impl_foldable_from_iter!();
 }
 
 #[cfg(all(test, feature = "std"))]

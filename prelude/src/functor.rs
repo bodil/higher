@@ -58,53 +58,45 @@ impl<'a, A: 'a, const N: usize> Functor<'a, A> for [A; N] {
         F: Fn(A) -> B + 'a,
     {
         let mut out: MaybeUninit<[B; N]> = MaybeUninit::uninit();
-        for (index, item) in self.into_iter().enumerate() {
-            let ptr: *mut B = out.as_mut_ptr().cast();
+        let mut ptr: *mut B = out.as_mut_ptr().cast();
+        for item in self.into_iter() {
             unsafe {
-                ptr.add(index).write(f(item));
+                ptr.write(f(item));
+                ptr = ptr.add(1);
             }
         }
         unsafe { out.assume_init() }
     }
 }
 
+macro_rules! impl_functor_from_iter {
+    () => {
+        fn fmap<B, F>(self, f: F) -> Self::Target<B>
+        where
+            B: 'a,
+            F: Fn(A) -> B,
+        {
+            self.into_iter().map(f).collect()
+        }
+    };
+}
+
 #[cfg(feature = "std")]
 impl<'a, A: 'a> Functor<'a, A> for Vec<A> {
     type Target<T> = Vec<T> where T: 'a;
-
-    fn fmap<B, F>(self, f: F) -> Self::Target<B>
-    where
-        B: 'a,
-        F: Fn(A) -> B,
-    {
-        self.into_iter().map(f).collect()
-    }
+    impl_functor_from_iter!();
 }
 
 #[cfg(feature = "std")]
 impl<'a, A: 'a> Functor<'a, A> for std::collections::VecDeque<A> {
     type Target<T> = std::collections::VecDeque<T> where T: 'a;
-
-    fn fmap<B, F>(self, f: F) -> Self::Target<B>
-    where
-        B: 'a,
-        F: Fn(A) -> B,
-    {
-        self.into_iter().map(f).collect()
-    }
+    impl_functor_from_iter!();
 }
 
 #[cfg(feature = "std")]
 impl<'a, A: 'a> Functor<'a, A> for std::collections::LinkedList<A> {
     type Target<T> = std::collections::LinkedList<T> where T: 'a;
-
-    fn fmap<B, F>(self, f: F) -> Self::Target<B>
-    where
-        B: 'a,
-        F: Fn(A) -> B,
-    {
-        self.into_iter().map(f).collect()
-    }
+    impl_functor_from_iter!();
 }
 
 #[cfg(test)]

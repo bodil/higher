@@ -29,6 +29,70 @@ impl<A> Pure<A> for Vec<A> {
     }
 }
 
+#[cfg(feature = "std")]
+impl<A> Pure<A> for std::collections::VecDeque<A> {
+    fn pure(value: A) -> Self {
+        Self::from_iter([value])
+    }
+}
+
+#[cfg(feature = "std")]
+impl<A> Pure<A> for std::collections::LinkedList<A> {
+    fn pure(value: A) -> Self {
+        Self::from_iter([value])
+    }
+}
+
+#[cfg(feature = "std")]
+impl<A> Pure<A> for std::collections::BinaryHeap<A>
+where
+    A: Ord,
+{
+    fn pure(value: A) -> Self {
+        Self::from_iter([value])
+    }
+}
+
+#[cfg(feature = "std")]
+impl<A> Pure<A> for std::collections::HashSet<A>
+where
+    A: std::hash::Hash + Eq,
+{
+    fn pure(value: A) -> Self {
+        Self::from_iter([value])
+    }
+}
+
+#[cfg(feature = "std")]
+impl<A> Pure<A> for std::collections::BTreeSet<A>
+where
+    A: Ord,
+{
+    fn pure(value: A) -> Self {
+        Self::from_iter([value])
+    }
+}
+
+#[cfg(feature = "std")]
+impl<K, V> Pure<(K, V)> for std::collections::HashMap<K, V>
+where
+    K: std::hash::Hash + Eq,
+{
+    fn pure(value: (K, V)) -> Self {
+        Self::from_iter([value])
+    }
+}
+
+#[cfg(feature = "std")]
+impl<K, V> Pure<(K, V)> for std::collections::BTreeMap<K, V>
+where
+    K: Ord,
+{
+    fn pure(value: (K, V)) -> Self {
+        Self::from_iter([value])
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::{Functor, Pure};

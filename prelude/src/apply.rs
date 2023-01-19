@@ -167,6 +167,44 @@ where
     }
 }
 
+#[cfg(feature = "std")]
+impl<'a, A> Apply<'a, A> for std::collections::VecDeque<A>
+where
+    A: 'a,
+    std::collections::VecDeque<A>: Clone,
+{
+    type Target<T> = std::collections::VecDeque<T> where T:'a;
+
+    fn apply<B>(
+        self,
+        f: <Self as Apply<'a, A>>::Target<ApplyFn<'a, A, B>>,
+    ) -> <Self as Apply<'a, A>>::Target<B>
+    where
+        B: 'a,
+    {
+        ap(f, self)
+    }
+}
+
+#[cfg(feature = "std")]
+impl<'a, A> Apply<'a, A> for std::collections::LinkedList<A>
+where
+    A: 'a,
+    std::collections::LinkedList<A>: Clone,
+{
+    type Target<T> = std::collections::LinkedList<T> where T:'a;
+
+    fn apply<B>(
+        self,
+        f: <Self as Apply<'a, A>>::Target<ApplyFn<'a, A, B>>,
+    ) -> <Self as Apply<'a, A>>::Target<B>
+    where
+        B: 'a,
+    {
+        ap(f, self)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::{

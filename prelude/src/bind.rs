@@ -62,17 +62,34 @@ impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
     }
 }
 
+macro_rules! impl_bind_from_iter {
+    () => {
+        fn bind<B, F>(self, f: F) -> Self::Target<B>
+        where
+            B: 'a,
+            F: Fn(A) -> Self::Target<B>,
+        {
+            self.into_iter().flat_map(|v| f(v).into_iter()).collect()
+        }
+    };
+}
+
 #[cfg(feature = "std")]
 impl<'a, A: 'a> Bind<'a, A> for Vec<A> {
     type Target<T> = Vec<T> where T: 'a;
+    impl_bind_from_iter!();
+}
 
-    fn bind<B, F>(self, f: F) -> Self::Target<B>
-    where
-        B: 'a,
-        F: Fn(A) -> Self::Target<B>,
-    {
-        self.into_iter().flat_map(|v| f(v).into_iter()).collect()
-    }
+#[cfg(feature = "std")]
+impl<'a, A: 'a> Bind<'a, A> for std::collections::VecDeque<A> {
+    type Target<T> = std::collections::VecDeque<T> where T: 'a;
+    impl_bind_from_iter!();
+}
+
+#[cfg(feature = "std")]
+impl<'a, A: 'a> Bind<'a, A> for std::collections::LinkedList<A> {
+    type Target<T> = std::collections::LinkedList<T> where T: 'a;
+    impl_bind_from_iter!();
 }
 
 #[cfg(test)]
