@@ -1,0 +1,5 @@
+disallowed-names = []
+single-char-binding-names-threshold = 15
+cognitive-complexity-threshold = 30
+# I HAVE THE POWER OF OLEG
+type-complexity-threshold = 999999

@@ -200,7 +200,7 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     };
 
     let type_params_with_t = type_params_replace(
-        &type_params,
+        type_params,
         generic_type,
         Ident::new("DerivedTargetType", Span::call_site()),
     );
