@@ -1,3 +1,5 @@
+use core::mem::MaybeUninit;
+
 /// A `Functor` lets you change the type parameter of a generic type.
 ///
 /// A `Functor` defines a method `fmap` on a type `F<_>: Functor` which converts
@@ -41,6 +43,28 @@ impl<'a, A: 'a, E> Functor<'a, A> for Result<A, E> {
         F: Fn(A) -> B,
     {
         self.map(f)
+    }
+}
+
+impl<'a, A: 'a, const N: usize> Functor<'a, A> for [A; N] {
+    type Target<T> = [T; N]
+    where
+        T: 'a;
+
+    #[allow(unsafe_code)]
+    fn fmap<B, F>(self, f: F) -> Self::Target<B>
+    where
+        B: 'a,
+        F: Fn(A) -> B + 'a,
+    {
+        let mut out: MaybeUninit<[B; N]> = MaybeUninit::uninit();
+        for (index, item) in self.into_iter().enumerate() {
+            let ptr: *mut B = out.as_mut_ptr().cast();
+            unsafe {
+                ptr.add(index).write(f(item));
+            }
+        }
+        unsafe { out.assume_init() }
     }
 }
 
@@ -92,6 +116,20 @@ mod test {
         let a = Option::Some(31337);
         let b = a.fmap(|x| format!("{}", x));
         assert_eq!(b, Option::Some("31337".to_string()));
+    }
+
+    #[test]
+    fn array_endofunctor() {
+        let a: [usize; 5] = [1, 2, 3, 4, 5];
+        let b = a.fmap(|x| x * 2);
+        assert_eq!(b, [2, 4, 6, 8, 10]);
+    }
+
+    #[test]
+    fn array_exofunctor() {
+        let a: [u64; 5] = [1, 2, 3, 4, 5];
+        let b = a.fmap(|x| ((x * 2) as u16));
+        assert_eq!(b, [2, 4, 6, 8, 10]);
     }
 
     #[test]

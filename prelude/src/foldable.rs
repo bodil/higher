@@ -118,6 +118,50 @@ where
     l.foldl(|a, b| a.mul(b), A::ONE)
 }
 
+// # Implementations
+
+impl<'a, A: 'a, const N: usize> Foldable<'a, A> for [A; N] {
+    fn foldr<B, F>(self, f: F, init: B) -> B
+    where
+        B: 'a,
+        F: Fn(A, B) -> B + 'a,
+    {
+        self.into_iter().rfold(init, |a, b| f(b, a))
+    }
+
+    fn foldr_ref<B, F>(&'a self, f: F, init: B) -> B
+    where
+        B: 'a,
+        F: Fn(&'a A, B) -> B + 'a,
+    {
+        self.iter().rfold(init, |a, b| f(b, a))
+    }
+
+    fn foldl<B, F>(self, f: F, init: B) -> B
+    where
+        B: 'a,
+        F: Fn(B, A) -> B + 'a,
+    {
+        self.into_iter().fold(init, f)
+    }
+
+    fn foldl_ref<B, F>(&'a self, f: F, init: B) -> B
+    where
+        B: 'a,
+        F: Fn(B, &'a A) -> B + 'a,
+    {
+        self.iter().fold(init, f)
+    }
+
+    fn fold_map<F, M>(self, f: F) -> M
+    where
+        F: Fn(A) -> M + 'a,
+        M: Monoid,
+    {
+        fold_map_default_l(f, self)
+    }
+}
+
 #[cfg(feature = "std")]
 impl<'a, A: 'a> Foldable<'a, A> for Vec<A> {
     fn foldl<B, F>(self, f: F, init: B) -> B

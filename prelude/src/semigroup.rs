@@ -3,8 +3,6 @@ use core::{
     ops::{Deref, DerefMut},
 };
 
-use crate::Functor;
-
 /// A `Semigroup` is a type with an associative operation. In plain terms, this
 /// means you can take two values of this type and add them together into a
 /// different value of the same type. The most obvious example of this is

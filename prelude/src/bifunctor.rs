@@ -1,5 +1,7 @@
 use core::convert::identity;
 
+use crate::Functor;
+
 /// A `Bifunctor` lets you change the types of a generic type with two type
 /// parameters.
 ///
@@ -60,6 +62,23 @@ impl<'a, A: 'a, B: 'a> Bifunctor<'a, A, B> for Result<A, B> {
             Ok(a) => Ok(left(a)),
             Err(b) => Err(right(b)),
         }
+    }
+}
+
+impl<'a, A: 'a, B: 'a, const N: usize> Bifunctor<'a, A, B> for [(A, B); N] {
+    type Target<T, U> = [(T, U); N]
+    where
+        T: 'a,
+        U: 'a;
+
+    fn bimap<C, D, L, R>(self, left: L, right: R) -> Self::Target<C, D>
+    where
+        C: 'a,
+        D: 'a,
+        L: Fn(A) -> C + 'a,
+        R: Fn(B) -> D + 'a,
+    {
+        self.fmap(|(a, b)| (left(a), right(b)))
     }
 }
 
