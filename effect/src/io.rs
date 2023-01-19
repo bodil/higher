@@ -370,18 +370,23 @@ impl<'a, A: 'a, E: 'a> Apply<'a, A> for IO<'a, A, E> {
     }
 }
 
+/// Print a string to the console.
 pub fn put_str<'a, S: AsRef<str> + 'a>(s: S) -> IO<'a, (), Error> {
     async move { stdout().write(s.as_ref().as_bytes()).map(|_| ()) }.into()
 }
 
+/// Print a string and a newline to the console.
 pub fn put_str_ln<'a, S: AsRef<str> + 'a>(s: S) -> IO<'a, (), Error> {
     put_str(format!("{}\n", s.as_ref()))
 }
 
+/// Print any value which implements [`Display`](Display) to the console,
+/// followed by a newline.
 pub fn print<'a, S: Display + 'a>(s: S) -> IO<'a, (), Error> {
     put_str_ln(format!("{}", s))
 }
 
+/// Read a line from the console.
 pub fn get_line<'a>() -> IO<'a, String, Error> {
     async move {
         let mut s = String::new();
@@ -390,6 +395,7 @@ pub fn get_line<'a>() -> IO<'a, String, Error> {
     .into()
 }
 
+/// Read the entire contents of the standard input.
 pub fn get_contents<'a>() -> IO<'a, String, Error> {
     async move {
         let mut s = String::new();
@@ -398,10 +404,14 @@ pub fn get_contents<'a>() -> IO<'a, String, Error> {
     .into()
 }
 
+/// Read a file from the filesystem.
 pub fn read_file<'a, P: 'a + AsRef<Path>>(path: P) -> IO<'a, Vec<u8>, Error> {
     async move { std::fs::read(path) }.into()
 }
 
+/// Write a file to the filesystem.
+///
+/// If the file already exists, it will be overwritten.
 pub fn write_file<'a, P: 'a + AsRef<Path>, C: 'a + AsRef<[u8]>>(
     path: P,
     contents: C,
@@ -409,6 +419,9 @@ pub fn write_file<'a, P: 'a + AsRef<Path>, C: 'a + AsRef<[u8]>>(
     async move { std::fs::write(path, contents) }.into()
 }
 
+/// Append to an already existing file on the filesystem.
+///
+/// If the file does not already exist, it will be created.
 pub fn append_file<'a, P: 'a + AsRef<Path>, C: 'a + AsRef<[u8]>>(
     path: P,
     contents: C,
