@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Monadic do notation."><meta name="keywords" content="rust, rustlang, rust-lang, run"><title>run in higher - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../normalize.css"><link rel="stylesheet" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../ayu.css" disabled><link rel="stylesheet" href="../dark.css" disabled><link rel="stylesheet" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc macro"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../higher/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../higher/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><div class="sidebar-elems"><h2><a href="index.html">In higher</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1 class="fqn">Macro <a href="index.html">higher</a>::<wbr><a class="macro" href="#">run</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../src/higher/lib.rs.html#127-143">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="item-decl"><div class="example-wrap"><pre class="rust macro"><code><span class="macro">macro_rules! </span>run {
+    (<span class="kw">yield </span><span class="macro-nonterminal">$result</span>:expr) =&gt; { ... };
+    (<span class="macro-nonterminal">$result</span>:expr) =&gt; { ... };
+    (<span class="macro-nonterminal">$binding</span>:ident &lt;= <span class="macro-nonterminal">$comp</span>:expr; $(<span class="macro-nonterminal">$tail</span>:tt)<span class="kw-2">*</span>) =&gt; { ... };
+    (<span class="macro-nonterminal">$comp</span>:expr; $(<span class="macro-nonterminal">$tail</span>:tt)<span class="kw-2">*</span>) =&gt; { ... };
+}</code></pre></div>
+</div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Monadic do notation.</p>
+<p>This macro provides some syntactic sugar to make monads easier to read and
+write.</p>
+<p>It takes a series of expressions evaluating to monads, separated by
+semicolons, and chains them together using <a href="trait.Bind.html#tymethod.bind"><code>bind</code></a>.</p>
+<p>The last expression may be preceded by the <code>yield</code> keyword, which will
+automatically wrap the result up into a monad using <a href="trait.Pure.html#tymethod.pure"><code>pure</code></a>.
+Otherwise it must be a plain expression returning a monad.</p>
+<p>Expressions before the last may be binding expressions, binding the result
+of the monadic computation to a named variable available to the subsequent
+expressions. If they don’t have a binding, the result of the computation is
+discarded. A binding expression looks like this:</p>
+<div class="example-wrap"><pre class="language-text"><code>variable &lt;= expression;
+</code></pre></div><h2 id="examples"><a href="#examples">Examples</a></h2>
+<p>The simplest example of monadic do notation is using the <a href="https://doc.rust-lang.org/1.66.1/core/option/enum.Option.html"><code>Option</code></a>
+type. It will run through the list of expressions as long as they keep
+evaluating to <a href="https://doc.rust-lang.org/1.66.1/core/option/enum.Option.html#variant.Some"><code>Some</code></a>, but if an expression should return
+<a href="https://doc.rust-lang.org/1.66.1/core/option/enum.Option.html#variant.None"><code>None</code></a>, it will discard the subsequent computations and
+immediately return <a href="https://doc.rust-lang.org/1.66.1/core/option/enum.Option.html#variant.None"><code>None</code></a>.</p>
+<p>We’ll illustrate with integer division using
+<a href="https://doc.rust-lang.org/1.66.1/std/primitive.usize.html#method.checked_div"><code>usize::checked_div</code></a>, which returns an
+<code>Option&lt;usize&gt;</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">run! </span>{
+    x &lt;= <span class="number">16usize</span>.checked_div(<span class="number">2</span>);
+    <span class="comment">// x = 16 / 2 = 8
+    </span>y &lt;= x.checked_div(<span class="number">2</span>);
+    <span class="comment">// y = x / 2 = 8 / 2 = 4
+    </span>z &lt;= y.checked_div(<span class="number">2</span>);
+    <span class="comment">// z = y / 2 = 4 / 2 = 2
+    </span><span class="kw">yield </span>x + y + z
+    <span class="comment">// returns Some(x + y + z) = Some(8 + 4 + 2) = Some(14)
+</span>}</code></pre></div>
+<p>And for a failing example, when we divide by zero:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">run! </span>{
+    x &lt;= <span class="number">16usize</span>.checked_div(<span class="number">2</span>);
+    <span class="comment">// x = 16 / 2 = 8
+    </span>y &lt;= x.checked_div(<span class="number">0</span>);
+    <span class="comment">// Division by zero returns None, the remaining expressions are ignored
+    </span>z &lt;= y.checked_div(<span class="number">2</span>);
+    <span class="kw">yield </span>x + y + z
+    <span class="comment">// returns None
+</span>}</code></pre></div>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="higher" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

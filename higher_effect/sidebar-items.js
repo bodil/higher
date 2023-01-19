@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["effect",""],["io",""]],"struct":[["Effect","An effect monad."],["IO","An IO monad."]]};

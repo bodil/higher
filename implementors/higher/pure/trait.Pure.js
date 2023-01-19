@@ -1,0 +1,4 @@
+(function() {var implementors = {
+"higher":[],
+"higher_effect":[["impl&lt;'a, A&gt; <a class=\"trait\" href=\"higher/pure/trait.Pure.html\" title=\"trait higher::pure::Pure\">Pure</a>&lt;A&gt; for <a class=\"struct\" href=\"higher_effect/struct.Effect.html\" title=\"struct higher_effect::Effect\">Effect</a>&lt;'a, A&gt;<span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;A: 'a,</span>"],["impl&lt;'a, A:&nbsp;'a, E&gt; <a class=\"trait\" href=\"higher/pure/trait.Pure.html\" title=\"trait higher::pure::Pure\">Pure</a>&lt;A&gt; for <a class=\"struct\" href=\"higher_effect/struct.IO.html\" title=\"struct higher_effect::IO\">IO</a>&lt;'a, A, E&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

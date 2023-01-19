@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["fold",""],["fold_m",""],["fold_map_default_l",""],["product",""],["sequence_",""],["sum",""],["traverse_",""]],"trait":[["Foldable",""]]};

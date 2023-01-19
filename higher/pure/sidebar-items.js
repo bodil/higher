@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["Pure","`Pure` lets you construct a value of type `F<A>` from a single value of `A`."]]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["boolean_algebra",""],["heyting_algebra",""]],"trait":[["BooleanAlgebra",""],["HeytingAlgebra",""]]};

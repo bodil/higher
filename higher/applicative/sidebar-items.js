@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["Applicative","An `Applicative` functor is anything which implements `Functor`, `Apply` and `Pure`."]]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["Profunctor","A `Profunctor` is just a `Bifunctor` that is contravariant over its first argument and covariant over its second argument. What’s the problem?"]]};

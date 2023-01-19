@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["commutative_ring",""],["division_ring",""],["euclidean_ring",""],["field",""],["ring",""],["semiring",""]],"trait":[["CommutativeRing",""],["DivisionRing",""],["EuclideanRing",""],["Field",""],["Ring",""],["Semiring",""]]};

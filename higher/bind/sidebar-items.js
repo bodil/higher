@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["lift_m1","`lift_m1` provides a default implementation for `Functor::fmap` using only `Bind` and `Pure`."]],"trait":[["Bind","`Bind` lets you chain computations together."]]};
