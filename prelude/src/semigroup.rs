@@ -1,4 +1,9 @@
-use core::convert::Infallible;
+use core::{
+    convert::Infallible,
+    ops::{Deref, DerefMut},
+};
+
+use crate::Functor;
 
 /// A `Semigroup` is a type with an associative operation. In plain terms, this
 /// means you can take two values of this type and add them together into a
@@ -42,25 +47,68 @@ impl Semigroup for Infallible {
     }
 }
 
-macro_rules! define_semigroup {
-    ($type:ty) => {
-        impl Semigroup for $type {
-            fn mappend(self, other: Self) -> Self {
-                self + other
-            }
-        }
-    };
+/// Semigroup where [`mappend`](Semigroup::mappend) always takes the first option.
+///
+/// ```
+/// # use higher::semigroup::{Semigroup, First};
+/// # let x = 5;
+/// # let y = 8;
+/// # assert!(
+/// First(x).mappend(First(y)) == First(x)
+/// # );
+/// ```
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+pub struct First<A>(pub A);
+
+impl<A> Deref for First<A> {
+    type Target = A;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-define_semigroup!(i8);
-define_semigroup!(i16);
-define_semigroup!(i32);
-define_semigroup!(i64);
-define_semigroup!(i128);
-define_semigroup!(isize);
-define_semigroup!(u8);
-define_semigroup!(u16);
-define_semigroup!(u32);
-define_semigroup!(u64);
-define_semigroup!(u128);
-define_semigroup!(usize);
+impl<A> DerefMut for First<A> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<A> Semigroup for First<A> {
+    fn mappend(self, _other: Self) -> Self {
+        self
+    }
+}
+
+/// Semigroup where [`mappend`](Semigroup::mappend) always takes the last option.
+///
+/// ```
+/// # use higher::semigroup::{Semigroup, Last};
+/// # let x = 5;
+/// # let y = 8;
+/// # assert!(
+/// Last(x).mappend(Last(y)) == Last(y)
+/// # );
+/// ```
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+pub struct Last<A>(pub A);
+
+impl<A> Deref for Last<A> {
+    type Target = A;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<A> DerefMut for Last<A> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<A> Semigroup for Last<A> {
+    fn mappend(self, other: Self) -> Self {
+        other
+    }
+}

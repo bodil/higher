@@ -180,7 +180,7 @@ mod test {
     #[test]
     fn foldmap_vec() {
         let a = vec![1, 2, 3, 4, 5];
-        let b = a.fold_map(|x| x << 1);
-        assert_eq!(b, 30);
+        let b = a.fold_map(|x| x.to_string());
+        assert_eq!(b, "12345");
     }
 }
