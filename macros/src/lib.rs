@@ -99,7 +99,7 @@ pub fn derive_bifunctor(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let type_params = &input.generics.params;
-    let where_clause = &input.generics.where_clause;
+    let where_clause = input.generics.where_clause.as_ref().map(|c| &c.predicates);
 
     let (generic_type_a, generic_type_b) = match decide_bifunctor_generic_types(&input) {
         Ok(t) => t,
@@ -148,12 +148,15 @@ pub fn derive_bifunctor(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     );
 
     quote!(
-        impl<#type_params> ::higher::Bifunctor<'_, #generic_type_a, #generic_type_b> for #name<#type_params> #where_clause {
-            type Target<DerivedTargetTypeA, DerivedTargetTypeB> = #name<#type_params_generic>;
+        impl<'derivedlifetime, #type_params> ::higher::Bifunctor<'derivedlifetime, #generic_type_a, #generic_type_b> for #name<#type_params>
+                where #generic_type_a: 'derivedlifetime, #generic_type_b: 'derivedlifetime, #where_clause {
+            type Target<DerivedTargetTypeA, DerivedTargetTypeB> = #name<#type_params_generic> where DerivedTargetTypeA: 'derivedlifetime, DerivedTargetTypeB: 'derivedlifetime;
             fn bimap<DerivedTypeA, DerivedTypeB, L, R>(self, left: L, right: R) -> Self::Target<DerivedTypeA, DerivedTypeB>
             where
-                L: Fn(#generic_type_a) -> DerivedTypeA,
-                R: Fn(#generic_type_b) -> DerivedTypeB
+                DerivedTypeA: 'derivedlifetime,
+                DerivedTypeB: 'derivedlifetime,
+                L: Fn(#generic_type_a) -> DerivedTypeA + 'derivedlifetime,
+                R: Fn(#generic_type_b) -> DerivedTypeB + 'derivedlifetime
             {
                 #bimap_impl
             }
@@ -167,7 +170,7 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let type_params = &input.generics.params;
-    let where_clause = &input.generics.where_clause;
+    let where_clause = input.generics.where_clause.as_ref().map(|c| &c.predicates);
 
     let generic_type = match decide_functor_generic_type(&input) {
         Ok(t) => t,
@@ -197,17 +200,19 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     };
 
     let type_params_with_t = type_params_replace(
-        type_params,
+        &type_params,
         generic_type,
         Ident::new("DerivedTargetType", Span::call_site()),
     );
 
     quote!(
-        impl<#type_params> ::higher::Functor<'_, #generic_type> for #name<#type_params> #where_clause {
-            type Target<DerivedTargetType> = #name<#type_params_with_t>;
+        impl<'derivedlifetime, #type_params> ::higher::Functor<'derivedlifetime, #generic_type> for #name<#type_params>
+                where #generic_type: 'derivedlifetime, #where_clause {
+            type Target<DerivedTargetType> = #name<#type_params_with_t> where DerivedTargetType: 'derivedlifetime;
             fn fmap<DerivedType, F>(self, f: F) -> Self::Target<DerivedType>
             where
-                F: Fn(#generic_type) -> DerivedType
+                DerivedType: 'derivedlifetime,
+                F: Fn(#generic_type) -> DerivedType + 'derivedlifetime
             {
                 #fmap_impl
             }

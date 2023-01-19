@@ -46,7 +46,10 @@ where
 
 /// `Apply` takes an `F<Fn(A) -> B>` (or, rather, an `F<ApplyFn<'a,A, B>>`
 /// specifically) and applies it to an `F<A>` to produce an `F<B>`.
-pub trait Apply<'a, A>: Functor<'a, A> {
+pub trait Apply<'a, A>: Functor<'a, A>
+where
+    A: 'a,
+{
     type Target<T>
     where
         T: 'a,

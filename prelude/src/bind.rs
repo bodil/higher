@@ -11,41 +11,51 @@ use crate::Pure;
 /// [`Applicative`](crate::Applicative), which in turn requires implementations
 /// for [`Functor`](crate::Functor), [`Pure`](crate::Pure) and
 /// [`Apply`](crate::Apply).
-pub trait Bind<'a, A> {
-    type Target<T>;
+pub trait Bind<'a, A>
+where
+    A: 'a,
+{
+    type Target<T>
+    where
+        T: 'a;
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> Self::Target<B> + 'a;
 }
 
 /// `lift_m1` provides a default implementation for
 /// [`Functor::fmap`](crate::Functor::fmap) using only [`Bind`](Bind) and
 /// [`Pure`](Pure).
-pub fn lift_m1<MA, MB, A, B, F>(f: F, a: MA) -> MB
+pub fn lift_m1<'a, MA, MB, A, B, F>(f: F, a: MA) -> MB
 where
-    F: Fn(A) -> B,
-    MA: for<'a> Bind<'a, A, Target<B> = MB>,
+    A: 'a,
+    B: 'a,
+    F: Fn(A) -> B + 'a,
+    MA: Bind<'a, A, Target<B> = MB>,
     MB: Pure<B>,
 {
-    a.bind::<B, _>(|x| MB::pure(f(x)))
+    a.bind::<B, _>(move |x| MB::pure(f(x)))
 }
 
-impl<A> Bind<'_, A> for Option<A> {
-    type Target<T> = Option<T>;
+impl<'a, A: 'a> Bind<'a, A> for Option<A> {
+    type Target<T> = Option<T> where T: 'a;
 
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> Self::Target<B>,
     {
         self.and_then(f)
     }
 }
 
-impl<A, E> Bind<'_, A> for Result<A, E> {
-    type Target<T> = Result<T, E>;
+impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
+    type Target<T> = Result<T, E> where T: 'a;
 
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> Self::Target<B>,
     {
         self.and_then(f)
@@ -53,11 +63,12 @@ impl<A, E> Bind<'_, A> for Result<A, E> {
 }
 
 #[cfg(feature = "std")]
-impl<A> Bind<'_, A> for Vec<A> {
-    type Target<T> = Vec<T>;
+impl<'a, A: 'a> Bind<'a, A> for Vec<A> {
+    type Target<T> = Vec<T> where T: 'a;
 
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> Self::Target<B>,
     {
         self.into_iter().flat_map(|v| f(v).into_iter()).collect()

@@ -3,6 +3,7 @@ name = "higher-derive"
 version = "0.2.0"
 authors = ["Bodil Stokke <bodil@bodil.org>"]
 edition = "2021"
+rust-version = "1.65"
 license = "MPL-2.0+"
 description = "Custom derives for `higher`"
 repository = "https://github.com/bodil/higher"

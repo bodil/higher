@@ -6,20 +6,25 @@ use crate::{
     Applicative, Apply, Bind, Functor, Monoid, Pure,
 };
 
-pub trait Foldable<'a, A> {
+pub trait Foldable<'a, A>
+where
+    A: 'a,
+{
     fn foldr<B, F>(self, f: F, init: B) -> B
     where
+        B: 'a,
         F: Fn(A, B) -> B + 'a;
     fn foldr_ref<B, F>(&'a self, f: F, init: B) -> B
     where
-        A: 'a,
+        B: 'a,
         F: Fn(&'a A, B) -> B + 'a;
     fn foldl<B, F>(self, f: F, init: B) -> B
     where
+        B: 'a,
         F: Fn(B, A) -> B + 'a;
     fn foldl_ref<B, F>(&'a self, f: F, init: B) -> B
     where
-        A: 'a,
+        B: 'a,
         F: Fn(B, &'a A) -> B + 'a;
     fn fold_map<F, M>(self, f: F) -> M
     where
@@ -38,6 +43,7 @@ where
 pub fn fold_m<'a, M, L, A, B, F>(f: &'a F, init: B, l: &'a L) -> M
 where
     A: 'a,
+    B: 'a,
     L: Foldable<'a, A> + 'a,
     M: Pure<B> + Bind<'a, B, Target<B> = M> + 'a,
     F: Fn(B, &'a A) -> M + 'a,
@@ -47,8 +53,9 @@ where
 
 pub fn fold_map_default_l<'a, A, L, M, F>(f: F, l: L) -> M
 where
+    A: 'a,
     L: Foldable<'a, A>,
-    M: Monoid,
+    M: Monoid + 'a,
     F: Fn(A) -> M + 'a,
 {
     l.foldl(move |acc, x| acc.mappend(f(x)), Default::default())
@@ -56,6 +63,7 @@ where
 
 pub fn traverse_<'a, A, B, L, MB, MU, MF, F>(func: F, l: L) -> MU
 where
+    A: 'a,
     B: 'a,
     L: Foldable<'a, A>,
     MB: Applicative<'a, B>
@@ -64,7 +72,8 @@ where
     MU: Applicative<'a, ()>
         + Apply<'a, (), Target<B> = MB>
         + Apply<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
-        + Functor<'a, (), Target<ApplyFn<'a, B, ()>> = MF>,
+        + Functor<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
+        + 'a,
     MF: Apply<'a, ApplyFn<'a, B, ()>, Target<B> = MB>,
     F: Fn(A) -> MB + 'a,
 {
@@ -86,7 +95,8 @@ where
     MU: Applicative<'a, ()>
         + Apply<'a, (), Target<A> = MA>
         + Apply<'a, (), Target<ApplyFn<'a, A, ()>> = MF>
-        + Functor<'a, (), Target<ApplyFn<'a, A, ()>> = MF>,
+        + Functor<'a, (), Target<ApplyFn<'a, A, ()>> = MF>
+        + 'a,
     MF: Apply<'a, ApplyFn<'a, A, ()>> + Apply<'a, ApplyFn<'a, A, ()>, Target<A> = MA>,
 {
     traverse_(identity, l)
@@ -94,7 +104,7 @@ where
 
 pub fn sum<'a, A, L>(l: L) -> A
 where
-    A: Semiring,
+    A: Semiring + 'a,
     L: Foldable<'a, A>,
 {
     l.foldl(|a, b| a.add(b), A::ZERO)
@@ -102,14 +112,14 @@ where
 
 pub fn product<'a, A, L>(l: L) -> A
 where
-    A: Semiring,
+    A: Semiring + 'a,
     L: Foldable<'a, A>,
 {
     l.foldl(|a, b| a.mul(b), A::ONE)
 }
 
 #[cfg(feature = "std")]
-impl<'a, A> Foldable<'a, A> for Vec<A> {
+impl<'a, A: 'a> Foldable<'a, A> for Vec<A> {
     fn foldl<B, F>(self, f: F, init: B) -> B
     where
         F: Fn(B, A) -> B,

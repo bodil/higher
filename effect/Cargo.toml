@@ -1,0 +1,20 @@
+[package]
+name = "higher-effect"
+version = "0.2.0"
+authors = ["Bodil Stokke <bodil@bodil.org>"]
+edition = "2021"
+rust-version = "1.65"
+license = "MPL-2.0+"
+description = "Effect monads for `higher`"
+repository = "https://github.com/bodil/higher"
+documentation = "http://docs.rs/higher-effect"
+readme = "../README.md"
+categories = []
+keywords = ["monad", "category-theory", "haskell", "effects"]
+
+[features]
+default = []
+
+[dependencies]
+higher = { path = "../prelude", features = ["futures"] }
+futures = { version = "0.3.25", features = [] }

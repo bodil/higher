@@ -1,2 +1,2 @@
 [workspace]
-members = ["prelude", "macros"]
+members = ["prelude", "macros", "effect"]

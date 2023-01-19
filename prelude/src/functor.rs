@@ -7,29 +7,37 @@
 /// You can also use this just to modify the values inside your container value
 /// without changing their type, if the mapping function returns a value of the
 /// same type.  This is called an "endofunctor."
-pub trait Functor<'a, A> {
-    type Target<T>;
+pub trait Functor<'a, A>
+where
+    A: 'a,
+{
+    type Target<T>
+    where
+        T: 'a;
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> B + 'a;
 }
 
-impl<A> Functor<'_, A> for Option<A> {
-    type Target<T> = Option<T>;
+impl<'a, A: 'a> Functor<'a, A> for Option<A> {
+    type Target<T> = Option<T> where T: 'a;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> B,
     {
         self.map(f)
     }
 }
 
-impl<A, E> Functor<'_, A> for Result<A, E> {
-    type Target<T> = Result<T, E>;
+impl<'a, A: 'a, E> Functor<'a, A> for Result<A, E> {
+    type Target<T> = Result<T, E> where T: 'a;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> B,
     {
         self.map(f)
@@ -37,11 +45,12 @@ impl<A, E> Functor<'_, A> for Result<A, E> {
 }
 
 #[cfg(feature = "std")]
-impl<A> Functor<'_, A> for Vec<A> {
-    type Target<T> = Vec<T>;
+impl<'a, A: 'a> Functor<'a, A> for Vec<A> {
+    type Target<T> = Vec<T> where T: 'a;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> B,
     {
         self.into_iter().map(f).collect()
@@ -49,11 +58,12 @@ impl<A> Functor<'_, A> for Vec<A> {
 }
 
 #[cfg(feature = "std")]
-impl<A> Functor<'_, A> for std::collections::VecDeque<A> {
-    type Target<T> = std::collections::VecDeque<T>;
+impl<'a, A: 'a> Functor<'a, A> for std::collections::VecDeque<A> {
+    type Target<T> = std::collections::VecDeque<T> where T: 'a;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> B,
     {
         self.into_iter().map(f).collect()
@@ -61,11 +71,12 @@ impl<A> Functor<'_, A> for std::collections::VecDeque<A> {
 }
 
 #[cfg(feature = "std")]
-impl<A> Functor<'_, A> for std::collections::LinkedList<A> {
-    type Target<T> = std::collections::LinkedList<T>;
+impl<'a, A: 'a> Functor<'a, A> for std::collections::LinkedList<A> {
+    type Target<T> = std::collections::LinkedList<T> where T: 'a;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
+        B: 'a,
         F: Fn(A) -> B,
     {
         self.into_iter().map(f).collect()

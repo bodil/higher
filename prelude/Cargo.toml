@@ -11,15 +11,12 @@ documentation = "http://docs.rs/higher"
 readme = "../README.md"
 categories = ["data-structures"]
 keywords = ["functor", "applicative", "monad", "category-theory", "haskell"]
-exclude = ["release.toml"]
 
 [features]
-default = ["std", "effect", "io"]
+default = ["std"]
 std = []
-effect = ["futures"]
-io = ["std", "futures"]
 test = ["std"]
 
 [dependencies]
-higher-derive = "0.2.0"
-futures = { version = "0.3.25", optional = true, features = ["thread-pool"] }
+higher-derive = { path = "../macros" }
+futures = { version = "0.3.25", optional = true }
