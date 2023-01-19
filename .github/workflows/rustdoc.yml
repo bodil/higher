@@ -1,0 +1,27 @@
+name: Rustdoc
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  rustdoc:
+    name: Rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check project
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --all-features
+      - name: Build rustdoc
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --all-features
+      - name: Deploy rustdoc
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/doc
