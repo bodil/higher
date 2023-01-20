@@ -35,12 +35,14 @@ some extremely elaborate type signatures. If you think this is actually useful (
 horrified to find that I'm starting to think it might be), you may wish to step up to help maintain
 it, because I doubt I'll keep giving it much attention once the novelty wears off.
 
+Together we can ruin Rust!
+
 ## Licence
 
 Copyright 2019 Bodil Stokke
 
 This software is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL
-was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+was not distributed with this file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 
 ## Code of Conduct
 

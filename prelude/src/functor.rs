@@ -16,10 +16,30 @@ where
     type Target<T>
     where
         T: 'a;
+
+    /// Map a functor of `A` to a functor of `B` using a function from `A`
+    /// to `B`.
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
         B: 'a,
         F: Fn(A) -> B + 'a;
+
+    /// Map the functor to the provided constant value.
+    fn fconst<B>(self, b: B) -> Self::Target<B>
+    where
+        Self: Sized,
+        B: Clone,
+    {
+        self.fmap(move |_| b.clone())
+    }
+
+    /// Map the functor to the unit value `()`.
+    fn void(self) -> Self::Target<()>
+    where
+        Self: Sized,
+    {
+        self.fconst(())
+    }
 }
 
 impl<'a, A: 'a> Functor<'a, A> for Option<A> {

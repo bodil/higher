@@ -18,6 +18,8 @@ where
     type Target<T>
     where
         T: 'a;
+
+    /// Apply the function `f` to the `A` or `A`s inside the `M<A>`, yielding an `M<B>`.
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
         B: 'a,

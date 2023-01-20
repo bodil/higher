@@ -1,5 +1,8 @@
-/// `Pure` lets you construct a value of type `F<A>` from a single value of
-/// `A`.
+/// `Pure` lets you construct a value of type `F<A>` from a single value of `A`.
+///
+/// Think of it as [`Default`](Default), but instead of constructing an empty
+/// value, it takes a single argument value and wraps it in the container type
+/// in a meaningful way.
 ///
 /// For instance:
 ///
