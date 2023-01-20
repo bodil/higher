@@ -432,6 +432,20 @@
 <span id="432">432</span>
 <span id="433">433</span>
 <span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::identity;
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::fs::File;
@@ -442,6 +456,7 @@
 <span class="kw">use </span>futures::future::Either;
 <span class="kw">use </span>futures::{future::LocalBoxFuture, Future, FutureExt};
 
+<span class="kw">use </span>higher::ApplicativeError;
 <span class="kw">use </span>higher::{apply::ApplyFn, Apply, Bifunctor, Bind, Functor, Pure};
 
 <span class="doccomment">/// An IO monad.
@@ -504,21 +519,6 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A, E&gt; IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt; {
-    <span class="doccomment">/// Construct an IO effect that resolves immediately to the given error.
-    </span><span class="kw">pub fn </span>err(error: E) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            state: IOState::Error(error),
-        }
-    }
-
-    <span class="doccomment">/// Construct an IO effect that resolves immediately to the given value.
-    </span><span class="kw">pub fn </span>ready(value: A) -&gt; <span class="self">Self
-    </span><span class="kw">where
-        </span>A: <span class="lifetime">&#39;a</span>,
-    {
-        <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(value) }.into()
-    }
-
     <span class="doccomment">/// Run the effect to completion, blocking the current thread.
     </span><span class="kw">pub fn </span>run(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;A, E&gt; {
         futures::executor::LocalPool::new().run_until(<span class="self">self</span>.into_future())
@@ -538,7 +538,7 @@
         R: FnOnce(E) -&gt; D + <span class="lifetime">&#39;a</span>,
     {
         <span class="kw">match </span><span class="self">self</span>.state {
-            IOState::Error(error) =&gt; IO::err(right(error)),
+            IOState::Error(error) =&gt; IO::throw_error(right(error)),
             IOState::Future(future) =&gt; <span class="kw">async move </span>{
                 <span class="kw">match </span>future.<span class="kw">await </span>{
                     <span class="prelude-val">Err</span>(error) =&gt; <span class="prelude-val">Err</span>(right(error)),
@@ -568,6 +568,9 @@
     <span class="doccomment">/// Transform the effect&#39;s error value using the given function.
     ///
     /// If the effect succeeds, the function is not applied.
+    ///
+    /// This is identical to [`Bifunctor::rmap`](Bifunctor::rmap), except it accepts
+    /// a [`FnOnce`](FnOnce) instead of a [`Fn`](Fn).
     </span><span class="kw">pub fn </span>map_error&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; IO&lt;<span class="lifetime">&#39;a</span>, A, B&gt;
     <span class="kw">where
         </span>A: <span class="lifetime">&#39;a</span>,
@@ -738,11 +741,11 @@
         F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt; + <span class="lifetime">&#39;a</span>,
     {
         <span class="kw">match </span><span class="self">self</span>.state {
-            IOState::Error(error) =&gt; &lt;<span class="self">Self</span>::Target&lt;B&gt;&gt;::err(error),
+            IOState::Error(error) =&gt; IO::throw_error(error),
             IOState::Future(future) =&gt; <span class="kw">async move </span>{
                 <span class="kw">match </span>future.<span class="kw">await </span>{
                     <span class="prelude-val">Ok</span>(result) =&gt; f(result),
-                    <span class="prelude-val">Err</span>(error) =&gt; &lt;<span class="self">Self</span>::Target&lt;B&gt;&gt;::err(error),
+                    <span class="prelude-val">Err</span>(error) =&gt; IO::throw_error(error),
                 }
                 .<span class="kw">await
             </span>}
@@ -763,15 +766,15 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt; Bifunctor&lt;<span class="lifetime">&#39;a</span>, A, B&gt; <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, B&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E: <span class="lifetime">&#39;a</span>&gt; Bifunctor&lt;<span class="lifetime">&#39;a</span>, A, E&gt; <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt; {
     <span class="kw">type </span>Target&lt;T, U&gt; = IO&lt;<span class="lifetime">&#39;a</span>, T, U&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>, U: <span class="lifetime">&#39;a</span>;
 
-    <span class="kw">fn </span>bimap&lt;C, D, L, R&gt;(<span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
+    <span class="kw">fn </span>bimap&lt;A2, E2, L, R&gt;(<span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;A2, E2&gt;
     <span class="kw">where
-        </span>C: <span class="lifetime">&#39;a</span>,
-        D: <span class="lifetime">&#39;a</span>,
-        L: Fn(A) -&gt; C + <span class="lifetime">&#39;a</span>,
-        R: Fn(B) -&gt; D + <span class="lifetime">&#39;a</span>,
+        </span>A2: <span class="lifetime">&#39;a</span>,
+        E2: <span class="lifetime">&#39;a</span>,
+        L: Fn(A) -&gt; A2 + <span class="lifetime">&#39;a</span>,
+        R: Fn(E) -&gt; E2 + <span class="lifetime">&#39;a</span>,
     {
         <span class="self">self</span>.map(left, right)
     }
@@ -779,7 +782,7 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E&gt; Pure&lt;A&gt; <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt; {
     <span class="kw">fn </span>pure(value: A) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::ready(value)
+        <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(value) }.into()
     }
 }
 
@@ -801,6 +804,31 @@
             }
         }
         .into()
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E: <span class="lifetime">&#39;a</span>&gt; ApplicativeError&lt;<span class="lifetime">&#39;a</span>, A, E&gt; <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt; {
+    <span class="kw">fn </span>throw_error(error: E) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            state: IOState::Error(error),
+        }
+    }
+
+    <span class="kw">fn </span>handle_error_with&lt;F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>F: Fn(E) -&gt; <span class="self">Self </span>+ <span class="lifetime">&#39;a</span>,
+    {
+        <span class="kw">match </span><span class="self">self</span>.state {
+            IOState::Error(error) =&gt; f(error),
+            IOState::Future(future) =&gt; <span class="kw">async move </span>{
+                <span class="kw">match </span>future.<span class="kw">await </span>{
+                    <span class="prelude-val">Ok</span>(result) =&gt; <span class="self">Self</span>::pure(result),
+                    <span class="prelude-val">Err</span>(error) =&gt; f(error),
+                }
+                .<span class="kw">await
+            </span>}
+            .into(),
+        }
     }
 }
 

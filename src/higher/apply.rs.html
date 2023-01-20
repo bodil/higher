@@ -233,7 +233,35 @@
 <span id="233">233</span>
 <span id="234">234</span>
 <span id="235">235</span>
-</pre><pre class="rust"><code><span class="kw">use crate</span>::{Bind, Functor, Pure};
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{run, Bind, Functor, Pure};
 
 <span class="doccomment">/// An `ApplyFn` is a function from `A` to `B` wrapped in something Rust&#39;s type
 /// system can more easily digest. Arguments for
@@ -271,17 +299,9 @@
     }
 }
 
-<span class="comment">// Construct an [`ApplyFn`](ApplyFn) from a plain function.
-</span><span class="kw">pub fn </span>f&lt;<span class="lifetime">&#39;a</span>, A, B, F&gt;(func: F) -&gt; ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;
-<span class="kw">where
-    </span>F: <span class="lifetime">&#39;a </span>+ Fn(A) -&gt; B,
-{
-    ApplyFn::from(func)
-}
-
 <span class="doccomment">/// `Apply` takes an `F&lt;Fn(A) -&gt; B&gt;` (or, rather, an `F&lt;ApplyFn&lt;&#39;a,A, B&gt;&gt;`
 /// specifically) and applies it to an `F&lt;A&gt;` to produce an `F&lt;B&gt;`.
-</span><span class="kw">pub trait </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;: Functor&lt;<span class="lifetime">&#39;a</span>, A&gt;
+</span><span class="kw">pub trait </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
 {
@@ -289,15 +309,61 @@
     <span class="kw">where
         </span>T: <span class="lifetime">&#39;a</span>,
         A: <span class="lifetime">&#39;a</span>;
-    <span class="kw">fn </span>apply&lt;B&gt;(
-        <span class="self">self</span>,
-        f: &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;,
-    ) -&gt; &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;B&gt;
+
+    <span class="doccomment">/// Apply an `F` of functions from `A` to `B` to an `F` of `A`,
+    /// producing an `F` of `B`.
+    </span><span class="kw">fn </span>apply&lt;B&gt;(<span class="self">self</span>, f: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>;
 }
 
-<span class="kw">pub fn </span>ap&lt;<span class="lifetime">&#39;a</span>, A, B, MA, MB, MF&gt;(f: MF, a: MA) -&gt; MB
+<span class="doccomment">/// `ap` is a default implementation of [`Apply::apply`][Apply::apply] for any
+/// type that implements [`Bind`](Bind), [`Pure`](Pure) and [`Clone`](Clone).
+///
+/// This is the easy way to implement [`Apply`](Apply):
+///
+/// ```
+/// # use higher::apply::{Apply, ApplyFn, ap};
+/// # use higher::{Bind, Pure};
+/// #[derive(Clone)]
+/// enum AustralianOption&lt;A&gt; {
+///   NahYeah(A),
+///   YeahNah
+/// }
+///
+/// impl&lt;&#39;a, A: &#39;a&gt; Bind&lt;&#39;a, A&gt; for AustralianOption&lt;A&gt; {
+///     type Target&lt;T: &#39;a&gt; = AustralianOption&lt;T&gt;;
+///
+///     fn bind&lt;B: &#39;a, F&gt;(self, f: F) -&gt; Self::Target&lt;B&gt;
+///     where F: Fn(A) -&gt; Self::Target&lt;B&gt; + &#39;a {
+///         match self {
+///             Self::NahYeah(x) =&gt; f(x),
+///             Self::YeahNah =&gt; AustralianOption::YeahNah,
+///         }
+///     }
+/// }
+///
+/// impl&lt;A&gt; Pure&lt;A&gt; for AustralianOption&lt;A&gt; {
+///     fn pure(value: A) -&gt; Self {
+///         Self::NahYeah(value)
+///     }
+/// }
+///
+/// impl&lt;&#39;a, A: &#39;a&gt; Apply&lt;&#39;a, A&gt; for AustralianOption&lt;A&gt;
+/// where
+///     AustralianOption&lt;A&gt;: Clone
+/// {
+///     type Target&lt;T: &#39;a&gt; = AustralianOption&lt;T&gt;;
+///
+///     fn apply&lt;B&gt;(self, f: Self::Target&lt;ApplyFn&lt;&#39;a, A, B&gt;&gt;) -&gt; Self::Target&lt;B&gt;
+///     where
+///         B: &#39;a,
+///     {
+///         ap(f, self)
+///     }
+/// }
+/// ```
+</span><span class="kw">pub fn </span>ap&lt;<span class="lifetime">&#39;a</span>, A, B, MA, MB, MF&gt;(mf: MF, ma: MA) -&gt; MB
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
     B: <span class="lifetime">&#39;a</span>,
@@ -305,7 +371,11 @@
     MB: Pure&lt;B&gt;,
     MF: Bind&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;, Target&lt;B&gt; = MB&gt;,
 {
-    f.bind::&lt;B, <span class="kw">_</span>&gt;(<span class="kw">move </span>|fv| a.clone().bind::&lt;B, <span class="kw">_</span>&gt;(<span class="kw">move </span>|av| MB::pure(fv.apply(av))))
+    <span class="macro">run! </span>{
+        f &lt;= &lt;B&gt; mf;
+        a &lt;= &lt;B&gt; ma.clone();
+        <span class="kw">yield </span>f.apply(a)
+    }
 }
 
 <span class="kw">pub fn </span>apply_first&lt;<span class="lifetime">&#39;a</span>, A, B, MA, MB, MF&gt;(a: MA, b: MB) -&gt; MA
@@ -316,7 +386,7 @@
     MB: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = MF&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;A&gt; = MA&gt;,
     MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;, Target&lt;B&gt; = MB&gt;,
 {
-    b.apply(a.fmap(|x: A| f(<span class="kw">move </span>|<span class="kw">_</span>| x.clone())))
+    b.apply(a.fmap(|x: A| ApplyFn::from(<span class="kw">move </span>|<span class="kw">_</span>| x.clone())))
 }
 
 <span class="kw">pub fn </span>apply_second&lt;<span class="lifetime">&#39;a</span>, A, B, MA, MB, MF&gt;(a: MA, b: MB) -&gt; MB
@@ -328,7 +398,7 @@
         + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;,
     MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;, Target&lt;A&gt; = MA&gt;,
 {
-    a.apply(b.fmap(|x: B| f(<span class="kw">move </span>|<span class="kw">_</span>| x.clone())))
+    a.apply(b.fmap(|x: B| ApplyFn::from(<span class="kw">move </span>|<span class="kw">_</span>| x.clone())))
 }
 
 <span class="kw">pub fn </span>lift2&lt;<span class="lifetime">&#39;a</span>, A, B, C, MA, MB, MC, MF, F&gt;(fun: F, a: MA, b: MB) -&gt; MC
@@ -345,7 +415,7 @@
     <span class="kw">let </span>fun_ref = std::rc::Rc::new(fun);
     b.apply(a.fmap(<span class="kw">move </span>|x: A| {
         <span class="kw">let </span>fun_int = fun_ref.clone();
-        f(<span class="kw">move </span>|y: B| fun_int(x.clone(), y))
+        ApplyFn::from(<span class="kw">move </span>|y: B| fun_int(x.clone(), y))
     }))
 }
 
@@ -355,10 +425,7 @@
 {
     <span class="kw">type </span>Target&lt;T&gt; = <span class="prelude-ty">Option</span>&lt;T&gt; <span class="kw">where </span>T:<span class="lifetime">&#39;a</span>;
 
-    <span class="kw">fn </span>apply&lt;B&gt;(
-        <span class="self">self</span>,
-        f: &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;,
-    ) -&gt; &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;B&gt;
+    <span class="kw">fn </span>apply&lt;B&gt;(<span class="self">self</span>, f: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
     {
@@ -372,10 +439,7 @@
 {
     <span class="kw">type </span>Target&lt;T&gt; = <span class="prelude-ty">Result</span>&lt;T, E&gt; <span class="kw">where </span>T:<span class="lifetime">&#39;a</span>;
 
-    <span class="kw">fn </span>apply&lt;B&gt;(
-        <span class="self">self</span>,
-        f: &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;,
-    ) -&gt; &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;B&gt;
+    <span class="kw">fn </span>apply&lt;B&gt;(<span class="self">self</span>, f: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
     {
@@ -389,12 +453,9 @@
     </span>A: <span class="lifetime">&#39;a</span>,
     Vec&lt;A&gt;: Clone,
 {
-    <span class="kw">type </span>Target&lt;T&gt; = Vec&lt;T&gt; <span class="kw">where </span>T:<span class="lifetime">&#39;a</span>;
+    <span class="kw">type </span>Target&lt;T&gt; = Vec&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
 
-    <span class="kw">fn </span>apply&lt;B&gt;(
-        <span class="self">self</span>,
-        f: &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;,
-    ) -&gt; &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;B&gt;
+    <span class="kw">fn </span>apply&lt;B&gt;(<span class="self">self</span>, f: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
     {
@@ -410,10 +471,7 @@
 {
     <span class="kw">type </span>Target&lt;T&gt; = std::collections::VecDeque&lt;T&gt; <span class="kw">where </span>T:<span class="lifetime">&#39;a</span>;
 
-    <span class="kw">fn </span>apply&lt;B&gt;(
-        <span class="self">self</span>,
-        f: &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;,
-    ) -&gt; &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;B&gt;
+    <span class="kw">fn </span>apply&lt;B&gt;(<span class="self">self</span>, f: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
     {
@@ -429,10 +487,7 @@
 {
     <span class="kw">type </span>Target&lt;T&gt; = std::collections::LinkedList&lt;T&gt; <span class="kw">where </span>T:<span class="lifetime">&#39;a</span>;
 
-    <span class="kw">fn </span>apply&lt;B&gt;(
-        <span class="self">self</span>,
-        f: &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;,
-    ) -&gt; &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;B&gt;
+    <span class="kw">fn </span>apply&lt;B&gt;(<span class="self">self</span>, f: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
     {
@@ -442,28 +497,29 @@
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use crate</span>::{
-        apply::{f, ApplyFn},
-        Apply,
-    };
+    <span class="kw">use crate</span>::{apply::ApplyFn, Apply};
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>apply_option() {
         <span class="kw">let </span>n: <span class="prelude-ty">Option</span>&lt;i32&gt; = <span class="prelude-val">None</span>;
         <span class="kw">let </span>nf: <span class="prelude-ty">Option</span>&lt;ApplyFn&lt;<span class="lifetime">&#39;_</span>, i32, i32&gt;&gt; = <span class="prelude-val">None</span>;
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">5</span>).apply(<span class="prelude-val">Some</span>(f(|x| x + <span class="number">2</span>))), <span class="prelude-val">Some</span>(<span class="number">7</span>));
-        <span class="macro">assert_eq!</span>(n.apply(<span class="prelude-val">Some</span>(f(|x| x + <span class="number">2</span>))), <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">5</span>).apply(<span class="prelude-val">Some</span>(ApplyFn::from(|x| x + <span class="number">2</span>))), <span class="prelude-val">Some</span>(<span class="number">7</span>));
+        <span class="macro">assert_eq!</span>(n.apply(<span class="prelude-val">Some</span>(ApplyFn::from(|x| x + <span class="number">2</span>))), <span class="prelude-val">None</span>);
         <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">5</span>).apply(nf), <span class="prelude-val">None</span>);
     }
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
     </span><span class="kw">mod </span>std_test {
-        <span class="kw">use </span><span class="kw">crate</span>::apply::{f, Apply};
+        <span class="kw">use </span><span class="kw">crate</span>::apply::{Apply, ApplyFn};
 
         <span class="attribute">#[test]
         </span><span class="kw">fn </span>apply_vec() {
             <span class="kw">let </span>a = <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
-            <span class="kw">let </span>f = <span class="macro">vec!</span>[f(|x: i32| x + <span class="number">3</span>), f(|x: i32| x + <span class="number">2</span>), f(|x: i32| x + <span class="number">1</span>)];
+            <span class="kw">let </span>f = <span class="macro">vec!</span>[
+                ApplyFn::from(|x: i32| x + <span class="number">3</span>),
+                ApplyFn::from(|x: i32| x + <span class="number">2</span>),
+                ApplyFn::from(|x: i32| x + <span class="number">1</span>),
+            ];
             <span class="macro">assert_eq!</span>(a.apply(f), <span class="macro">vec!</span>[<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
         }
     }

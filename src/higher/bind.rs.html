@@ -103,6 +103,8 @@
 <span id="103">103</span>
 <span id="104">104</span>
 <span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::Pure;
 
 <span class="doccomment">/// `Bind` lets you chain computations together.
@@ -123,7 +125,9 @@
     <span class="kw">type </span>Target&lt;T&gt;
     <span class="kw">where
         </span>T: <span class="lifetime">&#39;a</span>;
-    <span class="kw">fn </span>bind&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
+
+    <span class="doccomment">/// Apply the function `f` to the `A` or `A`s inside the `M&lt;A&gt;`, yielding an `M&lt;B&gt;`.
+    </span><span class="kw">fn </span>bind&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
         F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt; + <span class="lifetime">&#39;a</span>;

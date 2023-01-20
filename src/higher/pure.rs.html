@@ -105,8 +105,14 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
-</pre><pre class="rust"><code><span class="doccomment">/// `Pure` lets you construct a value of type `F&lt;A&gt;` from a single value of
-/// `A`.
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+</pre><pre class="rust"><code><span class="doccomment">/// `Pure` lets you construct a value of type `F&lt;A&gt;` from a single value of `A`.
+///
+/// Think of it as [`Default`](Default), but instead of constructing an empty
+/// value, it takes a single argument value and wraps it in the container type
+/// in a meaningful way.
 ///
 /// For instance:
 ///

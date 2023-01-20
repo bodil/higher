@@ -219,6 +219,19 @@
 <span id="219">219</span>
 <span id="220">220</span>
 <span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
 </pre><pre class="rust"><code><span class="attribute">#![deny(unsafe_code, nonstandard_style)]
 #![forbid(rust_2018_idioms)]
 #![warn(unreachable_pub, missing_debug_implementations)]
@@ -275,6 +288,10 @@
 <span class="kw">pub mod </span>foldable;
 <span class="attribute">#[doc(inline)]
 </span><span class="kw">pub use </span><span class="kw">crate</span>::foldable::Foldable;
+
+<span class="kw">pub mod </span>error;
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span><span class="kw">crate</span>::error::ApplicativeError;
 
 <span class="kw">pub mod </span>algebras;
 <span class="kw">pub mod </span>rings;
@@ -346,6 +363,22 @@
 /// ```
 </span><span class="attribute">#[macro_export]
 </span><span class="macro">macro_rules! </span>run {
+    (<span class="macro-nonterminal">$binding</span>:ident &lt;= &lt;<span class="macro-nonterminal">$coerce</span>:ident&gt; <span class="macro-nonterminal">$comp</span>:expr; $(<span class="macro-nonterminal">$tail</span>:tt)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro-nonterminal">$crate::Bind::bind</span>::&lt;<span class="macro-nonterminal">$coerce</span>, <span class="kw">_</span>&gt;(<span class="macro-nonterminal">$comp</span>, <span class="kw">move </span>|<span class="macro-nonterminal">$binding</span>| <span class="macro">run!</span>($(<span class="macro-nonterminal">$tail</span>)<span class="kw-2">*</span>))
+    };
+
+    (<span class="macro-nonterminal">$binding</span>:ident &lt;= <span class="macro-nonterminal">$comp</span>:expr; $(<span class="macro-nonterminal">$tail</span>:tt)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro-nonterminal">$crate::Bind::bind</span>(<span class="macro-nonterminal">$comp</span>, <span class="kw">move </span>|<span class="macro-nonterminal">$binding</span>| <span class="macro">run!</span>($(<span class="macro-nonterminal">$tail</span>)<span class="kw-2">*</span>))
+    };
+
+    (&lt;<span class="macro-nonterminal">$coerce</span>:ident&gt; <span class="macro-nonterminal">$comp</span>:expr; $(<span class="macro-nonterminal">$tail</span>:tt)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro-nonterminal">$crate::Bind::bind</span>::&lt;<span class="macro-nonterminal">$coerce</span>, <span class="kw">_</span>&gt;(<span class="macro-nonterminal">$comp</span>, <span class="kw">move </span>|<span class="kw">_</span>| <span class="macro">run!</span>($(<span class="macro-nonterminal">$tail</span>)<span class="kw-2">*</span>))
+    };
+
+    (<span class="macro-nonterminal">$comp</span>:expr; $(<span class="macro-nonterminal">$tail</span>:tt)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro-nonterminal">$crate::Bind::bind</span>(<span class="macro-nonterminal">$comp</span>, <span class="kw">move </span>|<span class="kw">_</span>| <span class="macro">run!</span>($(<span class="macro-nonterminal">$tail</span>)<span class="kw-2">*</span>))
+    };
+
     (<span class="kw">yield </span><span class="macro-nonterminal">$result</span>:expr) =&gt; {
         <span class="macro-nonterminal">$crate::Pure::pure</span>(<span class="macro-nonterminal">$result</span>)
     };
@@ -354,13 +387,6 @@
         <span class="macro-nonterminal">$result
     </span>};
 
-    (<span class="macro-nonterminal">$binding</span>:ident &lt;= <span class="macro-nonterminal">$comp</span>:expr; $(<span class="macro-nonterminal">$tail</span>:tt)<span class="kw-2">*</span>) =&gt; {
-        <span class="macro-nonterminal">$crate::Bind::bind</span>(<span class="macro-nonterminal">$comp</span>, <span class="kw">move </span>|<span class="macro-nonterminal">$binding</span>| <span class="macro">run!</span>($(<span class="macro-nonterminal">$tail</span>)<span class="kw-2">*</span>))
-    };
-
-    (<span class="macro-nonterminal">$comp</span>:expr; $(<span class="macro-nonterminal">$tail</span>:tt)<span class="kw-2">*</span>) =&gt; {
-        <span class="macro-nonterminal">$crate::Bind::bind</span>(<span class="macro-nonterminal">$comp</span>, <span class="kw">move </span>|<span class="kw">_</span>| <span class="macro">run!</span>($(<span class="macro-nonterminal">$tail</span>)<span class="kw-2">*</span>))
-    }
 }
 
 <span class="attribute">#[cfg(test)]
