@@ -125,6 +125,22 @@ pub mod rings;
 /// ```
 #[macro_export]
 macro_rules! run {
+    ($binding:ident <= <$coerce:ident> $comp:expr; $($tail:tt)*) => {
+        $crate::Bind::bind::<$coerce, _>($comp, move |$binding| run!($($tail)*))
+    };
+
+    ($binding:ident <= $comp:expr; $($tail:tt)*) => {
+        $crate::Bind::bind($comp, move |$binding| run!($($tail)*))
+    };
+
+    (<$coerce:ident> $comp:expr; $($tail:tt)*) => {
+        $crate::Bind::bind::<$coerce, _>($comp, move |_| run!($($tail)*))
+    };
+
+    ($comp:expr; $($tail:tt)*) => {
+        $crate::Bind::bind($comp, move |_| run!($($tail)*))
+    };
+
     (yield $result:expr) => {
         $crate::Pure::pure($result)
     };
@@ -133,13 +149,6 @@ macro_rules! run {
         $result
     };
 
-    ($binding:ident <= $comp:expr; $($tail:tt)*) => {
-        $crate::Bind::bind($comp, move |$binding| run!($($tail)*))
-    };
-
-    ($comp:expr; $($tail:tt)*) => {
-        $crate::Bind::bind($comp, move |_| run!($($tail)*))
-    }
 }
 
 #[cfg(test)]
