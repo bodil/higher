@@ -8,6 +8,7 @@ use std::path::Path;
 use futures::future::Either;
 use futures::{future::LocalBoxFuture, Future, FutureExt};
 
+use higher::ApplicativeError;
 use higher::{apply::ApplyFn, Apply, Bifunctor, Bind, Functor, Pure};
 
 /// An IO monad.
@@ -70,21 +71,6 @@ enum IOState<'a, A, E> {
 }
 
 impl<'a, A, E> IO<'a, A, E> {
-    /// Construct an IO effect that resolves immediately to the given error.
-    pub fn err(error: E) -> Self {
-        Self {
-            state: IOState::Error(error),
-        }
-    }
-
-    /// Construct an IO effect that resolves immediately to the given value.
-    pub fn ready(value: A) -> Self
-    where
-        A: 'a,
-    {
-        async { Ok(value) }.into()
-    }
-
     /// Run the effect to completion, blocking the current thread.
     pub fn run(self) -> Result<A, E> {
         futures::executor::LocalPool::new().run_until(self.into_future())
@@ -104,7 +90,7 @@ impl<'a, A, E> IO<'a, A, E> {
         R: FnOnce(E) -> D + 'a,
     {
         match self.state {
-            IOState::Error(error) => IO::err(right(error)),
+            IOState::Error(error) => IO::throw_error(right(error)),
             IOState::Future(future) => async move {
                 match future.await {
                     Err(error) => Err(right(error)),
@@ -134,6 +120,9 @@ impl<'a, A, E> IO<'a, A, E> {
     /// Transform the effect's error value using the given function.
     ///
     /// If the effect succeeds, the function is not applied.
+    ///
+    /// This is identical to [`Bifunctor::rmap`](Bifunctor::rmap), except it accepts
+    /// a [`FnOnce`](FnOnce) instead of a [`Fn`](Fn).
     pub fn map_error<B, F>(self, f: F) -> IO<'a, A, B>
     where
         A: 'a,
@@ -304,11 +293,11 @@ impl<'a, A: 'a, E: 'a> Bind<'a, A> for IO<'a, A, E> {
         F: Fn(A) -> Self::Target<B> + 'a,
     {
         match self.state {
-            IOState::Error(error) => <Self::Target<B>>::err(error),
+            IOState::Error(error) => IO::throw_error(error),
             IOState::Future(future) => async move {
                 match future.await {
                     Ok(result) => f(result),
-                    Err(error) => <Self::Target<B>>::err(error),
+                    Err(error) => IO::throw_error(error),
                 }
                 .await
             }
@@ -329,15 +318,15 @@ impl<'a, A: 'a, E: 'a> Functor<'a, A> for IO<'a, A, E> {
     }
 }
 
-impl<'a, A: 'a, B: 'a> Bifunctor<'a, A, B> for IO<'a, A, B> {
+impl<'a, A: 'a, E: 'a> Bifunctor<'a, A, E> for IO<'a, A, E> {
     type Target<T, U> = IO<'a, T, U> where T: 'a, U: 'a;
 
-    fn bimap<C, D, L, R>(self, left: L, right: R) -> Self::Target<C, D>
+    fn bimap<A2, E2, L, R>(self, left: L, right: R) -> Self::Target<A2, E2>
     where
-        C: 'a,
-        D: 'a,
-        L: Fn(A) -> C + 'a,
-        R: Fn(B) -> D + 'a,
+        A2: 'a,
+        E2: 'a,
+        L: Fn(A) -> A2 + 'a,
+        R: Fn(E) -> E2 + 'a,
     {
         self.map(left, right)
     }
@@ -345,7 +334,7 @@ impl<'a, A: 'a, B: 'a> Bifunctor<'a, A, B> for IO<'a, A, B> {
 
 impl<'a, A: 'a, E> Pure<A> for IO<'a, A, E> {
     fn pure(value: A) -> Self {
-        Self::ready(value)
+        async { Ok(value) }.into()
     }
 }
 
@@ -367,6 +356,31 @@ impl<'a, A: 'a, E: 'a> Apply<'a, A> for IO<'a, A, E> {
             }
         }
         .into()
+    }
+}
+
+impl<'a, A: 'a, E: 'a> ApplicativeError<'a, A, E> for IO<'a, A, E> {
+    fn throw_error(error: E) -> Self {
+        Self {
+            state: IOState::Error(error),
+        }
+    }
+
+    fn handle_error_with<F>(self, f: F) -> Self
+    where
+        F: Fn(E) -> Self + 'a,
+    {
+        match self.state {
+            IOState::Error(error) => f(error),
+            IOState::Future(future) => async move {
+                match future.await {
+                    Ok(result) => Self::pure(result),
+                    Err(error) => f(error),
+                }
+                .await
+            }
+            .into(),
+        }
     }
 }
 

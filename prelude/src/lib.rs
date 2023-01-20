@@ -55,6 +55,10 @@ pub mod foldable;
 #[doc(inline)]
 pub use crate::foldable::Foldable;
 
+pub mod error;
+#[doc(inline)]
+pub use crate::error::ApplicativeError;
+
 pub mod algebras;
 pub mod rings;
 
