@@ -67,17 +67,6 @@ where
             .into_iter(),
         )
     }
-
-    fn funzip<L: 'a, R: 'a, FL, FR, Z>(self, f: Z) -> (FL, FR)
-    where
-        A: 'static,
-        Self: Sized + Functor<'a, A, Target<L> = FL> + Functor<'a, A, Target<R> = FR>,
-        FL: Functor<'a, L, Target<A> = Self> + Default + Extend<L>,
-        FR: Functor<'a, R, Target<A> = Self> + Default + Extend<R>,
-        Z: Fn(A) -> (L, R) + 'a,
-    {
-        self.f_into_iter().map(|a| f(a)).unzip()
-    }
 }
 
 impl<'a, A: 'a> Functor<'a, A> for Option<A> {
@@ -191,13 +180,5 @@ mod test {
         let a = vec![1, 2, 3];
         let b = a.fmap(|x| (x as usize) * 2);
         assert_eq!(b, vec![2usize, 4usize, 6usize]);
-    }
-
-    #[test]
-    fn unzip() {
-        let a = vec![(1usize, 2i32), (2usize, 4i32), (3usize, 6i32)];
-        let (l, r) = a.funzip(std::convert::identity);
-        assert_eq!(l, vec![1usize, 2usize, 3usize]);
-        assert_eq!(r, vec![2i32, 4i32, 6i32]);
     }
 }
