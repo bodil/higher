@@ -248,7 +248,7 @@ where
     {
         async move {
             let (func, arg) = Effect::join(f, self).await;
-            func.apply(arg)
+            func.apply_fn(arg)
         }
         .into()
     }

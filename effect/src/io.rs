@@ -352,7 +352,7 @@ impl<'a, A: 'a, E: 'a> Apply<'a, A> for IO<'a, A, E> {
             match future::join(f.into_future(), self.into_future()).await {
                 (Err(error), _) => Err(error),
                 (_, Err(error)) => Err(error),
-                (Ok(func), Ok(arg)) => Ok(func.apply(arg)),
+                (Ok(func), Ok(arg)) => Ok(func.apply_fn(arg)),
             }
         }
         .into()

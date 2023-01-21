@@ -1,10 +1,6 @@
 use std::convert::identity;
 
-use crate::{
-    apply::{apply_second, ApplyFn},
-    rings::Semiring,
-    Applicative, Apply, Bind, Functor, Monoid, Pure,
-};
+use crate::{apply::ApplyFn, rings::Semiring, Applicative, Apply, Bind, Functor, Monoid, Pure};
 
 pub trait Foldable<'a, A>
 where
@@ -30,14 +26,14 @@ where
     where
         F: Fn(A) -> M + 'a,
         M: Monoid;
-}
 
-pub fn fold<'a, L, A>(l: L) -> A
-where
-    L: Foldable<'a, A>,
-    A: Monoid + 'a,
-{
-    l.fold_map(identity)
+    fn fold(self) -> A
+    where
+        Self: Sized,
+        A: Monoid,
+    {
+        self.fold_map(identity)
+    }
 }
 
 pub fn fold_m<'a, M, L, A, B, F>(f: &'a F, init: B, l: &'a L) -> M
@@ -79,7 +75,7 @@ where
 {
     #[allow(clippy::unit_arg)]
     l.foldr(
-        move |x, y| apply_second(func(x), y),
+        move |x, y| func(x).apply_second(y),
         Pure::pure(Default::default()),
     )
 }

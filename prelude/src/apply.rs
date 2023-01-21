@@ -1,4 +1,6 @@
-use crate::{run, Bind, Functor, Pure};
+use std::rc::Rc;
+
+use crate::{repeat, run, Bind, Functor, Pure};
 
 /// An `ApplyFn` is a function from `A` to `B` wrapped in something Rust's type
 /// system can more easily digest. Arguments for
@@ -10,7 +12,7 @@ pub struct ApplyFn<'a, A, B> {
 
 impl<'a, A, B> ApplyFn<'a, A, B> {
     /// Apply the wrapped function to a value of type `A`.
-    pub fn apply(&self, a: A) -> B {
+    pub fn apply_fn(&self, a: A) -> B {
         (self.function)(a)
     }
 }
@@ -52,6 +54,28 @@ where
     fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
     where
         B: 'a;
+
+    fn apply_first<B, MB, MF>(self, b: MB) -> Self
+    where
+        Self: Sized + Apply<'a, A, Target<B> = MB> + Functor<'a, A, Target<ApplyFn<'a, B, A>> = MF>,
+        A: Clone,
+        B: 'a,
+        MB: Apply<'a, B, Target<ApplyFn<'a, B, A>> = MF> + Apply<'a, B, Target<A> = Self>,
+        MF: Apply<'a, ApplyFn<'a, B, A>, Target<B> = MB>,
+    {
+        b.apply(self.fmap(|x: A| ApplyFn::from(repeat(x))))
+    }
+
+    fn apply_second<B, MB, MF>(self, b: MB) -> MB
+    where
+        Self: Sized + Apply<'a, A, Target<B> = MB> + Apply<'a, A, Target<ApplyFn<'a, A, B>> = MF>,
+        B: Clone + 'a,
+        MB: Apply<'a, B, Target<ApplyFn<'a, A, B>> = MF>
+            + Functor<'a, B, Target<ApplyFn<'a, A, B>> = MF>,
+        MF: Apply<'a, ApplyFn<'a, A, B>, Target<A> = Self>,
+    {
+        self.apply(b.fmap(|x: B| ApplyFn::from(repeat(x))))
+    }
 }
 
 /// `ap` is a default implementation of [`Apply::apply`][Apply::apply] for any
@@ -111,48 +135,25 @@ where
     run! {
         f <= <B> mf;
         a <= <B> ma.clone();
-        yield f.apply(a)
+        yield f.apply_fn(a)
     }
-}
-
-pub fn apply_first<'a, A, B, MA, MB, MF>(a: MA, b: MB) -> MA
-where
-    A: Clone + 'a,
-    B: 'a,
-    MA: Apply<'a, A, Target<B> = MB> + Functor<'a, A, Target<ApplyFn<'a, B, A>> = MF>,
-    MB: Apply<'a, B, Target<ApplyFn<'a, B, A>> = MF> + Apply<'a, B, Target<A> = MA>,
-    MF: Apply<'a, ApplyFn<'a, B, A>, Target<B> = MB>,
-{
-    b.apply(a.fmap(|x: A| ApplyFn::from(move |_| x.clone())))
-}
-
-pub fn apply_second<'a, A, B, MA, MB, MF>(a: MA, b: MB) -> MB
-where
-    A: 'a,
-    B: Clone + 'a,
-    MA: Apply<'a, A, Target<B> = MB> + Apply<'a, A, Target<ApplyFn<'a, A, B>> = MF>,
-    MB: Apply<'a, B, Target<ApplyFn<'a, A, B>> = MF>
-        + Functor<'a, B, Target<ApplyFn<'a, A, B>> = MF>,
-    MF: Apply<'a, ApplyFn<'a, A, B>, Target<A> = MA>,
-{
-    a.apply(b.fmap(|x: B| ApplyFn::from(move |_| x.clone())))
 }
 
 pub fn lift2<'a, A, B, C, MA, MB, MC, MF, F>(fun: F, a: MA, b: MB) -> MC
 where
     F: Fn(A, B) -> C + 'a,
     A: Clone + 'a,
-    B: Clone + 'a,
+    B: 'a,
     C: 'a,
     MA: Apply<'a, A, Target<C> = MC> + Functor<'a, A, Target<ApplyFn<'a, B, C>> = MF>,
     MB: Apply<'a, B, Target<C> = MC> + Apply<'a, B, Target<ApplyFn<'a, B, C>> = MF>,
     MC: Apply<'a, C, Target<A> = MA>,
     MF: Apply<'a, ApplyFn<'a, B, C>>,
 {
-    let fun_ref = std::rc::Rc::new(fun);
+    let fun_ref = Rc::new(fun);
     b.apply(a.fmap(move |x: A| {
-        let fun_int = fun_ref.clone();
-        ApplyFn::from(move |y: B| fun_int(x.clone(), y))
+        let f = fun_ref.clone();
+        ApplyFn::from(move |y: B| f(x.clone(), y))
     }))
 }
 
@@ -166,7 +167,7 @@ where
     where
         B: 'a,
     {
-        self.and_then(|x| f.map(|f| f.apply(x)))
+        self.and_then(|x| f.map(|f| f.apply_fn(x)))
     }
 }
 
@@ -180,7 +181,7 @@ where
     where
         B: 'a,
     {
-        self.and_then(|x| f.map(|f| f.apply(x)))
+        self.and_then(|x| f.map(|f| f.apply_fn(x)))
     }
 }
 
