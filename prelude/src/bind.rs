@@ -1,3 +1,6 @@
+#[cfg(feature = "futures")]
+use futures::{channel::mpsc, stream::LocalBoxStream};
+
 use crate::{run, Pure};
 
 /// `Bind` lets you chain computations together.
@@ -19,11 +22,52 @@ where
     where
         T: 'a;
 
-    /// Apply the function `f` to the `A` or `A`s inside the `M<A>`, yielding an `M<B>`.
+    /// Apply the function `f` to the `A` or `A`s inside the `M<A>` to turn it
+    /// into an `M<B>`.
+    ///
+    /// Think of this as a way to chain two computations together: `f` can be
+    /// seen as a callback function for a computation: `m.bind(|result| { ... })`
+    /// means "run `m` and call this function when the result is ready." The
+    /// return value from `f`, of type `M<B>`, is effectively the original
+    /// computation, `M<A>`, followed by the `M<B>` from the callback function
+    /// when the result of `M<A>` is ready.
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
         B: 'a,
         F: Fn(A) -> Self::Target<B> + 'a;
+
+    /// Turn an `M<A>` into an `M<()>` and a
+    /// [`Stream<Item = A>`](futures::stream::Stream) that will yield values of
+    /// `A`.
+    ///
+    /// The values won't start yielding until you run the `M<()>`, whatever that
+    /// means for any given `M`. For simple types like [`Result`](Result) and
+    /// [`Vec`](Vec), you don't have to do anything, they'll yield their entire
+    /// contents immediately. For effect types, you'll need to await their
+    /// futures to get them to start yielding.
+    ///
+    /// ```
+    /// # use higher::{Bind, Pure};
+    /// # use futures::stream::StreamExt;
+    /// # futures::executor::LocalPool::new().run_until(async {
+    /// let list = vec![1, 2, 3];
+    /// let (_, mut stream) = list.into_stream();
+    /// assert_eq!(stream.next().await, Some(1));
+    /// assert_eq!(stream.next().await, Some(2));
+    /// assert_eq!(stream.next().await, Some(3));
+    /// assert_eq!(stream.next().await, None);
+    /// # });
+    /// ```
+    #[cfg(feature = "futures")]
+    fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
+    where
+        Self: Sized + Bind<'a, A>,
+        <Self as Bind<'a, A>>::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
+    {
+        let (giver, receiver) = mpsc::unbounded();
+        let void = self.bind::<(), _>(move |a| Pure::pure(giver.unbounded_send(a).unwrap()));
+        (void, Box::pin(receiver))
+    }
 }
 
 /// `lift_m1` provides a default implementation for
@@ -53,6 +97,21 @@ impl<'a, A: 'a> Bind<'a, A> for Option<A> {
     {
         self.and_then(f)
     }
+
+    #[cfg(feature = "futures")]
+    fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
+    where
+        Self: Sized + Bind<'a, A>,
+        <Self as Bind<'a, A>>::Target<()>: Pure<()>,
+    {
+        (
+            Pure::pure(()),
+            match self {
+                None => Box::pin(futures::stream::empty()),
+                Some(a) => Box::pin(futures::stream::once(async { a })),
+            },
+        )
+    }
 }
 
 impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
@@ -64,6 +123,21 @@ impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
         F: Fn(A) -> Self::Target<B>,
     {
         self.and_then(f)
+    }
+
+    #[cfg(feature = "futures")]
+    fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
+    where
+        Self: Sized + Bind<'a, A>,
+        <Self as Bind<'a, A>>::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
+    {
+        match self {
+            Err(err) => (
+                Err(err).bind(|_| Pure::pure(())),
+                Box::pin(futures::stream::empty()),
+            ),
+            Ok(a) => (Pure::pure(()), Box::pin(futures::stream::once(async { a }))),
+        }
     }
 }
 
