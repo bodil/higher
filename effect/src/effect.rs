@@ -247,8 +247,7 @@ where
         B: 'a,
     {
         async move {
-            let func = f.await;
-            let arg = self.await;
+            let (func, arg) = Effect::join(f, self).await;
             func.apply(arg)
         }
         .into()

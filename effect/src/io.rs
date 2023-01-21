@@ -5,7 +5,7 @@ use std::future::IntoFuture;
 use std::io::{stdin, stdout, Error, Read, Write};
 use std::path::Path;
 
-use futures::future::Either;
+use futures::future::{self, Either};
 use futures::{future::LocalBoxFuture, Future, FutureExt};
 
 use higher::ApplicativeError;
@@ -349,7 +349,7 @@ impl<'a, A: 'a, E: 'a> Apply<'a, A> for IO<'a, A, E> {
         B: 'a,
     {
         async move {
-            match (f.await, self.await) {
+            match future::join(f.into_future(), self.into_future()).await {
                 (Err(error), _) => Err(error),
                 (_, Err(error)) => Err(error),
                 (Ok(func), Ok(arg)) => Ok(func.apply(arg)),
