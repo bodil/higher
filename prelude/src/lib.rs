@@ -154,6 +154,23 @@ macro_rules! run {
 
 }
 
+/// Construct a function that ignores its argument and returns the same value
+/// every time you call it.
+///
+/// You may know this function as `const` in certain other languages.
+///
+/// ```
+/// # use higher::repeat;
+/// let f = repeat(31337);
+/// assert_eq!(f("Joe"), 31337);
+/// assert_eq!(f("Mike"), 31337);
+/// assert_eq!(f("Robert"), 31337);
+/// assert_eq!(f("Bjarne"), 31337);
+/// ```
+pub fn repeat<A: Clone, B>(value: A) -> impl Fn(B) -> A {
+    move |_| value.clone()
+}
+
 #[cfg(test)]
 mod test {
     #[test]
