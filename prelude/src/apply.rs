@@ -117,7 +117,7 @@ where
 
 pub fn apply_first<'a, A, B, MA, MB, MF>(a: MA, b: MB) -> MA
 where
-    A: Clone + 'static,
+    A: Clone + 'a,
     B: 'a,
     MA: Apply<'a, A, Target<B> = MB> + Functor<'a, A, Target<ApplyFn<'a, B, A>> = MF>,
     MB: Apply<'a, B, Target<ApplyFn<'a, B, A>> = MF> + Apply<'a, B, Target<A> = MA>,
@@ -129,7 +129,7 @@ where
 pub fn apply_second<'a, A, B, MA, MB, MF>(a: MA, b: MB) -> MB
 where
     A: 'a,
-    B: Clone + 'static,
+    B: Clone + 'a,
     MA: Apply<'a, A, Target<B> = MB> + Apply<'a, A, Target<ApplyFn<'a, A, B>> = MF>,
     MB: Apply<'a, B, Target<ApplyFn<'a, A, B>> = MF>
         + Functor<'a, B, Target<ApplyFn<'a, A, B>> = MF>,
@@ -140,8 +140,8 @@ where
 
 pub fn lift2<'a, A, B, C, MA, MB, MC, MF, F>(fun: F, a: MA, b: MB) -> MC
 where
-    F: Fn(A, B) -> C + 'static,
-    A: Clone + 'static,
+    F: Fn(A, B) -> C + 'a,
+    A: Clone + 'a,
     B: Clone + 'a,
     C: 'a,
     MA: Apply<'a, A, Target<C> = MC> + Functor<'a, A, Target<ApplyFn<'a, B, C>> = MF>,

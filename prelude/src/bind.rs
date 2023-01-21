@@ -1,4 +1,4 @@
-use crate::Pure;
+use crate::{run, Pure};
 
 /// `Bind` lets you chain computations together.
 ///
@@ -37,7 +37,10 @@ where
     MA: Bind<'a, A, Target<B> = MB>,
     MB: Pure<B>,
 {
-    a.bind::<B, _>(move |x| MB::pure(f(x)))
+    run! {
+        x <= <B> a;
+        yield f(x)
+    }
 }
 
 impl<'a, A: 'a> Bind<'a, A> for Option<A> {
