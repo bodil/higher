@@ -105,7 +105,84 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
-</pre><pre class="rust"><code><span class="kw">use crate</span>::{run, Pure};
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+</pre><pre class="rust"><code><span class="attribute">#[cfg(feature = <span class="string">&quot;futures&quot;</span>)]
+</span><span class="kw">use </span>futures::{channel::mpsc, stream::LocalBoxStream};
+
+<span class="kw">use crate</span>::{run, Pure};
 
 <span class="doccomment">/// `Bind` lets you chain computations together.
 ///
@@ -126,11 +203,52 @@
     <span class="kw">where
         </span>T: <span class="lifetime">&#39;a</span>;
 
-    <span class="doccomment">/// Apply the function `f` to the `A` or `A`s inside the `M&lt;A&gt;`, yielding an `M&lt;B&gt;`.
+    <span class="doccomment">/// Apply the function `f` to the `A` or `A`s inside the `M&lt;A&gt;` to turn it
+    /// into an `M&lt;B&gt;`.
+    ///
+    /// Think of this as a way to chain two computations together: `f` can be
+    /// seen as a callback function for a computation: `m.bind(|result| { ... })`
+    /// means &quot;run `m` and call this function when the result is ready.&quot; The
+    /// return value from `f`, of type `M&lt;B&gt;`, is effectively the original
+    /// computation, `M&lt;A&gt;`, followed by the `M&lt;B&gt;` from the callback function
+    /// when the result of `M&lt;A&gt;` is ready.
     </span><span class="kw">fn </span>bind&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
         F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt; + <span class="lifetime">&#39;a</span>;
+
+    <span class="doccomment">/// Turn an `M&lt;A&gt;` into an `M&lt;()&gt;` and a
+    /// [`Stream&lt;Item = A&gt;`](futures::stream::Stream) that will yield values of
+    /// `A`.
+    ///
+    /// The values won&#39;t start yielding until you run the `M&lt;()&gt;`, whatever that
+    /// means for any given `M`. For simple types like [`Result`](Result) and
+    /// [`Vec`](Vec), you don&#39;t have to do anything, they&#39;ll yield their entire
+    /// contents immediately. For effect types, you&#39;ll need to await their
+    /// futures to get them to start yielding.
+    ///
+    /// ```
+    /// # use higher::{Bind, Pure};
+    /// # use futures::stream::StreamExt;
+    /// # futures::executor::LocalPool::new().run_until(async {
+    /// let list = vec![1, 2, 3];
+    /// let (_, mut stream) = list.into_stream();
+    /// assert_eq!(stream.next().await, Some(1));
+    /// assert_eq!(stream.next().await, Some(2));
+    /// assert_eq!(stream.next().await, Some(3));
+    /// assert_eq!(stream.next().await, None);
+    /// # });
+    /// ```
+    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;futures&quot;</span>)]
+    </span><span class="kw">fn </span>into_stream(<span class="self">self</span>) -&gt; (<span class="self">Self</span>::Target&lt;()&gt;, LocalBoxStream&lt;<span class="lifetime">&#39;a</span>, A&gt;)
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized + Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;,
+        &lt;<span class="self">Self </span><span class="kw">as </span>Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;()&gt;: Bind&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;A&gt; = <span class="self">Self</span>&gt; + Pure&lt;()&gt;,
+    {
+        <span class="kw">let </span>(giver, receiver) = mpsc::unbounded();
+        <span class="kw">let </span>void = <span class="self">self</span>.bind::&lt;(), <span class="kw">_</span>&gt;(<span class="kw">move </span>|a| Pure::pure(giver.unbounded_send(a).unwrap()));
+        (void, Box::pin(receiver))
+    }
 }
 
 <span class="doccomment">/// `lift_m1` provides a default implementation for
@@ -160,6 +278,21 @@
     {
         <span class="self">self</span>.and_then(f)
     }
+
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;futures&quot;</span>)]
+    </span><span class="kw">fn </span>into_stream(<span class="self">self</span>) -&gt; (<span class="self">Self</span>::Target&lt;()&gt;, LocalBoxStream&lt;<span class="lifetime">&#39;a</span>, A&gt;)
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized + Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;,
+        &lt;<span class="self">Self </span><span class="kw">as </span>Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;()&gt;: Pure&lt;()&gt;,
+    {
+        (
+            Pure::pure(()),
+            <span class="kw">match </span><span class="self">self </span>{
+                <span class="prelude-val">None </span>=&gt; Box::pin(futures::stream::empty()),
+                <span class="prelude-val">Some</span>(a) =&gt; Box::pin(futures::stream::once(<span class="kw">async </span>{ a })),
+            },
+        )
+    }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;A, E&gt; {
@@ -171,6 +304,21 @@
         F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;,
     {
         <span class="self">self</span>.and_then(f)
+    }
+
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;futures&quot;</span>)]
+    </span><span class="kw">fn </span>into_stream(<span class="self">self</span>) -&gt; (<span class="self">Self</span>::Target&lt;()&gt;, LocalBoxStream&lt;<span class="lifetime">&#39;a</span>, A&gt;)
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized + Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;,
+        &lt;<span class="self">Self </span><span class="kw">as </span>Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;()&gt;: Bind&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;A&gt; = <span class="self">Self</span>&gt; + Pure&lt;()&gt;,
+    {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="prelude-val">Err</span>(err) =&gt; (
+                <span class="prelude-val">Err</span>(err).bind(|<span class="kw">_</span>| Pure::pure(())),
+                Box::pin(futures::stream::empty()),
+            ),
+            <span class="prelude-val">Ok</span>(a) =&gt; (Pure::pure(()), Box::pin(futures::stream::once(<span class="kw">async </span>{ a }))),
+        }
     }
 }
 

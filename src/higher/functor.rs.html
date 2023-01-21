@@ -201,11 +201,6 @@
 <span id="201">201</span>
 <span id="202">202</span>
 <span id="203">203</span>
-<span id="204">204</span>
-<span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
-<span id="208">208</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{cell::RefCell, mem::MaybeUninit, rc::Rc};
 
 <span class="doccomment">/// A `Functor` lets you change the type parameter of a generic type.
@@ -249,47 +244,42 @@
         <span class="self">self</span>.fconst(())
     }
 
-    <span class="kw">fn </span>unzip&lt;L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>, FL, FR, Z&gt;(<span class="self">self</span>, f: Z) -&gt; (FL, FR)
+    <span class="doccomment">/// Turn the functor into an iterator.
+    ///
+    /// ```
+    /// # use higher::Functor;
+    /// let my_functor = vec![1, 2, 3];
+    /// let iter = my_functor.f_into_iter();
+    /// let my_vec: Vec&lt;i32&gt; = iter.collect();
+    /// assert_eq!(my_vec, vec![1, 2, 3]);
+    /// ```
+    </span><span class="kw">fn </span>f_into_iter(<span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = A&gt;&gt;
     <span class="kw">where
-        </span><span class="self">Self</span>: Sized + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;L&gt; = FL&gt; + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;R&gt; = FR&gt;,
-        FL: Functor&lt;<span class="lifetime">&#39;a</span>, L, Target&lt;A&gt; = <span class="self">Self</span>&gt; + FromIterator&lt;L&gt;,
-        FR: Functor&lt;<span class="lifetime">&#39;a</span>, R, Target&lt;A&gt; = <span class="self">Self</span>&gt; + FromIterator&lt;R&gt;,
+        </span><span class="self">Self</span>: Sized,
+        A: <span class="lifetime">&#39;static</span>,
+    {
+        <span class="kw">let </span>store = Rc::new(RefCell::new(Vec::new()));
+        <span class="kw">let </span>istore = store.clone();
+        <span class="self">self</span>.fmap(<span class="kw">move </span>|a| istore.borrow_mut().push(a));
+        Box::new(
+            <span class="kw">match </span>Rc::try_unwrap(store) {
+                <span class="prelude-val">Ok</span>(store) =&gt; store,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+            }
+            .into_inner()
+            .into_iter(),
+        )
+    }
+
+    <span class="kw">fn </span>funzip&lt;L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>, FL, FR, Z&gt;(<span class="self">self</span>, f: Z) -&gt; (FL, FR)
+    <span class="kw">where
+        </span>A: <span class="lifetime">&#39;static</span>,
+        <span class="self">Self</span>: Sized + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;L&gt; = FL&gt; + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;R&gt; = FR&gt;,
+        FL: Functor&lt;<span class="lifetime">&#39;a</span>, L, Target&lt;A&gt; = <span class="self">Self</span>&gt; + Default + Extend&lt;L&gt;,
+        FR: Functor&lt;<span class="lifetime">&#39;a</span>, R, Target&lt;A&gt; = <span class="self">Self</span>&gt; + Default + Extend&lt;R&gt;,
         Z: Fn(A) -&gt; (L, R) + <span class="lifetime">&#39;a</span>,
     {
-        <span class="kw">struct </span>Unzipper&lt;A, B&gt; {
-            left: Vec&lt;A&gt;,
-            right: Vec&lt;B&gt;,
-        }
-
-        <span class="kw">impl</span>&lt;A, B&gt; Unzipper&lt;A, B&gt; {
-            <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
-                <span class="self">Self </span>{
-                    left: Vec::new(),
-                    right: Vec::new(),
-                }
-            }
-
-            <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: A, b: B) {
-                <span class="self">self</span>.left.push(a);
-                <span class="self">self</span>.right.push(b);
-            }
-        }
-
-        <span class="kw">let </span>unzipper = Rc::new(RefCell::new(Unzipper::new()));
-        <span class="kw">let </span>u = unzipper.clone();
-        <span class="self">self</span>.fmap(<span class="kw">move </span>|a| {
-            <span class="kw">let </span>(l, r) = f(a);
-            u.borrow_mut().push(l, r)
-        });
-        <span class="kw">let </span>unzipper = <span class="kw">match </span>Rc::try_unwrap(unzipper) {
-            <span class="prelude-val">Ok</span>(unzipper) =&gt; unzipper,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-        }
-        .into_inner();
-        (
-            unzipper.left.into_iter().collect(),
-            unzipper.right.into_iter().collect(),
-        )
+        <span class="self">self</span>.f_into_iter().map(|a| f(a)).unzip()
     }
 }
 
@@ -409,7 +399,7 @@
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>unzip() {
         <span class="kw">let </span>a = <span class="macro">vec!</span>[(<span class="number">1usize</span>, <span class="number">2i32</span>), (<span class="number">2usize</span>, <span class="number">4i32</span>), (<span class="number">3usize</span>, <span class="number">6i32</span>)];
-        <span class="kw">let </span>(l, r) = a.unzip(std::convert::identity);
+        <span class="kw">let </span>(l, r) = a.funzip(std::convert::identity);
         <span class="macro">assert_eq!</span>(l, <span class="macro">vec!</span>[<span class="number">1usize</span>, <span class="number">2usize</span>, <span class="number">3usize</span>]);
         <span class="macro">assert_eq!</span>(r, <span class="macro">vec!</span>[<span class="number">2i32</span>, <span class="number">4i32</span>, <span class="number">6i32</span>]);
     }

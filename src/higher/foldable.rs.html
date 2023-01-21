@@ -313,16 +313,9 @@
 <span id="313">313</span>
 <span id="314">314</span>
 <span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::identity;
 
-<span class="kw">use crate</span>::{
-    apply::{apply_second, ApplyFn},
-    rings::Semiring,
-    Applicative, Apply, Bind, Functor, Monoid, Pure,
-};
+<span class="kw">use crate</span>::{apply::ApplyFn, rings::Semiring, Applicative, Apply, Bind, Functor, Monoid, Pure};
 
 <span class="kw">pub trait </span>Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt;
 <span class="kw">where
@@ -348,14 +341,14 @@
     <span class="kw">where
         </span>F: Fn(A) -&gt; M + <span class="lifetime">&#39;a</span>,
         M: Monoid;
-}
 
-<span class="kw">pub fn </span>fold&lt;<span class="lifetime">&#39;a</span>, L, A&gt;(l: L) -&gt; A
-<span class="kw">where
-    </span>L: Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt;,
-    A: Monoid + <span class="lifetime">&#39;a</span>,
-{
-    l.fold_map(identity)
+    <span class="kw">fn </span>fold(<span class="self">self</span>) -&gt; A
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized,
+        A: Monoid,
+    {
+        <span class="self">self</span>.fold_map(identity)
+    }
 }
 
 <span class="kw">pub fn </span>fold_m&lt;<span class="lifetime">&#39;a</span>, M, L, A, B, F&gt;(f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, init: B, l: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>L) -&gt; M
@@ -397,7 +390,7 @@
 {
     <span class="attribute">#[allow(clippy::unit_arg)]
     </span>l.foldr(
-        <span class="kw">move </span>|x, y| apply_second(func(x), y),
+        <span class="kw">move </span>|x, y| func(x).apply_second(y),
         Pure::pure(Default::default()),
     )
 }
@@ -610,7 +603,8 @@
     <span class="macro">impl_foldable_from_iter!</span>();
 }
 
-<span class="kw">mod </span>test {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
     <span class="kw">use </span><span class="kw">crate</span>::Foldable;
 
     <span class="attribute">#[test]

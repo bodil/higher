@@ -260,7 +260,10 @@
 <span id="260">260</span>
 <span id="261">261</span>
 <span id="262">262</span>
-</pre><pre class="rust"><code><span class="kw">use crate</span>::{run, Bind, Functor, Pure};
+<span id="263">263</span>
+</pre><pre class="rust"><code><span class="kw">use </span>std::rc::Rc;
+
+<span class="kw">use crate</span>::{repeat, run, Bind, Functor, Pure};
 
 <span class="doccomment">/// An `ApplyFn` is a function from `A` to `B` wrapped in something Rust&#39;s type
 /// system can more easily digest. Arguments for
@@ -272,7 +275,7 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A, B&gt; ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt; {
     <span class="doccomment">/// Apply the wrapped function to a value of type `A`.
-    </span><span class="kw">pub fn </span>apply(<span class="kw-2">&amp;</span><span class="self">self</span>, a: A) -&gt; B {
+    </span><span class="kw">pub fn </span>apply_fn(<span class="kw-2">&amp;</span><span class="self">self</span>, a: A) -&gt; B {
         (<span class="self">self</span>.function)(a)
     }
 }
@@ -314,6 +317,28 @@
     </span><span class="kw">fn </span>apply&lt;B&gt;(<span class="self">self</span>, f: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>;
+
+    <span class="kw">fn </span>apply_first&lt;B, MB, MF&gt;(<span class="self">self</span>, b: MB) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span><span class="self">Self</span>: Sized + Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;B&gt; = MB&gt; + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = MF&gt;,
+        A: Clone,
+        B: <span class="lifetime">&#39;a</span>,
+        MB: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = MF&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;A&gt; = <span class="self">Self</span>&gt;,
+        MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;, Target&lt;B&gt; = MB&gt;,
+    {
+        b.apply(<span class="self">self</span>.fmap(|x: A| ApplyFn::from(repeat(x))))
+    }
+
+    <span class="kw">fn </span>apply_second&lt;B, MB, MF&gt;(<span class="self">self</span>, b: MB) -&gt; MB
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized + Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;B&gt; = MB&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;,
+        B: Clone + <span class="lifetime">&#39;a</span>,
+        MB: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;
+            + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;,
+        MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;, Target&lt;A&gt; = <span class="self">Self</span>&gt;,
+    {
+        <span class="self">self</span>.apply(b.fmap(|x: B| ApplyFn::from(repeat(x))))
+    }
 }
 
 <span class="doccomment">/// `ap` is a default implementation of [`Apply::apply`][Apply::apply] for any
@@ -373,48 +398,25 @@
     <span class="macro">run! </span>{
         f &lt;= &lt;B&gt; mf;
         a &lt;= &lt;B&gt; ma.clone();
-        <span class="kw">yield </span>f.apply(a)
+        <span class="kw">yield </span>f.apply_fn(a)
     }
-}
-
-<span class="kw">pub fn </span>apply_first&lt;<span class="lifetime">&#39;a</span>, A, B, MA, MB, MF&gt;(a: MA, b: MB) -&gt; MA
-<span class="kw">where
-    </span>A: Clone + <span class="lifetime">&#39;a</span>,
-    B: <span class="lifetime">&#39;a</span>,
-    MA: Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;B&gt; = MB&gt; + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = MF&gt;,
-    MB: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = MF&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;A&gt; = MA&gt;,
-    MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;, Target&lt;B&gt; = MB&gt;,
-{
-    b.apply(a.fmap(|x: A| ApplyFn::from(<span class="kw">move </span>|<span class="kw">_</span>| x.clone())))
-}
-
-<span class="kw">pub fn </span>apply_second&lt;<span class="lifetime">&#39;a</span>, A, B, MA, MB, MF&gt;(a: MA, b: MB) -&gt; MB
-<span class="kw">where
-    </span>A: <span class="lifetime">&#39;a</span>,
-    B: Clone + <span class="lifetime">&#39;a</span>,
-    MA: Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;B&gt; = MB&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;,
-    MB: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;
-        + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;,
-    MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;, Target&lt;A&gt; = MA&gt;,
-{
-    a.apply(b.fmap(|x: B| ApplyFn::from(<span class="kw">move </span>|<span class="kw">_</span>| x.clone())))
 }
 
 <span class="kw">pub fn </span>lift2&lt;<span class="lifetime">&#39;a</span>, A, B, C, MA, MB, MC, MF, F&gt;(fun: F, a: MA, b: MB) -&gt; MC
 <span class="kw">where
     </span>F: Fn(A, B) -&gt; C + <span class="lifetime">&#39;a</span>,
     A: Clone + <span class="lifetime">&#39;a</span>,
-    B: Clone + <span class="lifetime">&#39;a</span>,
+    B: <span class="lifetime">&#39;a</span>,
     C: <span class="lifetime">&#39;a</span>,
     MA: Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;C&gt; = MC&gt; + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, C&gt;&gt; = MF&gt;,
     MB: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;C&gt; = MC&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, C&gt;&gt; = MF&gt;,
     MC: Apply&lt;<span class="lifetime">&#39;a</span>, C, Target&lt;A&gt; = MA&gt;,
     MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, C&gt;&gt;,
 {
-    <span class="kw">let </span>fun_ref = std::rc::Rc::new(fun);
+    <span class="kw">let </span>fun_ref = Rc::new(fun);
     b.apply(a.fmap(<span class="kw">move </span>|x: A| {
-        <span class="kw">let </span>fun_int = fun_ref.clone();
-        ApplyFn::from(<span class="kw">move </span>|y: B| fun_int(x.clone(), y))
+        <span class="kw">let </span>f = fun_ref.clone();
+        ApplyFn::from(<span class="kw">move </span>|y: B| f(x.clone(), y))
     }))
 }
 
@@ -428,7 +430,7 @@
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
     {
-        <span class="self">self</span>.and_then(|x| f.map(|f| f.apply(x)))
+        <span class="self">self</span>.and_then(|x| f.map(|f| f.apply_fn(x)))
     }
 }
 
@@ -442,7 +444,7 @@
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
     {
-        <span class="self">self</span>.and_then(|x| f.map(|f| f.apply(x)))
+        <span class="self">self</span>.and_then(|x| f.map(|f| f.apply_fn(x)))
     }
 }
 

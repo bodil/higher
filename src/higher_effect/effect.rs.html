@@ -503,7 +503,7 @@
     {
         <span class="kw">async move </span>{
             <span class="kw">let </span>(func, arg) = Effect::join(f, <span class="self">self</span>).<span class="kw">await</span>;
-            func.apply(arg)
+            func.apply_fn(arg)
         }
         .into()
     }
