@@ -105,7 +105,7 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
-</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::Pure;
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{run, Pure};
 
 <span class="doccomment">/// `Bind` lets you chain computations together.
 ///
@@ -144,7 +144,10 @@
     MA: Bind&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;B&gt; = MB&gt;,
     MB: Pure&lt;B&gt;,
 {
-    a.bind::&lt;B, <span class="kw">_</span>&gt;(<span class="kw">move </span>|x| MB::pure(f(x)))
+    <span class="macro">run! </span>{
+        x &lt;= &lt;B&gt; a;
+        <span class="kw">yield </span>f(x)
+    }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;A&gt; {
@@ -183,20 +186,17 @@
     };
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>Vec&lt;A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>Vec&lt;A&gt; {
     <span class="kw">type </span>Target&lt;T&gt; = Vec&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
     <span class="macro">impl_bind_from_iter!</span>();
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt; {
     <span class="kw">type </span>Target&lt;T&gt; = std::collections::VecDeque&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
     <span class="macro">impl_bind_from_iter!</span>();
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt; {
     <span class="kw">type </span>Target&lt;T&gt; = std::collections::LinkedList&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
     <span class="macro">impl_bind_from_iter!</span>();
 }

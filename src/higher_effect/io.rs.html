@@ -453,7 +453,7 @@
 <span class="kw">use </span>std::io::{stdin, stdout, Error, Read, Write};
 <span class="kw">use </span>std::path::Path;
 
-<span class="kw">use </span>futures::future::Either;
+<span class="kw">use </span>futures::future::{<span class="self">self</span>, Either};
 <span class="kw">use </span>futures::{future::LocalBoxFuture, Future, FutureExt};
 
 <span class="kw">use </span>higher::ApplicativeError;
@@ -698,8 +698,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A, E&gt; core::fmt::Debug <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A, E&gt; std::fmt::Debug <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
         f.write_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
             <span class="string">&quot;IO&lt;{}, {}&gt;&quot;</span>,
             std::any::type_name::&lt;A&gt;(),
@@ -797,7 +797,7 @@
         </span>B: <span class="lifetime">&#39;a</span>,
     {
         <span class="kw">async move </span>{
-            <span class="kw">match </span>(f.<span class="kw">await</span>, <span class="self">self</span>.<span class="kw">await</span>) {
+            <span class="kw">match </span>future::join(f.into_future(), <span class="self">self</span>.into_future()).<span class="kw">await </span>{
                 (<span class="prelude-val">Err</span>(error), <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(error),
                 (<span class="kw">_</span>, <span class="prelude-val">Err</span>(error)) =&gt; <span class="prelude-val">Err</span>(error),
                 (<span class="prelude-val">Ok</span>(func), <span class="prelude-val">Ok</span>(arg)) =&gt; <span class="prelude-val">Ok</span>(func.apply(arg)),

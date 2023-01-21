@@ -316,11 +316,7 @@
 <span id="316">316</span>
 <span id="317">317</span>
 <span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-</pre><pre class="rust"><code><span class="kw">use </span>core::convert::identity;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::identity;
 
 <span class="kw">use crate</span>::{
     apply::{apply_second, ApplyFn},
@@ -602,23 +598,19 @@
     <span class="macro">impl_foldable_from_iter!</span>();
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>Vec&lt;A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>Vec&lt;A&gt; {
     <span class="macro">impl_foldable_from_iter!</span>();
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt; {
     <span class="macro">impl_foldable_from_iter!</span>();
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt; {
     <span class="macro">impl_foldable_from_iter!</span>();
 }
 
-<span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;std&quot;</span>))]
-</span><span class="kw">mod </span>test {
+<span class="kw">mod </span>test {
     <span class="kw">use </span><span class="kw">crate</span>::Foldable;
 
     <span class="attribute">#[test]

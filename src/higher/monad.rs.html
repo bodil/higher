@@ -56,9 +56,9 @@
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>warm_fuzzy_option() {
-        <span class="kw">let </span>a = Option::pure(<span class="number">31337</span>);
-        <span class="kw">let </span>b = a.bind(|x| Option::pure(x.to_string()));
-        <span class="macro">assert_eq!</span>(b, Option::Some(<span class="string">&quot;31337&quot;</span>.to_string()));
+        <span class="kw">let </span>a = Option::pure(<span class="number">31337i32</span>);
+        <span class="kw">let </span>b = a.bind(|x| Option::pure(x <span class="kw">as </span>usize));
+        <span class="macro">assert_eq!</span>(b, Option::Some(<span class="number">31337usize</span>));
     }
 
     <span class="attribute">#[test]

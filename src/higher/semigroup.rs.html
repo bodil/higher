@@ -108,9 +108,7 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-</pre><pre class="rust"><code><span class="kw">use </span>core::{
+</pre><pre class="rust"><code><span class="kw">use </span>std::{
     convert::Infallible,
     ops::{Deref, DerefMut},
 };
@@ -132,16 +130,14 @@
     <span class="kw">fn </span>mappend(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self</span>;
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;A&gt; Semigroup <span class="kw">for </span>Vec&lt;A&gt; {
+<span class="kw">impl</span>&lt;A&gt; Semigroup <span class="kw">for </span>Vec&lt;A&gt; {
     <span class="kw">fn </span>mappend(<span class="kw-2">mut </span><span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.extend(other);
         <span class="self">self
     </span>}
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl </span>Semigroup <span class="kw">for </span>String {
+<span class="kw">impl </span>Semigroup <span class="kw">for </span>String {
     <span class="kw">fn </span>mappend(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
         <span class="self">self </span>+ <span class="kw-2">&amp;</span>other
     }

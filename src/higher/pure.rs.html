@@ -100,14 +100,6 @@
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
-<span id="103">103</span>
-<span id="104">104</span>
-<span id="105">105</span>
-<span id="106">106</span>
-<span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
 </pre><pre class="rust"><code><span class="doccomment">/// `Pure` lets you construct a value of type `F&lt;A&gt;` from a single value of `A`.
 ///
 /// Think of it as [`Default`](Default), but instead of constructing an empty
@@ -135,29 +127,25 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>Vec&lt;A&gt; {
+<span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>Vec&lt;A&gt; {
     <span class="kw">fn </span>pure(value: A) -&gt; <span class="self">Self </span>{
         <span class="macro">vec!</span>[value]
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt; {
+<span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt; {
     <span class="kw">fn </span>pure(value: A) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::from_iter([value])
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt; {
+<span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt; {
     <span class="kw">fn </span>pure(value: A) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::from_iter([value])
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::BinaryHeap&lt;A&gt;
+<span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::BinaryHeap&lt;A&gt;
 <span class="kw">where
     </span>A: Ord,
 {
@@ -166,8 +154,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::HashSet&lt;A&gt;
+<span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::HashSet&lt;A&gt;
 <span class="kw">where
     </span>A: std::hash::Hash + Eq,
 {
@@ -176,8 +163,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::BTreeSet&lt;A&gt;
+<span class="kw">impl</span>&lt;A&gt; Pure&lt;A&gt; <span class="kw">for </span>std::collections::BTreeSet&lt;A&gt;
 <span class="kw">where
     </span>A: Ord,
 {
@@ -186,8 +172,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;K, V&gt; Pure&lt;(K, V)&gt; <span class="kw">for </span>std::collections::HashMap&lt;K, V&gt;
+<span class="kw">impl</span>&lt;K, V&gt; Pure&lt;(K, V)&gt; <span class="kw">for </span>std::collections::HashMap&lt;K, V&gt;
 <span class="kw">where
     </span>K: std::hash::Hash + Eq,
 {
@@ -196,8 +181,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;K, V&gt; Pure&lt;(K, V)&gt; <span class="kw">for </span>std::collections::BTreeMap&lt;K, V&gt;
+<span class="kw">impl</span>&lt;K, V&gt; Pure&lt;(K, V)&gt; <span class="kw">for </span>std::collections::BTreeMap&lt;K, V&gt;
 <span class="kw">where
     </span>K: Ord,
 {
@@ -212,10 +196,10 @@
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>pure_vec() {
-        <span class="kw">let </span>a = Vec::pure(<span class="number">31337</span>);
-        <span class="macro">assert_eq!</span>(a, <span class="macro">vec!</span>[<span class="number">31337</span>]);
-        <span class="kw">let </span>b = a.fmap(|x| x.to_string());
-        <span class="macro">assert_eq!</span>(b, <span class="macro">vec!</span>[<span class="string">&quot;31337&quot;</span>.to_string()]);
+        <span class="kw">let </span>a = Vec::pure(<span class="number">31337i32</span>);
+        <span class="macro">assert_eq!</span>(a, <span class="macro">vec!</span>[<span class="number">31337i32</span>]);
+        <span class="kw">let </span>b = a.fmap(|x| (x + <span class="number">2</span>) <span class="kw">as </span>usize);
+        <span class="macro">assert_eq!</span>(b, <span class="macro">vec!</span>[<span class="number">31339usize</span>]);
     }
 }
 </code></pre></div>

@@ -260,7 +260,6 @@
 <span id="260">260</span>
 <span id="261">261</span>
 <span id="262">262</span>
-<span id="263">263</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{run, Bind, Functor, Pure};
 
 <span class="doccomment">/// An `ApplyFn` is a function from `A` to `B` wrapped in something Rust&#39;s type
@@ -289,8 +288,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A, B&gt; core::fmt::Debug <span class="kw">for </span>ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A, B&gt; std::fmt::Debug <span class="kw">for </span>ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
         f.write_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
             <span class="string">&quot;ApplyFn({}) -&gt; {}&quot;</span>,
             std::any::type_name::&lt;A&gt;(),
@@ -380,7 +379,7 @@
 
 <span class="kw">pub fn </span>apply_first&lt;<span class="lifetime">&#39;a</span>, A, B, MA, MB, MF&gt;(a: MA, b: MB) -&gt; MA
 <span class="kw">where
-    </span>A: Clone + <span class="lifetime">&#39;static</span>,
+    </span>A: Clone + <span class="lifetime">&#39;a</span>,
     B: <span class="lifetime">&#39;a</span>,
     MA: Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;B&gt; = MB&gt; + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = MF&gt;,
     MB: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = MF&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;A&gt; = MA&gt;,
@@ -392,7 +391,7 @@
 <span class="kw">pub fn </span>apply_second&lt;<span class="lifetime">&#39;a</span>, A, B, MA, MB, MF&gt;(a: MA, b: MB) -&gt; MB
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
-    B: Clone + <span class="lifetime">&#39;static</span>,
+    B: Clone + <span class="lifetime">&#39;a</span>,
     MA: Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;B&gt; = MB&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;,
     MB: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;
         + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = MF&gt;,
@@ -403,8 +402,8 @@
 
 <span class="kw">pub fn </span>lift2&lt;<span class="lifetime">&#39;a</span>, A, B, C, MA, MB, MC, MF, F&gt;(fun: F, a: MA, b: MB) -&gt; MC
 <span class="kw">where
-    </span>F: Fn(A, B) -&gt; C + <span class="lifetime">&#39;static</span>,
-    A: Clone + <span class="lifetime">&#39;static</span>,
+    </span>F: Fn(A, B) -&gt; C + <span class="lifetime">&#39;a</span>,
+    A: Clone + <span class="lifetime">&#39;a</span>,
     B: Clone + <span class="lifetime">&#39;a</span>,
     C: <span class="lifetime">&#39;a</span>,
     MA: Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;C&gt; = MC&gt; + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, C&gt;&gt; = MF&gt;,
@@ -447,8 +446,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A&gt; Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>Vec&lt;A&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A&gt; Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>Vec&lt;A&gt;
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
     Vec&lt;A&gt;: Clone,
@@ -463,8 +461,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A&gt; Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A&gt; Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt;
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
     std::collections::VecDeque&lt;A&gt;: Clone,
@@ -479,8 +476,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A&gt; Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A&gt; Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt;
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
     std::collections::LinkedList&lt;A&gt;: Clone,
@@ -503,13 +499,15 @@
     </span><span class="kw">fn </span>apply_option() {
         <span class="kw">let </span>n: <span class="prelude-ty">Option</span>&lt;i32&gt; = <span class="prelude-val">None</span>;
         <span class="kw">let </span>nf: <span class="prelude-ty">Option</span>&lt;ApplyFn&lt;<span class="lifetime">&#39;_</span>, i32, i32&gt;&gt; = <span class="prelude-val">None</span>;
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">5</span>).apply(<span class="prelude-val">Some</span>(ApplyFn::from(|x| x + <span class="number">2</span>))), <span class="prelude-val">Some</span>(<span class="number">7</span>));
-        <span class="macro">assert_eq!</span>(n.apply(<span class="prelude-val">Some</span>(ApplyFn::from(|x| x + <span class="number">2</span>))), <span class="prelude-val">None</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">5</span>).apply(nf), <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(
+            <span class="prelude-val">Some</span>(<span class="number">5i32</span>).apply(<span class="prelude-val">Some</span>::&lt;ApplyFn&lt;<span class="lifetime">&#39;_</span>, i32, i32&gt;&gt;(ApplyFn::from(|x: i32| x + <span class="number">2</span>))),
+            <span class="prelude-val">Some</span>(<span class="number">7i32</span>)
+        );
+        <span class="macro">assert_eq!</span>(n.apply::&lt;i32&gt;(<span class="prelude-val">Some</span>(ApplyFn::from(|x: i32| x + <span class="number">2</span>))), <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">5i32</span>).apply::&lt;i32&gt;(nf), <span class="prelude-val">None</span>);
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-    </span><span class="kw">mod </span>std_test {
+    <span class="kw">mod </span>std_test {
         <span class="kw">use </span><span class="kw">crate</span>::apply::{Apply, ApplyFn};
 
         <span class="attribute">#[test]

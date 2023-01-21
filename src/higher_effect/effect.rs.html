@@ -253,7 +253,6 @@
 <span id="253">253</span>
 <span id="254">254</span>
 <span id="255">255</span>
-<span id="256">256</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{fmt::Debug, future::IntoFuture};
 
 <span class="kw">use </span>futures::{
@@ -503,8 +502,7 @@
         </span>B: <span class="lifetime">&#39;a</span>,
     {
         <span class="kw">async move </span>{
-            <span class="kw">let </span>func = f.<span class="kw">await</span>;
-            <span class="kw">let </span>arg = <span class="self">self</span>.<span class="kw">await</span>;
+            <span class="kw">let </span>(func, arg) = Effect::join(f, <span class="self">self</span>).<span class="kw">await</span>;
             func.apply(arg)
         }
         .into()
