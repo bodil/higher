@@ -41,47 +41,42 @@ where
         self.fconst(())
     }
 
-    fn unzip<L: 'a, R: 'a, FL, FR, Z>(self, f: Z) -> (FL, FR)
+    /// Turn the functor into an iterator.
+    ///
+    /// ```
+    /// # use higher::Functor;
+    /// let my_functor = vec![1, 2, 3];
+    /// let iter = my_functor.f_into_iter();
+    /// let my_vec: Vec<i32> = iter.collect();
+    /// assert_eq!(my_vec, vec![1, 2, 3]);
+    /// ```
+    fn f_into_iter(self) -> Box<dyn Iterator<Item = A>>
     where
+        Self: Sized,
+        A: 'static,
+    {
+        let store = Rc::new(RefCell::new(Vec::new()));
+        let istore = store.clone();
+        self.fmap(move |a| istore.borrow_mut().push(a));
+        Box::new(
+            match Rc::try_unwrap(store) {
+                Ok(store) => store,
+                Err(_) => unreachable!(),
+            }
+            .into_inner()
+            .into_iter(),
+        )
+    }
+
+    fn funzip<L: 'a, R: 'a, FL, FR, Z>(self, f: Z) -> (FL, FR)
+    where
+        A: 'static,
         Self: Sized + Functor<'a, A, Target<L> = FL> + Functor<'a, A, Target<R> = FR>,
-        FL: Functor<'a, L, Target<A> = Self> + FromIterator<L>,
-        FR: Functor<'a, R, Target<A> = Self> + FromIterator<R>,
+        FL: Functor<'a, L, Target<A> = Self> + Default + Extend<L>,
+        FR: Functor<'a, R, Target<A> = Self> + Default + Extend<R>,
         Z: Fn(A) -> (L, R) + 'a,
     {
-        struct Unzipper<A, B> {
-            left: Vec<A>,
-            right: Vec<B>,
-        }
-
-        impl<A, B> Unzipper<A, B> {
-            fn new() -> Self {
-                Self {
-                    left: Vec::new(),
-                    right: Vec::new(),
-                }
-            }
-
-            fn push(&mut self, a: A, b: B) {
-                self.left.push(a);
-                self.right.push(b);
-            }
-        }
-
-        let unzipper = Rc::new(RefCell::new(Unzipper::new()));
-        let u = unzipper.clone();
-        self.fmap(move |a| {
-            let (l, r) = f(a);
-            u.borrow_mut().push(l, r)
-        });
-        let unzipper = match Rc::try_unwrap(unzipper) {
-            Ok(unzipper) => unzipper,
-            Err(_) => unreachable!(),
-        }
-        .into_inner();
-        (
-            unzipper.left.into_iter().collect(),
-            unzipper.right.into_iter().collect(),
-        )
+        self.f_into_iter().map(|a| f(a)).unzip()
     }
 }
 
@@ -201,7 +196,7 @@ mod test {
     #[test]
     fn unzip() {
         let a = vec![(1usize, 2i32), (2usize, 4i32), (3usize, 6i32)];
-        let (l, r) = a.unzip(std::convert::identity);
+        let (l, r) = a.funzip(std::convert::identity);
         assert_eq!(l, vec![1usize, 2usize, 3usize]);
         assert_eq!(r, vec![2i32, 4i32, 6i32]);
     }
