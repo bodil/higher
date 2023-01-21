@@ -82,6 +82,23 @@ impl<'a, A: 'a, B: 'a, const N: usize> Bifunctor<'a, A, B> for [(A, B); N] {
     }
 }
 
+impl<'a, A: 'a, B: 'a> Bifunctor<'a, A, B> for (A, B) {
+    type Target<T, U> = (T, U)
+    where
+        T: 'a,
+        U: 'a;
+
+    fn bimap<C, D, L, R>(self, left: L, right: R) -> Self::Target<C, D>
+    where
+        C: 'a,
+        D: 'a,
+        L: Fn(A) -> C + 'a,
+        R: Fn(B) -> D + 'a,
+    {
+        (left(self.0), right(self.1))
+    }
+}
+
 impl<'a, A: 'a, B: 'a> Bifunctor<'a, A, B> for Vec<(A, B)> {
     type Target<T, U> = Vec<(T, U)> where T: 'a, U: 'a;
 
