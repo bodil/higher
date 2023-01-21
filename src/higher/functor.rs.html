@@ -182,25 +182,6 @@
 <span id="182">182</span>
 <span id="183">183</span>
 <span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
-<span id="192">192</span>
-<span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
-<span id="198">198</span>
-<span id="199">199</span>
-<span id="200">200</span>
-<span id="201">201</span>
-<span id="202">202</span>
-<span id="203">203</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{cell::RefCell, mem::MaybeUninit, rc::Rc};
 
 <span class="doccomment">/// A `Functor` lets you change the type parameter of a generic type.
@@ -269,17 +250,6 @@
             .into_inner()
             .into_iter(),
         )
-    }
-
-    <span class="kw">fn </span>funzip&lt;L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>, FL, FR, Z&gt;(<span class="self">self</span>, f: Z) -&gt; (FL, FR)
-    <span class="kw">where
-        </span>A: <span class="lifetime">&#39;static</span>,
-        <span class="self">Self</span>: Sized + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;L&gt; = FL&gt; + Functor&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;R&gt; = FR&gt;,
-        FL: Functor&lt;<span class="lifetime">&#39;a</span>, L, Target&lt;A&gt; = <span class="self">Self</span>&gt; + Default + Extend&lt;L&gt;,
-        FR: Functor&lt;<span class="lifetime">&#39;a</span>, R, Target&lt;A&gt; = <span class="self">Self</span>&gt; + Default + Extend&lt;R&gt;,
-        Z: Fn(A) -&gt; (L, R) + <span class="lifetime">&#39;a</span>,
-    {
-        <span class="self">self</span>.f_into_iter().map(|a| f(a)).unzip()
     }
 }
 
@@ -394,14 +364,6 @@
         <span class="kw">let </span>a = <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
         <span class="kw">let </span>b = a.fmap(|x| (x <span class="kw">as </span>usize) * <span class="number">2</span>);
         <span class="macro">assert_eq!</span>(b, <span class="macro">vec!</span>[<span class="number">2usize</span>, <span class="number">4usize</span>, <span class="number">6usize</span>]);
-    }
-
-    <span class="attribute">#[test]
-    </span><span class="kw">fn </span>unzip() {
-        <span class="kw">let </span>a = <span class="macro">vec!</span>[(<span class="number">1usize</span>, <span class="number">2i32</span>), (<span class="number">2usize</span>, <span class="number">4i32</span>), (<span class="number">3usize</span>, <span class="number">6i32</span>)];
-        <span class="kw">let </span>(l, r) = a.funzip(std::convert::identity);
-        <span class="macro">assert_eq!</span>(l, <span class="macro">vec!</span>[<span class="number">1usize</span>, <span class="number">2usize</span>, <span class="number">3usize</span>]);
-        <span class="macro">assert_eq!</span>(r, <span class="macro">vec!</span>[<span class="number">2i32</span>, <span class="number">4i32</span>, <span class="number">6i32</span>]);
     }
 }
 </code></pre></div>
