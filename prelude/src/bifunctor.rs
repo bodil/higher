@@ -1,4 +1,4 @@
-use core::convert::identity;
+use std::convert::identity;
 
 use crate::Functor;
 

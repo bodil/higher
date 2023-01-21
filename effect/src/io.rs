@@ -250,8 +250,8 @@ impl<'a, A, E> IO<'a, A, E> {
     }
 }
 
-impl<'a, A, E> core::fmt::Debug for IO<'a, A, E> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<'a, A, E> std::fmt::Debug for IO<'a, A, E> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!(
             "IO<{}, {}>",
             std::any::type_name::<A>(),

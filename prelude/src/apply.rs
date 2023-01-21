@@ -26,8 +26,8 @@ where
     }
 }
 
-impl<'a, A, B> core::fmt::Debug for ApplyFn<'a, A, B> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<'a, A, B> std::fmt::Debug for ApplyFn<'a, A, B> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!(
             "ApplyFn({}) -> {}",
             std::any::type_name::<A>(),
@@ -184,7 +184,6 @@ where
     }
 }
 
-#[cfg(feature = "std")]
 impl<'a, A> Apply<'a, A> for Vec<A>
 where
     A: 'a,
@@ -200,7 +199,6 @@ where
     }
 }
 
-#[cfg(feature = "std")]
 impl<'a, A> Apply<'a, A> for std::collections::VecDeque<A>
 where
     A: 'a,
@@ -216,7 +214,6 @@ where
     }
 }
 
-#[cfg(feature = "std")]
 impl<'a, A> Apply<'a, A> for std::collections::LinkedList<A>
 where
     A: 'a,
@@ -240,12 +237,14 @@ mod test {
     fn apply_option() {
         let n: Option<i32> = None;
         let nf: Option<ApplyFn<'_, i32, i32>> = None;
-        assert_eq!(Some(5).apply(Some(ApplyFn::from(|x| x + 2))), Some(7));
-        assert_eq!(n.apply(Some(ApplyFn::from(|x| x + 2))), None);
-        assert_eq!(Some(5).apply(nf), None);
+        assert_eq!(
+            Some(5i32).apply(Some::<ApplyFn<'_, i32, i32>>(ApplyFn::from(|x: i32| x + 2))),
+            Some(7i32)
+        );
+        assert_eq!(n.apply::<i32>(Some(ApplyFn::from(|x: i32| x + 2))), None);
+        assert_eq!(Some(5i32).apply::<i32>(nf), None);
     }
 
-    #[cfg(feature = "std")]
     mod std_test {
         use crate::apply::{Apply, ApplyFn};
 

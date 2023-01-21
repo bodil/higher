@@ -79,19 +79,16 @@ macro_rules! impl_bind_from_iter {
     };
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Bind<'a, A> for Vec<A> {
     type Target<T> = Vec<T> where T: 'a;
     impl_bind_from_iter!();
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Bind<'a, A> for std::collections::VecDeque<A> {
     type Target<T> = std::collections::VecDeque<T> where T: 'a;
     impl_bind_from_iter!();
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Bind<'a, A> for std::collections::LinkedList<A> {
     type Target<T> = std::collections::LinkedList<T> where T: 'a;
     impl_bind_from_iter!();

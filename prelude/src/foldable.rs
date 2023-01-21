@@ -1,4 +1,4 @@
-use core::convert::identity;
+use std::convert::identity;
 
 use crate::{
     apply::{apply_second, ApplyFn},
@@ -280,22 +280,18 @@ impl<'a, A: 'a, const N: usize> Foldable<'a, A> for [A; N] {
     impl_foldable_from_iter!();
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Foldable<'a, A> for Vec<A> {
     impl_foldable_from_iter!();
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Foldable<'a, A> for std::collections::VecDeque<A> {
     impl_foldable_from_iter!();
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Foldable<'a, A> for std::collections::LinkedList<A> {
     impl_foldable_from_iter!();
 }
 
-#[cfg(all(test, feature = "std"))]
 mod test {
     use crate::Foldable;
 

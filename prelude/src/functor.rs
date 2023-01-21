@@ -1,4 +1,4 @@
-use core::mem::MaybeUninit;
+use std::{cell::RefCell, mem::MaybeUninit, rc::Rc};
 
 /// A `Functor` lets you change the type parameter of a generic type.
 ///
@@ -39,6 +39,49 @@ where
         Self: Sized,
     {
         self.fconst(())
+    }
+
+    fn unzip<L: 'a, R: 'a, FL, FR, Z>(self, f: Z) -> (FL, FR)
+    where
+        Self: Sized + Functor<'a, A, Target<L> = FL> + Functor<'a, A, Target<R> = FR>,
+        FL: Functor<'a, L, Target<A> = Self> + FromIterator<L>,
+        FR: Functor<'a, R, Target<A> = Self> + FromIterator<R>,
+        Z: Fn(A) -> (L, R) + 'a,
+    {
+        struct Unzipper<A, B> {
+            left: Vec<A>,
+            right: Vec<B>,
+        }
+
+        impl<A, B> Unzipper<A, B> {
+            fn new() -> Self {
+                Self {
+                    left: Vec::new(),
+                    right: Vec::new(),
+                }
+            }
+
+            fn push(&mut self, a: A, b: B) {
+                self.left.push(a);
+                self.right.push(b);
+            }
+        }
+
+        let unzipper = Rc::new(RefCell::new(Unzipper::new()));
+        let u = unzipper.clone();
+        self.fmap(move |a| {
+            let (l, r) = f(a);
+            u.borrow_mut().push(l, r)
+        });
+        let unzipper = match Rc::try_unwrap(unzipper) {
+            Ok(unzipper) => unzipper,
+            Err(_) => unreachable!(),
+        }
+        .into_inner();
+        (
+            unzipper.left.into_iter().collect(),
+            unzipper.right.into_iter().collect(),
+        )
     }
 }
 
@@ -89,7 +132,7 @@ impl<'a, A: 'a, const N: usize> Functor<'a, A> for [A; N] {
     }
 }
 
-macro_rules! impl_functor_from_iter {
+macro_rules! impl_fmap_from_iter {
     () => {
         fn fmap<B, F>(self, f: F) -> Self::Target<B>
         where
@@ -101,22 +144,19 @@ macro_rules! impl_functor_from_iter {
     };
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Functor<'a, A> for Vec<A> {
     type Target<T> = Vec<T> where T: 'a;
-    impl_functor_from_iter!();
+    impl_fmap_from_iter!();
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Functor<'a, A> for std::collections::VecDeque<A> {
     type Target<T> = std::collections::VecDeque<T> where T: 'a;
-    impl_functor_from_iter!();
+    impl_fmap_from_iter!();
 }
 
-#[cfg(feature = "std")]
 impl<'a, A: 'a> Functor<'a, A> for std::collections::LinkedList<A> {
     type Target<T> = std::collections::LinkedList<T> where T: 'a;
-    impl_functor_from_iter!();
+    impl_fmap_from_iter!();
 }
 
 #[cfg(test)]
@@ -126,8 +166,8 @@ mod test {
     #[test]
     fn option_functor() {
         let a = Option::Some(31337);
-        let b = a.fmap(|x| format!("{}", x));
-        assert_eq!(b, Option::Some("31337".to_string()));
+        let b = a.fmap(|x| x + 2);
+        assert_eq!(b, Option::Some(31339));
     }
 
     #[test]
@@ -154,7 +194,15 @@ mod test {
     #[test]
     fn vec_exofunctor() {
         let a = vec![1, 2, 3];
-        let b = a.fmap(|x| x.to_string());
-        assert_eq!(b, vec!["1".to_string(), "2".to_string(), "3".to_string()]);
+        let b = a.fmap(|x| (x as usize) * 2);
+        assert_eq!(b, vec![2usize, 4usize, 6usize]);
+    }
+
+    #[test]
+    fn unzip() {
+        let a = vec![(1usize, 2i32), (2usize, 4i32), (3usize, 6i32)];
+        let (l, r) = a.unzip(std::convert::identity);
+        assert_eq!(l, vec![1usize, 2usize, 3usize]);
+        assert_eq!(r, vec![2i32, 4i32, 6i32]);
     }
 }

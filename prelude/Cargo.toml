@@ -12,11 +12,6 @@ readme = "../README.md"
 categories = ["data-structures"]
 keywords = ["functor", "applicative", "monad", "category-theory", "haskell"]
 
-[features]
-default = ["std"]
-std = []
-test = ["std"]
-
 [dependencies]
 higher-derive = { path = "../macros" }
 futures = { version = "0.3.25", optional = true }

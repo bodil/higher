@@ -1,4 +1,4 @@
-use core::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut};
 
 use crate::{algebras::HeytingAlgebra, rings::Semiring, Semigroup};
 

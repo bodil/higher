@@ -21,9 +21,9 @@ mod test {
 
     #[test]
     fn warm_fuzzy_option() {
-        let a = Option::pure(31337);
-        let b = a.bind(|x| Option::pure(x.to_string()));
-        assert_eq!(b, Option::Some("31337".to_string()));
+        let a = Option::pure(31337i32);
+        let b = a.bind(|x| Option::pure(x as usize));
+        assert_eq!(b, Option::Some(31337usize));
     }
 
     #[test]

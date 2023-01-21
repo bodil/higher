@@ -1,4 +1,4 @@
-use core::{
+use std::{
     convert::Infallible,
     ops::{Deref, DerefMut},
 };
@@ -20,7 +20,6 @@ pub trait Semigroup {
     fn mappend(self, other: Self) -> Self;
 }
 
-#[cfg(feature = "std")]
 impl<A> Semigroup for Vec<A> {
     fn mappend(mut self, other: Self) -> Self {
         self.extend(other);
@@ -28,7 +27,6 @@ impl<A> Semigroup for Vec<A> {
     }
 }
 
-#[cfg(feature = "std")]
 impl Semigroup for String {
     fn mappend(self, other: Self) -> Self {
         self + &other
