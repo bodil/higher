@@ -1,5 +1,7 @@
 use std::{cell::RefCell, mem::MaybeUninit, rc::Rc};
 
+use crate::repeat;
+
 /// A `Functor` lets you change the type parameter of a generic type.
 ///
 /// A `Functor` defines a method `fmap` on a type `F<_>: Functor` which converts
@@ -30,7 +32,7 @@ where
         Self: Sized,
         B: Clone,
     {
-        self.fmap(move |_| b.clone())
+        self.fmap(repeat(b))
     }
 
     /// Map the functor to the unit value `()`.
@@ -116,31 +118,48 @@ impl<'a, A: 'a, const N: usize> Functor<'a, A> for [A; N] {
     }
 }
 
-macro_rules! impl_fmap_from_iter {
-    () => {
-        fn fmap<B, F>(self, f: F) -> Self::Target<B>
-        where
-            B: 'a,
-            F: Fn(A) -> B,
-        {
-            self.into_iter().map(f).collect()
-        }
-    };
-}
-
 impl<'a, A: 'a> Functor<'a, A> for Vec<A> {
     type Target<T> = Vec<T> where T: 'a;
-    impl_fmap_from_iter!();
+
+    fn fmap<B, F>(self, f: F) -> Self::Target<B>
+    where
+        B: 'a,
+        F: Fn(A) -> B + 'a,
+    {
+        let mut out = Vec::with_capacity(self.len());
+        for item in self {
+            out.push(f(item));
+        }
+        out
+    }
 }
 
 impl<'a, A: 'a> Functor<'a, A> for std::collections::VecDeque<A> {
     type Target<T> = std::collections::VecDeque<T> where T: 'a;
-    impl_fmap_from_iter!();
+
+    fn fmap<B, F>(self, f: F) -> Self::Target<B>
+    where
+        B: 'a,
+        F: Fn(A) -> B + 'a,
+    {
+        let mut out = std::collections::VecDeque::with_capacity(self.len());
+        for item in self {
+            out.push_back(f(item));
+        }
+        out
+    }
 }
 
 impl<'a, A: 'a> Functor<'a, A> for std::collections::LinkedList<A> {
     type Target<T> = std::collections::LinkedList<T> where T: 'a;
-    impl_fmap_from_iter!();
+
+    fn fmap<B, F>(self, f: F) -> Self::Target<B>
+    where
+        B: 'a,
+        F: Fn(A) -> B,
+    {
+        self.into_iter().map(f).collect()
+    }
 }
 
 #[cfg(test)]
