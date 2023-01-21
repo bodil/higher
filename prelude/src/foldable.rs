@@ -292,6 +292,7 @@ impl<'a, A: 'a> Foldable<'a, A> for std::collections::LinkedList<A> {
     impl_foldable_from_iter!();
 }
 
+#[cfg(test)]
 mod test {
     use crate::Foldable;
 
