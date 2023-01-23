@@ -132,6 +132,8 @@
 <span id="132">132</span>
 <span id="133">133</span>
 <span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     convert::Infallible,
     ops::{Deref, DerefMut},
@@ -177,7 +179,8 @@
     }
 }
 
-<span class="doccomment">/// Semigroup where [`mappend`](Semigroup::mappend) always takes the first option.
+<span class="doccomment">/// Semigroup where [`mappend`](Semigroup::mappend) discards the second
+/// argument, always returning the first.
 ///
 /// ```
 /// # use higher::semigroup::{Semigroup, First};
@@ -222,7 +225,8 @@
     </span>}
 }
 
-<span class="doccomment">/// Semigroup where [`mappend`](Semigroup::mappend) always takes the last option.
+<span class="doccomment">/// Semigroup where [`mappend`](Semigroup::mappend) discards the first argument,
+/// always returning the second.
 ///
 /// ```
 /// # use higher::semigroup::{Semigroup, Last};

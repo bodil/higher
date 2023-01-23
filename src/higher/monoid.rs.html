@@ -244,6 +244,27 @@
 <span id="244">244</span>
 <span id="245">245</span>
 <span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
 <span class="kw">use crate</span>::{algebras::HeytingAlgebra, rings::Semiring, Semigroup};
@@ -253,6 +274,15 @@
 ///
 /// - Associativity: `(x + y) + z == x + (y + z)`
 /// - Identity: `0 + a == a + 0 == a`
+///
+/// If you&#39;re wondering why this isn&#39;t implemented for Rust&#39;s primitive
+/// integers, it&#39;s because they&#39;re essentially two `Monoid`s in a trenchcoat:
+/// both addition and multiplication fulfill the monoid laws. To distinguish
+/// between the two, you can wrap them in the [`Additive`](Additive) and
+/// [`Multiplicative`](Multiplicative) newtypes. It&#39;s generally easier to use
+/// [`Semiring`](Semiring) as an abstraction for numbers for this
+/// reason, but the newtypes are there if you just need to use a number as a
+/// monoid.
 </span><span class="kw">pub trait </span>Monoid: Semigroup + Default {}
 
 <span class="kw">impl</span>&lt;A&gt; Monoid <span class="kw">for </span>A <span class="kw">where </span>A: Semigroup + Default {}
@@ -288,6 +318,9 @@
 }
 
 <span class="doccomment">/// Monoid and semigroup for semirings under addition.
+///
+/// Wrap a [`Semiring`](Semiring) (such as an integer or float) in this to use
+/// its addition method as a monoid.
 ///
 /// ```
 /// # use higher::{Semigroup, rings::Semiring, monoid::Additive};
@@ -325,6 +358,9 @@
 
 <span class="doccomment">/// Monoid and semigroup for semirings under multiplication.
 ///
+/// Wrap a [`Semiring`](Semiring) (such as an integer or float) in this to use
+/// its multiplication method as a monoid.
+///
 /// ```
 /// # use higher::{Semigroup, rings::Semiring, monoid::Multiplicative};
 /// # let x = 5;
@@ -360,6 +396,9 @@
 }
 
 <span class="doccomment">/// Monoid and semigroup for conjunction.
+///
+/// Wrap a [`HeytingAlgebra`](HeytingAlgebra) (such as a boolean) in this to use
+/// its conjunction method (logical &quot;and&quot;) as a monoid.
 ///
 /// ```
 /// # use higher::{Semigroup, monoid::Conj, algebras::HeytingAlgebra};
@@ -412,6 +451,9 @@
 }
 
 <span class="doccomment">/// Monoid and semigroup for disjunction.
+///
+/// Wrap a [`HeytingAlgebra`](HeytingAlgebra) (such as a boolean) in this to use
+/// its disjunction method (logical &quot;or&quot;) as a monoid.
 ///
 /// ```
 /// # use higher::{Semigroup, monoid::Disj, algebras::HeytingAlgebra};
