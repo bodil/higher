@@ -111,6 +111,8 @@ where
     }
 }
 
+/// A default implementation for [`fold_map`](Foldable::fold_map) using
+/// [`foldl`](Foldable::foldl).
 pub fn fold_map_default_l<'a, A, L, M, F>(f: F, l: L) -> M
 where
     A: 'a,
@@ -121,6 +123,8 @@ where
     l.foldl(move |acc, x| acc.mappend(f(x)), Default::default())
 }
 
+/// A default implementation for [`fold_map_ref`](Foldable::fold_map_ref) using
+/// [`foldl_ref`](Foldable::foldl_ref).
 pub fn fold_map_default_l_ref<'a, A, L, M, F>(f: F, l: &'a L) -> M
 where
     A: 'a,
