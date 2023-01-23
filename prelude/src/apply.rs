@@ -147,7 +147,7 @@ where
     }
 }
 
-pub fn lift2<'a, A, B, C, MA, MB, MC, MF, F>(fun: F, a: MA, b: MB) -> MC
+pub fn lift2<'a, A, B, C, MA, MB, MC, MF, F>(f: &'a F, a: MA, b: MB) -> MC
 where
     F: Fn(A, B) -> C + 'a,
     A: Clone + 'a,
@@ -158,11 +158,7 @@ where
     MC: Apply<'a, C, Target<A> = MA>,
     MF: Apply<'a, ApplyFn<'a, B, C>>,
 {
-    let fun_ref = Rc::new(fun);
-    b.apply(a.fmap(move |x: A| {
-        let f = fun_ref.clone();
-        ApplyFn::from(move |y: B| f(x.clone(), y))
-    }))
+    b.apply(a.fmap(move |x: A| ApplyFn::from(move |y: B| f(x.clone(), y))))
 }
 
 impl<'a, A> Apply<'a, A> for Option<A>
@@ -269,7 +265,7 @@ mod test {
     fn apply_lift2() {
         let a = Some(2);
         let b = Some(3);
-        let sum = lift2(|a, b| a + b, a, b);
+        let sum = lift2(&|a, b| a + b, a, b);
         assert_eq!(sum, Some(5));
     }
 }

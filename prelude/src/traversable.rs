@@ -121,7 +121,7 @@ where
     let out: MLB = Pure::pure(Default::default());
     let cons_f = move |ys: MLB, x: A| {
         lift2(
-            |item: B, mut list: LB| {
+            &|item: B, mut list: LB| {
                 list.extend(iter::once(item));
                 list
             },
