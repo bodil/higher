@@ -232,6 +232,18 @@
 <span id="232">232</span>
 <span id="233">233</span>
 <span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
 <span class="kw">use crate</span>::{algebras::HeytingAlgebra, rings::Semiring, Semigroup};
@@ -245,8 +257,20 @@
 
 <span class="kw">impl</span>&lt;A&gt; Monoid <span class="kw">for </span>A <span class="kw">where </span>A: Semigroup + Default {}
 
-<span class="macro">macro_rules! </span>deref_impl {
+<span class="macro">macro_rules! </span>impl_newtype {
     (<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ident</span>) =&gt; {
+        <span class="kw">impl</span>&lt;A&gt; <span class="macro-nonterminal">$</span><span class="kw">type</span>&lt;<span class="macro-nonterminal">A</span>&gt; {
+            <span class="kw">pub fn </span>unwrap(<span class="self">self</span>) -&gt; A {
+                <span class="self">self</span>.<span class="number">0
+            </span>}
+        }
+
+        <span class="kw">impl</span>&lt;A&gt; From&lt;A&gt; <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type</span>&lt;<span class="macro-nonterminal">A</span>&gt; {
+            <span class="kw">fn </span>from(value: A) -&gt; <span class="self">Self </span>{
+                <span class="self">Self</span>(value)
+            }
+        }
+
         <span class="kw">impl</span>&lt;A&gt; Deref <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type</span>&lt;<span class="macro-nonterminal">A</span>&gt; {
             <span class="kw">type </span>Target = A;
 
@@ -279,7 +303,7 @@
 </span><span class="attribute">#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 </span><span class="kw">pub struct </span>Additive&lt;A&gt;(<span class="kw">pub </span>A);
 
-<span class="macro">deref_impl!</span>(Additive);
+<span class="macro">impl_newtype!</span>(Additive);
 
 <span class="kw">impl</span>&lt;A&gt; Default <span class="kw">for </span>Additive&lt;A&gt;
 <span class="kw">where
@@ -315,7 +339,7 @@
 </span><span class="attribute">#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 </span><span class="kw">pub struct </span>Multiplicative&lt;A&gt;(<span class="kw">pub </span>A);
 
-<span class="macro">deref_impl!</span>(Multiplicative);
+<span class="macro">impl_newtype!</span>(Multiplicative);
 
 <span class="kw">impl</span>&lt;A&gt; Default <span class="kw">for </span>Multiplicative&lt;A&gt;
 <span class="kw">where
@@ -350,7 +374,7 @@
 </span><span class="attribute">#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 </span><span class="kw">pub struct </span>Conj&lt;A&gt;(<span class="kw">pub </span>A);
 
-<span class="macro">deref_impl!</span>(Conj);
+<span class="macro">impl_newtype!</span>(Conj);
 
 <span class="kw">impl</span>&lt;A&gt; Default <span class="kw">for </span>Conj&lt;A&gt;
 <span class="kw">where
@@ -402,7 +426,7 @@
 </span><span class="attribute">#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 </span><span class="kw">pub struct </span>Disj&lt;A&gt;(<span class="kw">pub </span>A);
 
-<span class="macro">deref_impl!</span>(Disj);
+<span class="macro">impl_newtype!</span>(Disj);
 
 <span class="kw">impl</span>&lt;A&gt; Default <span class="kw">for </span>Disj&lt;A&gt;
 <span class="kw">where
@@ -456,7 +480,7 @@
 </span><span class="attribute">#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 </span><span class="kw">pub struct </span>Dual&lt;A&gt;(<span class="kw">pub </span>A);
 
-<span class="macro">deref_impl!</span>(Dual);
+<span class="macro">impl_newtype!</span>(Dual);
 
 <span class="kw">impl</span>&lt;A&gt; Semigroup <span class="kw">for </span>Dual&lt;A&gt;
 <span class="kw">where

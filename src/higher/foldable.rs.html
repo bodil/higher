@@ -313,7 +313,13 @@
 <span id="313">313</span>
 <span id="314">314</span>
 <span id="315">315</span>
-</pre><pre class="rust"><code><span class="kw">use </span>std::convert::identity;
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+</pre><pre class="rust"><code><span class="kw">use </span>std::{
+    collections::{LinkedList, VecDeque},
+    convert::identity,
+};
 
 <span class="kw">use crate</span>::{apply::ApplyFn, rings::Semiring, Applicative, Apply, Bind, Functor, Monoid, Pure};
 
@@ -595,11 +601,11 @@
     <span class="macro">impl_foldable_from_iter!</span>();
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>VecDeque&lt;A&gt; {
     <span class="macro">impl_foldable_from_iter!</span>();
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>LinkedList&lt;A&gt; {
     <span class="macro">impl_foldable_from_iter!</span>();
 }
 

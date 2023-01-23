@@ -108,6 +108,30 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     convert::Infallible,
     ops::{Deref, DerefMut},
@@ -166,6 +190,18 @@
 </span><span class="attribute">#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 </span><span class="kw">pub struct </span>First&lt;A&gt;(<span class="kw">pub </span>A);
 
+<span class="kw">impl</span>&lt;A&gt; First&lt;A&gt; {
+    <span class="kw">pub fn </span>unwrap(<span class="self">self</span>) -&gt; A {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;A&gt; From&lt;A&gt; <span class="kw">for </span>First&lt;A&gt; {
+    <span class="kw">fn </span>from(value: A) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(value)
+    }
+}
+
 <span class="kw">impl</span>&lt;A&gt; Deref <span class="kw">for </span>First&lt;A&gt; {
     <span class="kw">type </span>Target = A;
 
@@ -198,6 +234,18 @@
 /// ```
 </span><span class="attribute">#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 </span><span class="kw">pub struct </span>Last&lt;A&gt;(<span class="kw">pub </span>A);
+
+<span class="kw">impl</span>&lt;A&gt; Last&lt;A&gt; {
+    <span class="kw">pub fn </span>unwrap(<span class="self">self</span>) -&gt; A {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;A&gt; From&lt;A&gt; <span class="kw">for </span>Last&lt;A&gt; {
+    <span class="kw">fn </span>from(value: A) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(value)
+    }
+}
 
 <span class="kw">impl</span>&lt;A&gt; Deref <span class="kw">for </span>Last&lt;A&gt; {
     <span class="kw">type </span>Target = A;
