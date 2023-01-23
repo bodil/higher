@@ -478,7 +478,7 @@ fn derive_functor_enum(
                     .unnamed
                     .iter()
                     .enumerate()
-                    .map(|(index, _)| Ident::new(&format!("arg{}", index), Span::call_site()))
+                    .map(|(index, _)| Ident::new(&format!("arg{index}"), Span::call_site()))
                     .collect();
                 let fields = fields.unnamed.iter().zip(args.iter()).map(|(field, arg)| {
                     if let Some(function_name) = match_type_param(generic_types, &field.ty) {

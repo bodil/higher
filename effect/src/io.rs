@@ -396,7 +396,7 @@ pub fn put_str_ln<'a, S: AsRef<str> + 'a>(s: S) -> IO<'a, (), Error> {
 /// Print any value which implements [`Display`](Display) to the console,
 /// followed by a newline.
 pub fn print<'a, S: Display + 'a>(s: S) -> IO<'a, (), Error> {
-    put_str_ln(format!("{}", s))
+    put_str_ln(format!("{s}"))
 }
 
 /// Read a line from the console.

@@ -52,10 +52,7 @@ pub trait Foldable<'a, A: 'a> {
         M::Target<()>: Applicative<'a, (), Target<ApplyFn<'a, B, ()>> = M::Target<ApplyFn<'a, B, ()>>>
             + Applicative<'a, (), Target<B> = M>,
     {
-        self.foldr(
-            move |x, y| f(x).apply_second(y),
-            Pure::pure(Default::default()),
-        )
+        self.foldr(move |x, y| f(x).apply_second(y), Pure::pure(()))
     }
 
     fn sequence_unit<B: 'a>(self) -> A::Target<()>

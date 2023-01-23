@@ -59,7 +59,10 @@ pub trait Bind<'a, A: 'a>: Functor<'a, A> {
         Self::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
     {
         let (giver, receiver) = mpsc::unbounded();
-        let void = self.bind::<(), _>(move |a| Pure::pure(giver.unbounded_send(a).unwrap()));
+        let void = self.bind::<(), _>(move |a| {
+            giver.unbounded_send(a).unwrap();
+            Pure::pure(())
+        });
         (void, Box::pin(receiver))
     }
 }
