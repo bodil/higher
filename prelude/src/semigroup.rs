@@ -56,6 +56,18 @@ impl Semigroup for Infallible {
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct First<A>(pub A);
 
+impl<A> First<A> {
+    pub fn unwrap(self) -> A {
+        self.0
+    }
+}
+
+impl<A> From<A> for First<A> {
+    fn from(value: A) -> Self {
+        Self(value)
+    }
+}
+
 impl<A> Deref for First<A> {
     type Target = A;
 
@@ -88,6 +100,18 @@ impl<A> Semigroup for First<A> {
 /// ```
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Last<A>(pub A);
+
+impl<A> Last<A> {
+    pub fn unwrap(self) -> A {
+        self.0
+    }
+}
+
+impl<A> From<A> for Last<A> {
+    fn from(value: A) -> Self {
+        Self(value)
+    }
+}
 
 impl<A> Deref for Last<A> {
     type Target = A;

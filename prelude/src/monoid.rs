@@ -11,8 +11,20 @@ pub trait Monoid: Semigroup + Default {}
 
 impl<A> Monoid for A where A: Semigroup + Default {}
 
-macro_rules! deref_impl {
+macro_rules! impl_newtype {
     ($type:ident) => {
+        impl<A> $type<A> {
+            pub fn unwrap(self) -> A {
+                self.0
+            }
+        }
+
+        impl<A> From<A> for $type<A> {
+            fn from(value: A) -> Self {
+                Self(value)
+            }
+        }
+
         impl<A> Deref for $type<A> {
             type Target = A;
 
@@ -45,7 +57,7 @@ macro_rules! deref_impl {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Additive<A>(pub A);
 
-deref_impl!(Additive);
+impl_newtype!(Additive);
 
 impl<A> Default for Additive<A>
 where
@@ -81,7 +93,7 @@ where
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Multiplicative<A>(pub A);
 
-deref_impl!(Multiplicative);
+impl_newtype!(Multiplicative);
 
 impl<A> Default for Multiplicative<A>
 where
@@ -116,7 +128,7 @@ where
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Conj<A>(pub A);
 
-deref_impl!(Conj);
+impl_newtype!(Conj);
 
 impl<A> Default for Conj<A>
 where
@@ -168,7 +180,7 @@ where
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Disj<A>(pub A);
 
-deref_impl!(Disj);
+impl_newtype!(Disj);
 
 impl<A> Default for Disj<A>
 where
@@ -222,7 +234,7 @@ where
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Dual<A>(pub A);
 
-deref_impl!(Dual);
+impl_newtype!(Dual);
 
 impl<A> Semigroup for Dual<A>
 where
