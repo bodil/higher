@@ -60,7 +60,7 @@ pub use crate::traversable::Traversable;
 
 pub mod error;
 #[doc(inline)]
-pub use crate::error::ApplicativeError;
+pub use crate::error::{ApplicativeError, MonadError};
 
 pub mod algebras;
 pub mod rings;
