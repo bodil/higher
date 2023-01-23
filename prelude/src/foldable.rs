@@ -8,36 +8,29 @@ use crate::{
     apply::ApplyFn,
     monoid::{Conj, Disj},
     rings::Semiring,
-    Alt, Applicative, Apply, Bind, Functor, Monoid, Plus, Pure,
+    Alt, Applicative, Bind, Monoid, Plus, Pure,
 };
 
-pub trait Foldable<'a, A>
-where
-    A: 'a,
-{
-    fn foldr<B, F>(self, f: F, init: B) -> B
+pub trait Foldable<'a, A: 'a> {
+    fn foldr<B: 'a, F: 'a>(self, f: F, init: B) -> B
     where
-        B: 'a,
-        F: Fn(A, B) -> B + 'a;
-    fn foldr_ref<B, F>(&'a self, f: F, init: B) -> B
+        F: Fn(A, B) -> B;
+    fn foldr_ref<B: 'a, F: 'a>(&'a self, f: F, init: B) -> B
     where
-        B: 'a,
-        F: Fn(&'a A, B) -> B + 'a;
-    fn foldl<B, F>(self, f: F, init: B) -> B
+        F: Fn(&'a A, B) -> B;
+    fn foldl<B: 'a, F: 'a>(self, f: F, init: B) -> B
     where
-        B: 'a,
-        F: Fn(B, A) -> B + 'a;
-    fn foldl_ref<B, F>(&'a self, f: F, init: B) -> B
+        F: Fn(B, A) -> B;
+    fn foldl_ref<B: 'a, F: 'a>(&'a self, f: F, init: B) -> B
     where
-        B: 'a,
-        F: Fn(B, &'a A) -> B + 'a;
-    fn fold_map<F, M>(self, f: F) -> M
+        F: Fn(B, &'a A) -> B;
+    fn fold_map<F: 'a, M>(self, f: F) -> M
     where
-        F: Fn(A) -> M + 'a,
+        F: Fn(A) -> M,
         M: Monoid;
-    fn fold_map_ref<F, M>(&'a self, f: F) -> M
+    fn fold_map_ref<F: 'a, M>(&'a self, f: F) -> M
     where
-        F: Fn(&'a A) -> M + 'a,
+        F: Fn(&'a A) -> M,
         M: Monoid + 'a;
 
     fn fold(self) -> A
@@ -48,54 +41,42 @@ where
         self.fold_map(identity)
     }
 
-    fn traverse_unit<B, MB, MU, MF, F>(self, func: F) -> MU
+    fn traverse_unit<B: 'a, M: 'a, F: 'a>(self, f: F) -> M::Target<()>
     where
         Self: Sized,
-        A: 'a,
-        B: 'a,
-        MB: Applicative<'a, B>
-            + Apply<'a, B, Target<ApplyFn<'a, B, ()>> = MF>
-            + Apply<'a, B, Target<()> = MU>,
-        MU: Applicative<'a, ()>
-            + Apply<'a, (), Target<B> = MB>
-            + Apply<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
-            + Functor<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
-            + 'a,
-        MF: Apply<'a, ApplyFn<'a, B, ()>, Target<B> = MB>,
-        F: Fn(A) -> MB + 'a,
+        B: Clone,
+        M: Applicative<'a, B>,
+        F: Fn(A) -> M,
+
+        M::Target<ApplyFn<'a, B, ()>>: Applicative<'a, ApplyFn<'a, B, ()>, Target<B> = M>,
+        M::Target<()>: Applicative<'a, (), Target<ApplyFn<'a, B, ()>> = M::Target<ApplyFn<'a, B, ()>>>
+            + Applicative<'a, (), Target<B> = M>,
     {
-        #[allow(clippy::unit_arg)]
         self.foldr(
-            move |x, y| func(x).apply_second(y),
+            move |x, y| f(x).apply_second(y),
             Pure::pure(Default::default()),
         )
     }
 
-    fn sequence_unit<B, MA, MU, MF>(self) -> MU
+    fn sequence_unit<B: 'a>(self) -> A::Target<()>
     where
         Self: Sized,
-        B: 'a,
-        A: Applicative<'a, B>
-            + Apply<'a, B, Target<()> = MU>
-            + Apply<'a, B, Target<ApplyFn<'a, B, ()>> = MF>
-            + 'a,
-        MU: Applicative<'a, ()>
-            + Apply<'a, (), Target<B> = A>
-            + Apply<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
-            + Functor<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
-            + 'a,
-        MF: Apply<'a, ApplyFn<'a, B, ()>> + Apply<'a, ApplyFn<'a, B, ()>, Target<B> = A>,
+        B: Clone,
+        A: Applicative<'a, B>,
+
+        A::Target<()>: Applicative<'a, (), Target<B> = A>
+            + Applicative<'a, (), Target<ApplyFn<'a, B, ()>> = A::Target<ApplyFn<'a, B, ()>>>,
+        A::Target<ApplyFn<'a, B, ()>>: Applicative<'a, ApplyFn<'a, B, ()>, Target<B> = A>,
     {
         self.traverse_unit(identity)
     }
 
-    fn fold_m<M, B, F>(&'a self, f: &'a F, init: B) -> M
+    fn fold_m<M: 'a, B: 'a, F: 'a>(&'a self, f: &'a F, init: B) -> M
     where
         Self: Sized,
-        A: 'a,
-        B: 'a,
-        M: Pure<B> + Bind<'a, B, Target<B> = M> + 'a,
-        F: Fn(B, &'a A) -> M + 'a,
+        B: Clone,
+        M: Pure<B> + Bind<'a, B, Target<B> = M>,
+        F: Fn(B, &'a A) -> M,
     {
         self.foldl_ref(move |m, a| m.bind::<B, _>(move |b| f(b, a)), M::pure(init))
     }

@@ -7,13 +7,18 @@ use crate::{Applicative, Bind};
 /// count as a monad a type must also implement [`Applicative`](Applicative),
 /// which in turn requires you to implement [`Functor`](crate::Functor),
 /// [`Pure`](crate::Pure) and [`Apply`](crate::Apply).
-pub trait Monad<'a, A>: Bind<'a, A> + Applicative<'a, A>
+pub trait Monad<'a, A: 'a>: Bind<'a, A> + Applicative<'a, A>
 where
-    A: 'a,
+    A: Clone,
 {
 }
 
-impl<'a, M, A: 'a> Monad<'a, A> for M where M: Bind<'a, A> + Applicative<'a, A> {}
+impl<'a, M, A: 'a> Monad<'a, A> for M
+where
+    A: Clone,
+    M: Bind<'a, A> + Applicative<'a, A>,
+{
+}
 
 #[cfg(test)]
 mod test {

@@ -1,4 +1,9 @@
-use std::{cell::RefCell, mem::MaybeUninit, rc::Rc};
+use std::{
+    cell::RefCell,
+    collections::{LinkedList, VecDeque},
+    mem::MaybeUninit,
+    rc::Rc,
+};
 
 use crate::repeat;
 
@@ -11,20 +16,14 @@ use crate::repeat;
 /// You can also use this just to modify the values inside your container value
 /// without changing their type, if the mapping function returns a value of the
 /// same type.  This is called an "endofunctor."
-pub trait Functor<'a, A>
-where
-    A: 'a,
-{
-    type Target<T>
-    where
-        T: 'a;
+pub trait Functor<'a, A: 'a> {
+    type Target<T: 'a>;
 
     /// Map a functor of `A` to a functor of `B` using a function from `A`
     /// to `B`.
-    fn fmap<B, F>(self, f: F) -> Self::Target<B>
+    fn fmap<B: 'a, F: 'a>(self, f: F) -> Self::Target<B>
     where
-        B: 'a,
-        F: Fn(A) -> B + 'a;
+        F: Fn(A) -> B;
 
     /// Map the functor to the provided constant value.
     fn fconst<B>(self, b: B) -> Self::Target<B>
@@ -71,20 +70,46 @@ where
     }
 }
 
-impl<'a, A: 'a> Functor<'a, A> for Option<A> {
-    type Target<T> = Option<T> where T: 'a;
-
-    fn fmap<B, F>(self, f: F) -> Self::Target<B>
+pub trait FunctorRef<'a, A: 'a>: Functor<'a, A> {
+    /// Map a functor of `A` to a functor of `B` using a function from `&A` to
+    /// `B`.
+    fn fmap_ref<B: 'a, F: 'a>(&self, f: F) -> Self::Target<B>
     where
-        B: 'a,
+        F: Fn(&A) -> B;
+
+    /// Given a type `A` implementing [`Clone`](Clone), create a new identical
+    /// `FunctorRef<A>` by cloning the values inside `self`.
+    fn fclone(&self) -> Self
+    where
+        Self: Sized + FunctorRef<'a, A, Target<A> = Self>,
+        A: Clone,
+    {
+        self.fmap_ref(Clone::clone)
+    }
+}
+
+impl<'a, A: 'a> Functor<'a, A> for Option<A> {
+    type Target<T: 'a> = Option<T>;
+
+    fn fmap<B: 'a, F>(self, f: F) -> Self::Target<B>
+    where
         F: Fn(A) -> B,
     {
         self.map(f)
     }
 }
 
+impl<'a, A: 'a> FunctorRef<'a, A> for Option<A> {
+    fn fmap_ref<B: 'a, F>(&self, f: F) -> Self::Target<B>
+    where
+        F: Fn(&A) -> B,
+    {
+        self.as_ref().map(f)
+    }
+}
+
 impl<'a, A: 'a, E> Functor<'a, A> for Result<A, E> {
-    type Target<T> = Result<T, E> where T: 'a;
+    type Target<T: 'a> = Result<T, E>;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
@@ -96,9 +121,7 @@ impl<'a, A: 'a, E> Functor<'a, A> for Result<A, E> {
 }
 
 impl<'a, A: 'a, const N: usize> Functor<'a, A> for [A; N] {
-    type Target<T> = [T; N]
-    where
-        T: 'a;
+    type Target<T: 'a> = [T; N];
 
     #[allow(unsafe_code)]
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
@@ -118,49 +141,34 @@ impl<'a, A: 'a, const N: usize> Functor<'a, A> for [A; N] {
     }
 }
 
-impl<'a, A: 'a> Functor<'a, A> for Vec<A> {
-    type Target<T> = Vec<T> where T: 'a;
+macro_rules! impl_functor_for_collection {
+    ($type:ident) => {
+        impl<'a, A: 'a> Functor<'a, A> for $type<A> {
+            type Target<T: 'a> = $type<T>;
 
-    fn fmap<B, F>(self, f: F) -> Self::Target<B>
-    where
-        B: 'a,
-        F: Fn(A) -> B + 'a,
-    {
-        let mut out = Vec::with_capacity(self.len());
-        for item in self {
-            out.push(f(item));
+            fn fmap<B, F>(self, f: F) -> Self::Target<B>
+            where
+                B: 'a,
+                F: Fn(A) -> B,
+            {
+                self.into_iter().map(f).collect()
+            }
         }
-        out
-    }
-}
 
-impl<'a, A: 'a> Functor<'a, A> for std::collections::VecDeque<A> {
-    type Target<T> = std::collections::VecDeque<T> where T: 'a;
-
-    fn fmap<B, F>(self, f: F) -> Self::Target<B>
-    where
-        B: 'a,
-        F: Fn(A) -> B + 'a,
-    {
-        let mut out = std::collections::VecDeque::with_capacity(self.len());
-        for item in self {
-            out.push_back(f(item));
+        impl<'a, A: 'a> FunctorRef<'a, A> for $type<A> {
+            fn fmap_ref<B: 'a, F>(&self, f: F) -> Self::Target<B>
+            where
+                F: Fn(&A) -> B,
+            {
+                self.iter().map(f).collect()
+            }
         }
-        out
-    }
+    };
 }
 
-impl<'a, A: 'a> Functor<'a, A> for std::collections::LinkedList<A> {
-    type Target<T> = std::collections::LinkedList<T> where T: 'a;
-
-    fn fmap<B, F>(self, f: F) -> Self::Target<B>
-    where
-        B: 'a,
-        F: Fn(A) -> B,
-    {
-        self.into_iter().map(f).collect()
-    }
-}
+impl_functor_for_collection!(Vec);
+impl_functor_for_collection!(VecDeque);
+impl_functor_for_collection!(LinkedList);
 
 #[cfg(test)]
 mod test {

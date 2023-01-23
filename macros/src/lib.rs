@@ -119,8 +119,10 @@ pub fn derive_bifunctor(input: proc_macro::TokenStream) -> proc_macro::TokenStre
 
     let bimap_impl = match &input.data {
         Data::Struct(data) => match &data.fields {
-            Fields::Named(fields) => derive_functor_named_struct(name, fields, &type_map),
-            Fields::Unnamed(fields) => derive_functor_unnamed_struct(name, fields, &type_map),
+            Fields::Named(fields) => derive_functor_named_struct(name, fields, &type_map, false),
+            Fields::Unnamed(fields) => {
+                derive_functor_unnamed_struct(name, fields, &type_map, false)
+            }
             Fields::Unit => {
                 return report_error(
                     input.ident.span(),
@@ -128,7 +130,7 @@ pub fn derive_bifunctor(input: proc_macro::TokenStream) -> proc_macro::TokenStre
                 );
             }
         },
-        Data::Enum(data) => derive_functor_enum(name, data, &type_map),
+        Data::Enum(data) => derive_functor_enum(name, data, &type_map, false),
         Data::Union(_) => {
             return report_error(
                 input.ident.span(),
@@ -165,6 +167,66 @@ pub fn derive_bifunctor(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     .into()
 }
 
+#[proc_macro_derive(BifunctorRef)]
+pub fn derive_bifunctor_ref(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+    let type_params = &input.generics.params;
+    let where_clause = input.generics.where_clause.as_ref().map(|c| &c.predicates);
+
+    let (generic_type_a, generic_type_b) = match decide_bifunctor_generic_types(&input) {
+        Ok(t) => t,
+        Err(err) => return err,
+    };
+
+    let type_map = HashMap::from([
+        (
+            generic_type_a.ident.clone(),
+            Ident::new("left", Span::call_site()),
+        ),
+        (
+            generic_type_b.ident.clone(),
+            Ident::new("right", Span::call_site()),
+        ),
+    ]);
+
+    let bimap_impl = match &input.data {
+        Data::Struct(data) => match &data.fields {
+            Fields::Named(fields) => derive_functor_named_struct(name, fields, &type_map, true),
+            Fields::Unnamed(fields) => derive_functor_unnamed_struct(name, fields, &type_map, true),
+            Fields::Unit => {
+                return report_error(
+                    input.ident.span(),
+                    "can't derive BifunctorRef for an empty struct",
+                );
+            }
+        },
+        Data::Enum(data) => derive_functor_enum(name, data, &type_map, true),
+        Data::Union(_) => {
+            return report_error(
+                input.ident.span(),
+                "can't derive BifunctorRef for a union type",
+            );
+        }
+    };
+
+    quote!(
+        impl<'derivedlifetime, #type_params> ::higher::BifunctorRef<'derivedlifetime, #generic_type_a, #generic_type_b> for #name<#type_params>
+                where #generic_type_a: 'derivedlifetime, #generic_type_b: 'derivedlifetime, #where_clause {
+            fn bimap_ref<DerivedTypeA, DerivedTypeB, L, R>(&self, left: L, right: R) -> Self::Target<DerivedTypeA, DerivedTypeB>
+            where
+                DerivedTypeA: 'derivedlifetime,
+                DerivedTypeB: 'derivedlifetime,
+                L: Fn(&#generic_type_a) -> DerivedTypeA + 'derivedlifetime,
+                R: Fn(&#generic_type_b) -> DerivedTypeB + 'derivedlifetime
+            {
+                #bimap_impl
+            }
+        }
+    )
+    .into()
+}
+
 #[proc_macro_derive(Functor)]
 pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -184,8 +246,10 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
 
     let fmap_impl = match &input.data {
         Data::Struct(data) => match &data.fields {
-            Fields::Named(fields) => derive_functor_named_struct(name, fields, &type_map),
-            Fields::Unnamed(fields) => derive_functor_unnamed_struct(name, fields, &type_map),
+            Fields::Named(fields) => derive_functor_named_struct(name, fields, &type_map, false),
+            Fields::Unnamed(fields) => {
+                derive_functor_unnamed_struct(name, fields, &type_map, false)
+            }
             Fields::Unit => {
                 return report_error(
                     input.ident.span(),
@@ -193,7 +257,7 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
                 );
             }
         },
-        Data::Enum(data) => derive_functor_enum(name, data, &type_map),
+        Data::Enum(data) => derive_functor_enum(name, data, &type_map, false),
         Data::Union(_) => {
             return report_error(input.ident.span(), "can't derive Functor for a union type");
         }
@@ -215,6 +279,58 @@ pub fn derive_functor(input: proc_macro::TokenStream) -> proc_macro::TokenStream
                 F: Fn(#generic_type) -> DerivedType + 'derivedlifetime
             {
                 #fmap_impl
+            }
+        }
+    )
+    .into()
+}
+
+#[proc_macro_derive(FunctorRef)]
+pub fn derive_functor_ref(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+    let type_params = &input.generics.params;
+    let where_clause = input.generics.where_clause.as_ref().map(|c| &c.predicates);
+
+    let generic_type = match decide_functor_generic_type(&input) {
+        Ok(t) => t,
+        Err(err) => return err,
+    };
+
+    let type_map = HashMap::from([(
+        generic_type.ident.clone(),
+        Ident::new("f", Span::call_site()),
+    )]);
+
+    let fmapref_impl = match &input.data {
+        Data::Struct(data) => match &data.fields {
+            Fields::Named(fields) => derive_functor_named_struct(name, fields, &type_map, true),
+            Fields::Unnamed(fields) => derive_functor_unnamed_struct(name, fields, &type_map, true),
+            Fields::Unit => {
+                return report_error(
+                    input.ident.span(),
+                    "can't derive FunctorRef for an empty struct",
+                );
+            }
+        },
+        Data::Enum(data) => derive_functor_enum(name, data, &type_map, true),
+        Data::Union(_) => {
+            return report_error(
+                input.ident.span(),
+                "can't derive FunctorRef for a union type",
+            );
+        }
+    };
+
+    quote!(
+        impl<'derivedlifetime, #type_params> ::higher::FunctorRef<'derivedlifetime, #generic_type> for #name<#type_params>
+                where #generic_type: 'derivedlifetime, #where_clause {
+            fn fmap_ref<DerivedType, F>(&self, f: F) -> Self::Target<DerivedType>
+            where
+                DerivedType: 'derivedlifetime,
+                F: Fn(&#generic_type) -> DerivedType + 'derivedlifetime
+            {
+                #fmapref_impl
             }
         }
     )
@@ -256,13 +372,20 @@ fn derive_functor_named_struct(
     name: &Ident,
     fields: &FieldsNamed,
     generic_types: &HashMap<Ident, Ident>,
+    as_ref: bool,
 ) -> TokenStream {
     let apply_fields = filter_fields(
         &fields.named,
         generic_types,
         |field, function_name| {
-            quote! {
-                #field: #function_name(self.#field),
+            if as_ref {
+                quote! {
+                    #field: #function_name(&self.#field),
+                }
+            } else {
+                quote! {
+                    #field: #function_name(self.#field),
+                }
             }
         },
         |field| {
@@ -283,11 +406,16 @@ fn derive_functor_unnamed_struct(
     name: &Ident,
     fields: &FieldsUnnamed,
     generic_types: &HashMap<Ident, Ident>,
+    as_ref: bool,
 ) -> TokenStream {
     let fields = fields.unnamed.iter().enumerate().map(|(index, field)| {
         let index = Index::from(index);
         if let Some(function_name) = match_type_param(generic_types, &field.ty) {
-            quote! { #function_name(self.#index), }
+            if as_ref {
+                quote! { #function_name(&self.#index), }
+            } else {
+                quote! { #function_name(self.#index), }
+            }
         } else {
             quote! { self.#index, }
         }
@@ -299,6 +427,7 @@ fn derive_functor_enum(
     name: &Ident,
     data: &DataEnum,
     generic_types: &HashMap<Ident, Ident>,
+    as_ref: bool,
 ) -> TokenStream {
     let variants = data.variants.iter().map(|variant| {
         let ident = &variant.ident;
@@ -323,7 +452,11 @@ fn derive_functor_enum(
                             let name = &field.ident;
                             if let Some(function_name) = match_type_param(generic_types, &field.ty)
                             {
-                                quote! { #name: #function_name(#arg) }
+                                if as_ref {
+                                    quote! { #name: #function_name(&#arg) }
+                                } else {
+                                    quote! { #name: #function_name(#arg) }
+                                }
                             } else {
                                 quote! { #name: #arg }
                             }
@@ -349,7 +482,11 @@ fn derive_functor_enum(
                     .collect();
                 let fields = fields.unnamed.iter().zip(args.iter()).map(|(field, arg)| {
                     if let Some(function_name) = match_type_param(generic_types, &field.ty) {
-                        quote! { #function_name(#arg) }
+                        if as_ref {
+                            quote! { #function_name(&#arg) }
+                        } else {
+                            quote! { #function_name(#arg) }
+                        }
                     } else {
                         quote! { #arg }
                     }
@@ -373,14 +510,14 @@ fn derive_functor_enum(
 
 #[cfg(test)]
 mod test {
-    use higher::{Bifunctor, Functor};
+    use higher::{Bifunctor, BifunctorRef, Functor, FunctorRef};
 
-    #[derive(PartialEq, Eq, Debug, Functor)]
+    #[derive(PartialEq, Eq, Debug, Functor, FunctorRef)]
     struct FunctorNamed<A> {
         named: A,
     }
 
-    #[derive(PartialEq, Eq, Debug, Functor)]
+    #[derive(PartialEq, Eq, Debug, Functor, FunctorRef)]
     struct FunctorUnnamed<A>(A);
 
     #[derive(PartialEq, Eq, Debug, Functor)]
@@ -416,13 +553,13 @@ mod test {
         assert_eq!(FunctorEnum::<u32>::None.fmap(|x| x + 3), FunctorEnum::None);
     }
 
-    #[derive(PartialEq, Eq, Debug, Bifunctor)]
+    #[derive(PartialEq, Eq, Debug, Bifunctor, BifunctorRef)]
     struct BifunctorNamed<A, B> {
         a: A,
         b: B,
     }
 
-    #[derive(PartialEq, Eq, Debug, Bifunctor)]
+    #[derive(PartialEq, Eq, Debug, Bifunctor, BifunctorRef)]
     struct BifunctorUnnamed<A, B>(A, B);
 
     #[derive(PartialEq, Eq, Debug, Bifunctor)]

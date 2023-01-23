@@ -194,12 +194,10 @@ where
     }
 }
 
-impl<'a, A> Bind<'a, A> for Effect<'a, A>
+impl<'a, A: 'a> Bind<'a, A> for Effect<'a, A>
 where
-    A: 'a,
+    A: Clone,
 {
-    type Target<T> = Effect<'a, T> where T: 'a;
-
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
         B: 'a,
@@ -209,11 +207,8 @@ where
     }
 }
 
-impl<'a, A> Functor<'a, A> for Effect<'a, A>
-where
-    A: 'a,
-{
-    type Target<T> = Effect<'a, T> where T: 'a;
+impl<'a, A: 'a> Functor<'a, A> for Effect<'a, A> {
+    type Target<T: 'a> = Effect<'a, T>;
 
     fn fmap<B, F>(self, f: F) -> Self::Target<B>
     where
@@ -233,16 +228,11 @@ where
     }
 }
 
-impl<'a, A> Apply<'a, A> for Effect<'a, A>
+impl<'a, A: 'a> Apply<'a, A> for Effect<'a, A>
 where
-    A: 'a,
+    A: Clone,
 {
-    type Target<T> = Effect<'a, T> where T:'a;
-
-    fn apply<B>(
-        self,
-        f: <Self as Apply<'a, A>>::Target<ApplyFn<'a, A, B>>,
-    ) -> <Self as Apply<'a, A>>::Target<B>
+    fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
     where
         B: 'a,
     {

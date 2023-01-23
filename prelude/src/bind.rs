@@ -1,7 +1,9 @@
+use std::collections::{LinkedList, VecDeque};
+
 #[cfg(feature = "futures")]
 use futures::{channel::mpsc, stream::LocalBoxStream};
 
-use crate::{run, Pure};
+use crate::{run, Functor, Pure};
 
 /// `Bind` lets you chain computations together.
 ///
@@ -14,14 +16,7 @@ use crate::{run, Pure};
 /// [`Applicative`](crate::Applicative), which in turn requires implementations
 /// for [`Functor`](crate::Functor), [`Pure`](crate::Pure) and
 /// [`Apply`](crate::Apply).
-pub trait Bind<'a, A>
-where
-    A: 'a,
-{
-    type Target<T>
-    where
-        T: 'a;
-
+pub trait Bind<'a, A: 'a>: Functor<'a, A> {
     /// Apply the function `f` to the `A` or `A`s inside the `M<A>` to turn it
     /// into an `M<B>`.
     ///
@@ -31,10 +26,9 @@ where
     /// return value from `f`, of type `M<B>`, is effectively the original
     /// computation, `M<A>`, followed by the `M<B>` from the callback function
     /// when the result of `M<A>` is ready.
-    fn bind<B, F>(self, f: F) -> Self::Target<B>
+    fn bind<B: 'a, F: 'a>(self, f: F) -> Self::Target<B>
     where
-        B: 'a,
-        F: Fn(A) -> Self::Target<B> + 'a;
+        F: Fn(A) -> Self::Target<B>;
 
     /// Turn an `M<A>` into an `M<()>` and a
     /// [`Stream<Item = A>`](futures::stream::Stream) that will yield values of
@@ -62,7 +56,7 @@ where
     fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
     where
         Self: Sized + Bind<'a, A>,
-        <Self as Bind<'a, A>>::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
+        Self::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
     {
         let (giver, receiver) = mpsc::unbounded();
         let void = self.bind::<(), _>(move |a| Pure::pure(giver.unbounded_send(a).unwrap()));
@@ -73,13 +67,11 @@ where
 /// `lift_m1` provides a default implementation for
 /// [`Functor::fmap`](crate::Functor::fmap) using only [`Bind`](Bind) and
 /// [`Pure`](Pure).
-pub fn lift_m1<'a, MA, MB, A, B, F>(f: F, a: MA) -> MB
+pub fn lift_m1<'a, M, A: 'a, B: 'a, F: 'a>(f: F, a: M) -> M::Target<B>
 where
-    A: 'a,
-    B: 'a,
-    F: Fn(A) -> B + 'a,
-    MA: Bind<'a, A, Target<B> = MB>,
-    MB: Pure<B>,
+    F: Fn(A) -> B,
+    M: Bind<'a, A>,
+    M::Target<B>: Pure<B>,
 {
     run! {
         x <= <B> a;
@@ -87,12 +79,12 @@ where
     }
 }
 
-impl<'a, A: 'a> Bind<'a, A> for Option<A> {
-    type Target<T> = Option<T> where T: 'a;
-
-    fn bind<B, F>(self, f: F) -> Self::Target<B>
+impl<'a, A: 'a> Bind<'a, A> for Option<A>
+where
+    A: Clone,
+{
+    fn bind<B: 'a, F: 'a>(self, f: F) -> Self::Target<B>
     where
-        B: 'a,
         F: Fn(A) -> Self::Target<B>,
     {
         self.and_then(f)
@@ -102,7 +94,7 @@ impl<'a, A: 'a> Bind<'a, A> for Option<A> {
     fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
     where
         Self: Sized + Bind<'a, A>,
-        <Self as Bind<'a, A>>::Target<()>: Pure<()>,
+        Self::Target<()>: Pure<()>,
     {
         (
             Pure::pure(()),
@@ -114,12 +106,12 @@ impl<'a, A: 'a> Bind<'a, A> for Option<A> {
     }
 }
 
-impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
-    type Target<T> = Result<T, E> where T: 'a;
-
-    fn bind<B, F>(self, f: F) -> Self::Target<B>
+impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E>
+where
+    A: Clone,
+{
+    fn bind<B: 'a, F: 'a>(self, f: F) -> Self::Target<B>
     where
-        B: 'a,
         F: Fn(A) -> Self::Target<B>,
     {
         self.and_then(f)
@@ -129,7 +121,7 @@ impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
     fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
     where
         Self: Sized + Bind<'a, A>,
-        <Self as Bind<'a, A>>::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
+        Self::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
     {
         match self {
             Err(err) => (
@@ -142,31 +134,21 @@ impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
 }
 
 macro_rules! impl_bind_from_iter {
-    () => {
-        fn bind<B, F>(self, f: F) -> Self::Target<B>
-        where
-            B: 'a,
-            F: Fn(A) -> Self::Target<B>,
-        {
-            self.into_iter().flat_map(|v| f(v).into_iter()).collect()
+    ($type:ident) => {
+        impl<'a, A: 'a> Bind<'a, A> for $type<A> {
+            fn bind<B: 'a, F: 'a>(self, f: F) -> Self::Target<B>
+            where
+                F: Fn(A) -> Self::Target<B>,
+            {
+                self.into_iter().flat_map(|v| f(v).into_iter()).collect()
+            }
         }
     };
 }
 
-impl<'a, A: 'a> Bind<'a, A> for Vec<A> {
-    type Target<T> = Vec<T> where T: 'a;
-    impl_bind_from_iter!();
-}
-
-impl<'a, A: 'a> Bind<'a, A> for std::collections::VecDeque<A> {
-    type Target<T> = std::collections::VecDeque<T> where T: 'a;
-    impl_bind_from_iter!();
-}
-
-impl<'a, A: 'a> Bind<'a, A> for std::collections::LinkedList<A> {
-    type Target<T> = std::collections::LinkedList<T> where T: 'a;
-    impl_bind_from_iter!();
-}
+impl_bind_from_iter!(Vec);
+impl_bind_from_iter!(VecDeque);
+impl_bind_from_iter!(LinkedList);
 
 #[cfg(test)]
 mod test {

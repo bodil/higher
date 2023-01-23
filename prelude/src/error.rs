@@ -14,9 +14,9 @@ pub trait ApplicativeError<'a, A: 'a, E: 'a>: Functor<'a, A> + Pure<A> {
     /// [`ApplicativeError`](ApplicativeError).
     ///
     /// If there's no error, do nothing.
-    fn handle_error_with<F>(self, f: F) -> Self
+    fn handle_error_with<F: 'a>(self, f: F) -> Self
     where
-        F: Fn(E) -> Self + 'a;
+        F: Fn(E) -> Self;
 
     /// Handle an error.
     ///
@@ -25,19 +25,19 @@ pub trait ApplicativeError<'a, A: 'a, E: 'a>: Functor<'a, A> + Pure<A> {
     /// wrapped in a new [`ApplicativeError`](ApplicativeError).
     ///
     /// If there's no error, do nothing.
-    fn handle_error<F>(self, f: F) -> Self
+    fn handle_error<F: 'a>(self, f: F) -> Self
     where
         Self: Sized,
-        F: Fn(E) -> A + 'a,
+        F: Fn(E) -> A,
     {
         self.handle_error_with(move |e| Pure::pure(f(e)))
     }
 
-    fn attempt<MR>(self) -> MR
+    fn attempt(self) -> Self::Target<Result<A, E>>
     where
-        Self: Sized + Functor<'a, A, Target<Result<A, E>> = MR>,
-        <Self as Functor<'a, A>>::Target<Result<A, E>>: ApplicativeError<'a, A, E>,
-        MR: Pure<Result<A, E>>,
+        Self: Sized,
+
+        Self::Target<Result<A, E>>: ApplicativeError<'a, A, E> + Pure<Result<A, E>>,
     {
         self.fmap(|v| Ok(v))
             .handle_error_with(|error| Pure::pure(Err(error)))
@@ -67,13 +67,13 @@ pub trait ApplicativeError<'a, A: 'a, E: 'a>: Functor<'a, A> + Pure<A> {
         self.recover_with(move |error| Err(adapt(error)))
     }
 
-    fn redeem<B, FE, FA, MB>(self, recover: FE, map: FA) -> MB
+    fn redeem<B: 'a, FE: 'a, FA: 'a>(self, recover: FE, map: FA) -> Self::Target<B>
     where
-        Self: Sized + Functor<'a, A, Target<B> = MB>,
-        MB: ApplicativeError<'a, B, E> + Functor<'a, B, Target<A> = Self>,
-        B: 'a,
-        FE: Fn(E) -> B + 'a,
-        FA: Fn(A) -> B + 'a,
+        Self: Sized,
+        FE: Fn(E) -> B,
+        FA: Fn(A) -> B,
+
+        Self::Target<B>: ApplicativeError<'a, B, E>,
     {
         self.fmap(map).handle_error(recover)
     }
@@ -94,11 +94,16 @@ pub trait ApplicativeError<'a, A: 'a, E: 'a>: Functor<'a, A> + Pure<A> {
     }
 }
 
-pub trait MonadError<'a, A: 'a, E: 'a>: ApplicativeError<'a, A, E> + Bind<'a, A> {
-    fn rethrow<MR>(mr: MR) -> Self
+pub trait MonadError<'a, A: 'a, E: 'a>: ApplicativeError<'a, A, E> + Bind<'a, A>
+where
+    A: Clone,
+    E: Clone,
+{
+    fn rethrow(mr: Self::Target<Result<A, E>>) -> Self
     where
         Self: Sized,
-        MR: Bind<'a, Result<A, E>, Target<A> = Self>,
+
+        Self::Target<Result<A, E>>: Bind<'a, Result<A, E>, Target<A> = Self>,
     {
         run! {
             result <= <A>mr;
@@ -106,11 +111,13 @@ pub trait MonadError<'a, A: 'a, E: 'a>: ApplicativeError<'a, A, E> + Bind<'a, A>
         }
     }
 
-    fn ensure_or<P, F>(self, error: F, predicate: P) -> Self
+    fn ensure_or<P: 'a, F: 'a>(self, error: F, predicate: P) -> Self
     where
-        Self: Sized + Bind<'a, A, Target<A> = Self>,
-        P: Fn(&A) -> bool + 'a,
-        F: Fn(&A) -> E + 'a,
+        Self: Sized,
+        P: Fn(&A) -> bool,
+        F: Fn(&A) -> E,
+
+        Self: Bind<'a, A, Target<A> = Self>,
     {
         run! {
             result <= <A>self;
@@ -122,22 +129,26 @@ pub trait MonadError<'a, A: 'a, E: 'a>: ApplicativeError<'a, A, E> + Bind<'a, A>
         }
     }
 
-    fn ensure<P>(self, error: E, predicate: P) -> Self
+    fn ensure<P: 'a>(self, error: E, predicate: P) -> Self
     where
-        Self: Sized + Bind<'a, A, Target<A> = Self>,
+        Self: Sized,
         E: Clone,
-        P: Fn(&A) -> bool + 'a,
+        P: Fn(&A) -> bool,
+
+        Self: Bind<'a, A, Target<A> = Self>,
     {
         self.ensure_or(move |_| error.clone(), predicate)
     }
 
-    fn redeem_with<B: 'a, FA, FE, MB>(self, recover: FE, bind: FA) -> MB
+    fn redeem_with<B: 'a, FA: 'a, FE: 'a>(self, recover: FE, bind: FA) -> Self::Target<B>
     where
         Self: Sized + Bind<'a, A, Target<A> = Self>,
-        MB: Bind<'a, B, Target<A> = Self>,
-        FE: Fn(E) -> MB + 'a,
-        FA: Fn(A) -> MB + 'a,
-        <Self as Functor<'a, A>>::Target<Result<A, E>>: Bind<'a, Result<A, E>, Target<B> = MB>
+        B: Clone,
+        FE: Fn(E) -> Self::Target<B>,
+        FA: Fn(A) -> Self::Target<B>,
+
+        Self::Target<B>: Bind<'a, B, Target<A> = Self>,
+        Self::Target<Result<A, E>>: Bind<'a, Result<A, E>, Target<B> = Self::Target<B>>
             + Pure<Result<A, E>>
             + ApplicativeError<'a, A, E>,
     {
@@ -148,32 +159,35 @@ pub trait MonadError<'a, A: 'a, E: 'a>: ApplicativeError<'a, A, E> + Bind<'a, A>
     }
 }
 
-impl<'a, A: 'a, E: 'a, M> MonadError<'a, A, E> for M where
-    M: ApplicativeError<'a, A, E> + Bind<'a, A>
+impl<'a, A: 'a, E: 'a, M> MonadError<'a, A, E> for M
+where
+    A: Clone,
+    E: Clone,
+    M: ApplicativeError<'a, A, E> + Bind<'a, A>,
 {
 }
 
 impl<'a, A: 'a> ApplicativeError<'a, A, ()> for Option<A> {
-    fn throw_error(_error: ()) -> <Self as Bind<'a, A>>::Target<A> {
+    fn throw_error(_error: ()) -> Self::Target<A> {
         None
     }
 
-    fn handle_error_with<F>(self, f: F) -> <Self as Bind<'a, A>>::Target<A>
+    fn handle_error_with<F>(self, f: F) -> Self::Target<A>
     where
-        F: FnOnce(()) -> <Self as Bind<'a, A>>::Target<A> + 'a,
+        F: FnOnce(()) -> Self::Target<A> + 'a,
     {
         self.or_else(|| f(()))
     }
 }
 
 impl<'a, A: 'a, E: 'a> ApplicativeError<'a, A, E> for Result<A, E> {
-    fn throw_error(error: E) -> <Self as Bind<'a, A>>::Target<A> {
+    fn throw_error(error: E) -> Self::Target<A> {
         Err(error)
     }
 
-    fn handle_error_with<F>(self, f: F) -> <Self as Bind<'a, A>>::Target<A>
+    fn handle_error_with<F>(self, f: F) -> Self::Target<A>
     where
-        F: FnOnce(E) -> <Self as Bind<'a, A>>::Target<A> + 'a,
+        F: FnOnce(E) -> Self::Target<A> + 'a,
     {
         self.or_else(f)
     }

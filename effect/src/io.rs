@@ -284,9 +284,10 @@ where
     }
 }
 
-impl<'a, A: 'a, E: 'a> Bind<'a, A> for IO<'a, A, E> {
-    type Target<T> = IO<'a, T, E> where T: 'a;
-
+impl<'a, A: 'a, E: 'a> Bind<'a, A> for IO<'a, A, E>
+where
+    A: Clone,
+{
     fn bind<B, F>(self, f: F) -> Self::Target<B>
     where
         B: 'a,
@@ -338,13 +339,11 @@ impl<'a, A: 'a, E> Pure<A> for IO<'a, A, E> {
     }
 }
 
-impl<'a, A: 'a, E: 'a> Apply<'a, A> for IO<'a, A, E> {
-    type Target<T> = IO<'a, T, E> where T: 'a;
-
-    fn apply<B>(
-        self,
-        f: <Self as Apply<'a, A>>::Target<ApplyFn<'a, A, B>>,
-    ) -> <Self as Apply<'a, A>>::Target<B>
+impl<'a, A: 'a, E: 'a> Apply<'a, A> for IO<'a, A, E>
+where
+    A: Clone,
+{
+    fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
     where
         B: 'a,
     {

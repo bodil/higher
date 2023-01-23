@@ -1,11 +1,22 @@
-use std::rc::Rc;
+use std::{
+    collections::{LinkedList, VecDeque},
+    rc::Rc,
+};
 
-use crate::{repeat, run, Bind, Functor, Pure};
+use crate::{functor::FunctorRef, repeat, run, Bind, Functor, Pure};
 
-/// An `ApplyFn` is a function from `A` to `B` wrapped in something Rust's type
-/// system can more easily digest. Arguments for
+/// An `ApplyFn` is a function from `A` to `B` wrapped in something Rust's
+/// type system can more easily digest. Arguments for
 /// [`Apply::apply()`](Apply::apply) are required to be of this type rather than
 /// an arbitrary type matching `Fn(A) -> B`.
+///
+/// Create an `ApplyFn` by using its [`From`](From) implementation:
+///
+/// ```
+/// # use higher::apply::ApplyFn;
+/// let f = ApplyFn::from(|x| x + 2);
+/// assert_eq!(f.apply_fn(3), 5);
+/// ```
 pub struct ApplyFn<'a, A, B> {
     function: Rc<dyn Fn(A) -> B + 'a>,
 }
@@ -46,63 +57,62 @@ impl<'a, A, B> std::fmt::Debug for ApplyFn<'a, A, B> {
     }
 }
 
-/// `Apply` takes an `F<Fn(A) -> B>` (or, rather, an `F<ApplyFn<'a,A, B>>`
-/// specifically) and applies it to an `F<A>` to produce an `F<B>`.
-pub trait Apply<'a, A>
-where
-    A: 'a,
-{
-    type Target<T>
-    where
-        T: 'a,
-        A: 'a;
-
+/// `Apply` takes an `Apply<Fn(A) -> B>` (or, rather, an `Apply<ApplyFn<'a, A,
+/// B>>` specifically) and applies it to an `Apply<A>` to produce an `Apply<B>`.
+///
+/// In simpler terms, it takes a value of type `A` inside some context ("some
+/// context" here being the type which implements `Apply`) and a function `Fn(A)
+/// ->B` inside a similar context and produces a similar context containing the
+/// result (`B`) of applying the function to the value. Some concrete examples
+/// of "some context" are [`Option`](Option), [`Vec`](Vec) and futures.
+pub trait Apply<'a, A: 'a>: Functor<'a, A> {
     /// Apply an `F` of functions from `A` to `B` to an `F` of `A`,
     /// producing an `F` of `B`.
-    fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
-    where
-        B: 'a;
+    fn apply<B: 'a>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>;
 
-    fn apply_first<B, MB, MF>(self, b: MB) -> Self
+    fn apply_first<B: 'a>(self, b: Self::Target<B>) -> Self
     where
-        Self: Sized + Apply<'a, A, Target<B> = MB> + Functor<'a, A, Target<ApplyFn<'a, B, A>> = MF>,
+        Self: Sized,
         A: Clone,
-        B: 'a,
-        MB: Apply<'a, B, Target<ApplyFn<'a, B, A>> = MF> + Apply<'a, B, Target<A> = Self>,
-        MF: Apply<'a, ApplyFn<'a, B, A>, Target<B> = MB>,
+
+        Self::Target<B>: Apply<'a, B>
+            + Functor<'a, B, Target<ApplyFn<'a, B, A>> = Self::Target<ApplyFn<'a, B, A>>>
+            + Functor<'a, B, Target<A> = Self>,
     {
-        b.apply(self.fmap(|x: A| ApplyFn::from(repeat(x))))
+        let mapped: Self::Target<ApplyFn<'a, B, A>> = self.fmap(|x: A| ApplyFn::from(repeat(x)));
+        b.apply(mapped)
     }
 
-    fn apply_second<B, MB, MF>(self, b: MB) -> MB
+    fn apply_second<B: 'a>(self, b: Self::Target<B>) -> Self::Target<B>
     where
-        Self: Sized + Apply<'a, A, Target<B> = MB> + Apply<'a, A, Target<ApplyFn<'a, A, B>> = MF>,
-        B: Clone + 'a,
-        MB: Apply<'a, B, Target<ApplyFn<'a, A, B>> = MF>
-            + Functor<'a, B, Target<ApplyFn<'a, A, B>> = MF>,
-        MF: Apply<'a, ApplyFn<'a, A, B>, Target<A> = Self>,
+        Self: Sized,
+        B: Clone,
+
+        Self::Target<B>: Apply<'a, B>
+            + Functor<'a, B, Target<ApplyFn<'a, A, B>> = Self::Target<ApplyFn<'a, A, B>>>
+            + Functor<'a, B, Target<A> = Self>,
     {
         self.apply(b.fmap(|x: B| ApplyFn::from(repeat(x))))
     }
 }
 
 /// `ap` is a default implementation of [`Apply::apply`][Apply::apply] for any
-/// type that implements [`Bind`](Bind), [`Pure`](Pure) and [`Clone`](Clone).
+/// type that implements [`Bind`](Bind), [`Pure`](Pure) and
+/// [`FunctorRef`](FunctorRef), where the contained type `A` implements
+/// [`Clone`](Clone).
 ///
 /// This is the easy way to implement [`Apply`](Apply):
 ///
 /// ```
 /// # use higher::apply::{Apply, ApplyFn, ap};
-/// # use higher::{Bind, Pure};
-/// #[derive(Clone)]
+/// # use higher::{Bind, Pure, Functor, FunctorRef};
+/// #[derive(Clone, Functor, FunctorRef)]
 /// enum AustralianOption<A> {
 ///   NahYeah(A),
 ///   YeahNah
 /// }
 ///
 /// impl<'a, A: 'a> Bind<'a, A> for AustralianOption<A> {
-///     type Target<T: 'a> = AustralianOption<T>;
-///
 ///     fn bind<B: 'a, F>(self, f: F) -> Self::Target<B>
 ///     where F: Fn(A) -> Self::Target<B> + 'a {
 ///         match self {
@@ -118,27 +128,19 @@ where
 ///     }
 /// }
 ///
-/// impl<'a, A: 'a> Apply<'a, A> for AustralianOption<A>
-/// where
-///     AustralianOption<A>: Clone
-/// {
-///     type Target<T: 'a> = AustralianOption<T>;
-///
-///     fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
-///     where
-///         B: 'a,
-///     {
+/// impl<'a, A: Clone + 'a> Apply<'a, A> for AustralianOption<A> {
+///     fn apply<B: 'a>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B> {
 ///         ap(f, self)
 ///     }
 /// }
 /// ```
-pub fn ap<'a, A, B, MA, MB, MF>(mf: MF, ma: MA) -> MB
+pub fn ap<'a, A: 'a, B: 'a, M: 'a>(mf: M::Target<ApplyFn<'a, A, B>>, ma: M) -> M::Target<B>
 where
-    A: 'a,
-    B: 'a,
-    MA: Bind<'a, A, Target<B> = MB> + Clone + 'a,
-    MB: Pure<B>,
-    MF: Bind<'a, ApplyFn<'a, A, B>, Target<B> = MB>,
+    M: Bind<'a, A> + Pure<A> + FunctorRef<'a, A, Target<A> = M> + Clone,
+
+    M::Target<B>: Bind<'a, B> + Pure<B>,
+    M::Target<ApplyFn<'a, A, B>>:
+        Bind<'a, ApplyFn<'a, A, B>, Target<B> = M::Target<B>> + Pure<ApplyFn<'a, A, B>>,
 {
     run! {
         f <= <B> mf;
@@ -147,26 +149,24 @@ where
     }
 }
 
-pub fn lift2<'a, A, B, C, MA, MB, MC, MF, F>(f: &'a F, a: MA, b: MB) -> MC
+pub fn lift2<'a, A: 'a, B: 'a, C: 'a, F: 'a, M>(f: &'a F, a: M, b: M::Target<B>) -> M::Target<C>
 where
-    F: Fn(A, B) -> C + 'a,
-    A: Clone + 'a,
-    B: 'a,
-    C: 'a,
-    MA: Apply<'a, A, Target<C> = MC> + Functor<'a, A, Target<ApplyFn<'a, B, C>> = MF>,
-    MB: Apply<'a, B, Target<C> = MC> + Apply<'a, B, Target<ApplyFn<'a, B, C>> = MF>,
-    MC: Apply<'a, C, Target<A> = MA>,
-    MF: Apply<'a, ApplyFn<'a, B, C>>,
+    A: Clone,
+    F: Fn(A, B) -> C,
+    M: Apply<'a, A>,
+
+    M::Target<B>: Apply<'a, B, Target<C> = M::Target<C>>
+        + Apply<'a, B, Target<ApplyFn<'a, B, C>> = M::Target<ApplyFn<'a, B, C>>>,
+    M::Target<C>: Apply<'a, C, Target<B> = M::Target<B>>
+        + Apply<'a, C, Target<ApplyFn<'a, B, C>> = M::Target<ApplyFn<'a, B, C>>>,
 {
     b.apply(a.fmap(move |x: A| ApplyFn::from(move |y: B| f(x.clone(), y))))
 }
 
-impl<'a, A> Apply<'a, A> for Option<A>
+impl<'a, A: 'a> Apply<'a, A> for Option<A>
 where
-    A: 'a,
+    A: Clone,
 {
-    type Target<T> = Option<T> where T:'a;
-
     fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
     where
         B: 'a,
@@ -175,12 +175,10 @@ where
     }
 }
 
-impl<'a, A, E> Apply<'a, A> for Result<A, E>
+impl<'a, A: 'a, E> Apply<'a, A> for Result<A, E>
 where
-    A: 'a,
+    A: Clone,
 {
-    type Target<T> = Result<T, E> where T:'a;
-
     fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
     where
         B: 'a,
@@ -189,50 +187,22 @@ where
     }
 }
 
-impl<'a, A> Apply<'a, A> for Vec<A>
-where
-    A: 'a,
-    Vec<A>: Clone,
-{
-    type Target<T> = Vec<T> where T: 'a;
-
-    fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
-    where
-        B: 'a,
-    {
-        ap(f, self)
-    }
+macro_rules! impl_apply_for_list {
+    ($type:ident) => {
+        impl<'a, A: 'a> Apply<'a, A> for $type<A>
+        where
+            A: Clone,
+        {
+            fn apply<B: 'a>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B> {
+                ap(f, self)
+            }
+        }
+    };
 }
 
-impl<'a, A> Apply<'a, A> for std::collections::VecDeque<A>
-where
-    A: 'a,
-    std::collections::VecDeque<A>: Clone,
-{
-    type Target<T> = std::collections::VecDeque<T> where T:'a;
-
-    fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
-    where
-        B: 'a,
-    {
-        ap(f, self)
-    }
-}
-
-impl<'a, A> Apply<'a, A> for std::collections::LinkedList<A>
-where
-    A: 'a,
-    std::collections::LinkedList<A>: Clone,
-{
-    type Target<T> = std::collections::LinkedList<T> where T:'a;
-
-    fn apply<B>(self, f: Self::Target<ApplyFn<'a, A, B>>) -> Self::Target<B>
-    where
-        B: 'a,
-    {
-        ap(f, self)
-    }
-}
+impl_apply_for_list!(Vec);
+impl_apply_for_list!(VecDeque);
+impl_apply_for_list!(LinkedList);
 
 #[cfg(test)]
 mod test {

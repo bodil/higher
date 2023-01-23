@@ -4,7 +4,7 @@
 #![allow(rustdoc::bare_urls)]
 #![doc = include_str!("../README.md")]
 
-pub use higher_derive::{Bifunctor, Functor};
+pub use higher_derive::{Bifunctor, BifunctorRef, Functor, FunctorRef};
 
 pub mod semigroup;
 #[doc(inline)]
@@ -16,7 +16,7 @@ pub use crate::monoid::Monoid;
 
 pub mod functor;
 #[doc(inline)]
-pub use crate::functor::Functor;
+pub use crate::functor::{Functor, FunctorRef};
 
 pub mod contra;
 #[doc(inline)]
@@ -24,7 +24,7 @@ pub use crate::contra::Contravariant;
 
 pub mod bifunctor;
 #[doc(inline)]
-pub use crate::bifunctor::Bifunctor;
+pub use crate::bifunctor::{Bifunctor, BifunctorRef};
 
 pub mod profunctor;
 #[doc(inline)]

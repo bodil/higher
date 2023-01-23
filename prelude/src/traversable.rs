@@ -6,66 +6,70 @@ use std::{
 
 use crate::{
     apply::{lift2, ApplyFn},
-    Apply, Foldable, Functor, Pure,
+    Applicative, Foldable, Functor, Pure,
 };
 
 pub trait Traversable<'a, A: 'a>: Functor<'a, A> + Foldable<'a, A> {
-    type Target<T: 'a>;
-
-    fn traverse<B, MB, MLB, MF, F>(self, f: F) -> MLB
+    fn traverse<B: 'a, M: 'a, F: 'a>(self, f: F) -> M::Target<Self::Target<B>>
     where
-        B: Clone + 'a,
-        <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
-        MB: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Functor<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>,
-        MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = MB>
-            + Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Apply<'a,<Self as Traversable<'a, A>>::Target<B>,Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, <Self as Traversable<'a, A>>::Target<B>, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Pure<<Self as Traversable<'a, A>>::Target<B>>
-            + 'a,
-        MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
-        F: Fn(A) -> MB + 'a;
+        Self::Target<B>: Traversable<'a, B>,
+        B: Clone,
+        M: Applicative<'a, B>,
 
-    fn sequence<B, MLB, MF>(self) -> MLB
+        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>
+            + Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = M::Target<Self::Target<B>>>
+            + Applicative<
+                'a,
+                Self::Target<B>,
+                Target<ApplyFn<'a, B, Self::Target<B>>> = M::Target<
+                    ApplyFn<'a, B, Self::Target<B>>,
+                >,
+            >,
+        M::Target<ApplyFn<'a, B, Self::Target<B>>>: Applicative<
+            'a,
+            ApplyFn<'a, B, Self::Target<B>>,
+            Target<Self::Target<B>> = M::Target<Self::Target<B>>,
+        >,
+        F: Fn(A) -> M;
+
+    fn sequence<B: 'a>(self) -> A::Target<Self::Target<B>>
     where
         Self: Sized,
-        B: Clone+'a,
-        <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
-        A: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Functor<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>,
-        MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = A>
-            + Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Apply<'a,<Self as Traversable<'a, A>>::Target<B>,Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, <Self as Traversable<'a, A>>::Target<B>, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Pure<<Self as Traversable<'a, A>>::Target<B>>
-            + 'a,
-        MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
+        Self::Target<B>: Traversable<'a, B>,
+        A: Applicative<'a, B>,
+        B: Clone,
+
+        A::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = A>
+            + Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = A::Target<Self::Target<B>>>
+            + Applicative<
+                'a,
+                Self::Target<B>,
+                Target<ApplyFn<'a, B, Self::Target<B>>> = A::Target<
+                    ApplyFn<'a, B, Self::Target<B>>,
+                >,
+            >,
+        A::Target<ApplyFn<'a, B, Self::Target<B>>>: Applicative<
+            'a,
+            ApplyFn<'a, B, Self::Target<B>>,
+            Target<Self::Target<B>> = A::Target<Self::Target<B>>,
+        >,
     {
         self.traverse(identity)
     }
 }
 
 impl<'a, A: 'a> Traversable<'a, A> for Option<A> {
-    type Target<T: 'a> = Option<T>;
-
-    fn traverse<B, MB, MLB, MF, F>(self, f: F) -> MLB
+    fn traverse<B: 'a, M, F: 'a>(self, f: F) -> M::Target<Self::Target<B>>
     where
-        B: Clone + 'a,
-        <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
-        MB: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Functor<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>,
-        MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = MB>
-            + Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Apply<'a,<Self as Traversable<'a, A>>::Target<B>,Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, <Self as Traversable<'a, A>>::Target<B>, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Pure<<Self as Traversable<'a, A>>::Target<B>>
-            + 'a,
-        MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
-        F: Fn(A) -> MB + 'a,
+        Self::Target<B>: Traversable<'a, B>,
+        M: Applicative<'a, B>,
+
+        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>
+            + Applicative<'a, Self::Target<B>>
+            + Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = M::Target<Self::Target<B>>>,
+        M::Target<ApplyFn<'a, B, Self::Target<B>>>:
+            Applicative<'a, ApplyFn<'a, B, Self::Target<B>>>,
+        F: Fn(A) -> M,
     {
         match self {
             None => Pure::pure(None),
@@ -75,23 +79,15 @@ impl<'a, A: 'a> Traversable<'a, A> for Option<A> {
 }
 
 impl<'a, A: 'a, E: 'a> Traversable<'a, A> for Result<A, E> {
-    type Target<T: 'a> = Result<T, E>;
-
-    fn traverse<B, MB, MLB, MF, F>(self, f: F) -> MLB
+    fn traverse<B: 'a, M, F: 'a>(self, f: F) -> M::Target<Self::Target<B>>
     where
-        B: Clone + 'a,
-        <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
-        MB: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Functor<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>,
-        MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = MB>
-            + Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Apply<'a,<Self as Traversable<'a, A>>::Target<B>,Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, <Self as Traversable<'a, A>>::Target<B>, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Pure<<Self as Traversable<'a, A>>::Target<B>>
-            + 'a,
-        MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
-        F: Fn(A) -> MB + 'a,
+        Self::Target<B>: Traversable<'a, B>,
+        M: Applicative<'a, B>,
+
+        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>,
+        M::Target<ApplyFn<'a, B, Self::Target<B>>>:
+            Applicative<'a, ApplyFn<'a, B, Self::Target<B>>>,
+        F: Fn(A) -> M,
     {
         match self {
             Err(e) => Pure::pure(Err(e)),
@@ -100,61 +96,72 @@ impl<'a, A: 'a, E: 'a> Traversable<'a, A> for Result<A, E> {
     }
 }
 
-/// An implementation of [`traverse`](traverse) for anything that implements
-/// [`Foldable`](Foldable), [`Default`](Default) and [`Extend`](Extend).
-pub fn traverse_extend<'a, A, B, LA, LB, MB, MLB, MF, F>(f: F, l: LA) -> MLB
+/// A default implementation of [`traverse`](traverse) for anything that
+/// implements [`Foldable`](Foldable), [`Default`](Default) and
+/// [`Extend`](Extend).
+pub fn traverse_extend<'a, A: 'a, B: 'a, L: 'a, M: 'a, F: 'a>(f: F, l: L) -> M::Target<L::Target<B>>
 where
-    A: 'a,
-    B: Clone + 'a,
-    LA: Foldable<'a, A>,
-    LB: Foldable<'a, B> + Extend<B> + Default + Clone + 'a,
-    MB: Apply<'a, B, Target<LB> = MLB> + Functor<'a, B, Target<ApplyFn<'a, LB, LB>> = MF>,
-    MLB: Apply<'a, LB, Target<B> = MB>
-        + Apply<'a, LB, Target<ApplyFn<'a, LB, LB>> = MF>
-        + Apply<'a, LB, Target<LB> = MLB>
-        + Functor<'a, LB, Target<LB> = MLB>
-        + Pure<LB>
-        + 'a,
-    MF: Apply<'a, ApplyFn<'a, LB, LB>>,
-    F: Fn(A) -> MB + 'a,
+    L: Traversable<'a, A>,
+    L::Target<B>: Foldable<'a, B> + Extend<B> + Default + Clone,
+    M: Applicative<'a, B>,
+
+    M::Target<L::Target<B>>: Applicative<'a, L::Target<B>, Target<B> = M>
+        + Applicative<'a, L::Target<B>, Target<L::Target<B>> = M::Target<L::Target<B>>>
+        + Applicative<
+            'a,
+            L::Target<B>,
+            Target<ApplyFn<'a, B, L::Target<B>>> = M::Target<ApplyFn<'a, B, L::Target<B>>>,
+        >,
+    M::Target<ApplyFn<'a, B, L::Target<B>>>: Applicative<
+        'a,
+        ApplyFn<'a, B, L::Target<B>>,
+        Target<L::Target<B>> = M::Target<L::Target<B>>,
+    >,
+    F: Fn(A) -> M,
 {
-    let out: MLB = Pure::pure(Default::default());
-    let cons_f = move |ys: MLB, x: A| {
-        lift2(
-            &|item: B, mut list: LB| {
-                list.extend(iter::once(item));
-                list
-            },
-            f(x),
-            ys,
-        )
-    };
-    l.foldl(cons_f, out)
+    fn snoc<L: Extend<A>, A>(mut l: L, a: A) -> L {
+        l.extend(iter::once(a));
+        l
+    }
+
+    l.foldl(
+        move |ys, x| lift2(&snoc, ys, f(x)),
+        Pure::pure(Default::default()),
+    )
 }
 
 macro_rules! impl_traversable_for_extendable {
     ($type:ident) => {
         impl<'a, A: 'a> Traversable<'a, A> for $type<A> {
-            type Target<T: 'a> = $type<T>;
-
-            fn traverse<B,  MB, MLB, MF, F>(self, f: F) -> MLB
+            fn traverse<B: 'a, M: 'a, F: 'a>(self, f: F) -> M::Target<Self::Target<B>>
             where
-            B: Clone + 'a,
-            <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
-            MB: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB> + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>,
-            MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = MB>
-            + Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Apply<'a,<Self as Traversable<'a, A>>::Target<B>,Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, <Self as Traversable<'a, A>>::Target<B>, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Pure<<Self as Traversable<'a, A>>::Target<B>>
-            + 'a,
-            MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
-            F: Fn(A) -> MB + 'a,
+                Self::Target<B>: Foldable<'a, B>,
+                M: Applicative<'a, B>,
+                B: Clone,
+
+                M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>
+                    + Applicative<
+                        'a,
+                        Self::Target<B>,
+                        Target<Self::Target<B>> = M::Target<Self::Target<B>>,
+                    > + Applicative<
+                        'a,
+                        Self::Target<B>,
+                        Target<ApplyFn<'a, B, Self::Target<B>>> = M::Target<
+                            ApplyFn<'a, B, Self::Target<B>>,
+                        >,
+                    >,
+                M::Target<ApplyFn<'a, B, Self::Target<B>>>: Applicative<
+                    'a,
+                    ApplyFn<'a, B, Self::Target<B>>,
+                    Target<Self::Target<B>> = M::Target<Self::Target<B>>,
+                >,
+                F: Fn(A) -> M,
             {
                 traverse_extend(f, self)
             }
         }
-    }
+    };
 }
 
 impl_traversable_for_extendable!(Vec);
