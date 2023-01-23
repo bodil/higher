@@ -252,6 +252,22 @@
 <span id="252">252</span>
 <span id="253">253</span>
 <span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
 </pre><pre class="rust"><code><span class="attribute">#![deny(unsafe_code, nonstandard_style)]
 #![forbid(rust_2018_idioms)]
 #![warn(unreachable_pub, missing_debug_implementations)]
@@ -315,6 +331,22 @@
 <span class="kw">pub mod </span>error;
 <span class="attribute">#[doc(inline)]
 </span><span class="kw">pub use </span><span class="kw">crate</span>::error::{ApplicativeError, MonadError};
+
+<span class="kw">pub mod </span>alt;
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span><span class="kw">crate</span>::alt::Alt;
+
+<span class="kw">pub mod </span>plus;
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span><span class="kw">crate</span>::plus::Plus;
+
+<span class="kw">pub mod </span>alternative;
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span><span class="kw">crate</span>::alternative::Alternative;
+
+<span class="kw">pub mod </span>monadplus;
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span><span class="kw">crate</span>::monadplus::MonadPlus;
 
 <span class="kw">pub mod </span>algebras;
 <span class="kw">pub mod </span>rings;
