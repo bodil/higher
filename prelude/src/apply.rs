@@ -7,7 +7,7 @@ use crate::{repeat, run, Bind, Functor, Pure};
 /// [`Apply::apply()`](Apply::apply) are required to be of this type rather than
 /// an arbitrary type matching `Fn(A) -> B`.
 pub struct ApplyFn<'a, A, B> {
-    function: Box<dyn Fn(A) -> B + 'a>,
+    function: Rc<dyn Fn(A) -> B + 'a>,
 }
 
 impl<'a, A, B> ApplyFn<'a, A, B> {
@@ -17,13 +17,21 @@ impl<'a, A, B> ApplyFn<'a, A, B> {
     }
 }
 
+impl<'a, A, B> Clone for ApplyFn<'a, A, B> {
+    fn clone(&self) -> Self {
+        Self {
+            function: self.function.clone(),
+        }
+    }
+}
+
 impl<'a, A, B, F> From<F> for ApplyFn<'a, A, B>
 where
     F: 'a + Fn(A) -> B,
 {
     fn from(f: F) -> Self {
         ApplyFn {
-            function: Box::new(f),
+            function: Rc::new(f),
         }
     }
 }
@@ -232,7 +240,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{apply::ApplyFn, Apply};
+    use super::{lift2, Apply, ApplyFn};
 
     #[test]
     fn apply_option() {
@@ -246,18 +254,22 @@ mod test {
         assert_eq!(Some(5i32).apply::<i32>(nf), None);
     }
 
-    mod std_test {
-        use crate::apply::{Apply, ApplyFn};
+    #[test]
+    fn apply_vec() {
+        let a = vec![1, 2, 3];
+        let f = vec![
+            ApplyFn::from(|x: i32| x + 3),
+            ApplyFn::from(|x: i32| x + 2),
+            ApplyFn::from(|x: i32| x + 1),
+        ];
+        assert_eq!(a.apply(f), vec![4, 5, 6, 3, 4, 5, 2, 3, 4]);
+    }
 
-        #[test]
-        fn apply_vec() {
-            let a = vec![1, 2, 3];
-            let f = vec![
-                ApplyFn::from(|x: i32| x + 3),
-                ApplyFn::from(|x: i32| x + 2),
-                ApplyFn::from(|x: i32| x + 1),
-            ];
-            assert_eq!(a.apply(f), vec![4, 5, 6, 3, 4, 5, 2, 3, 4]);
-        }
+    #[test]
+    fn apply_lift2() {
+        let a = Some(2);
+        let b = Some(3);
+        let sum = lift2(|a, b| a + b, a, b);
+        assert_eq!(sum, Some(5));
     }
 }

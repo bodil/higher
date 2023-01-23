@@ -253,3 +253,19 @@ where
         .into()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::Effect;
+    use higher::{Pure, Traversable};
+
+    #[test]
+    fn traverse_effect() {
+        let ef1 = Effect::pure(1);
+        let ef2 = Effect::pure(2);
+        let ef3 = Effect::pure(3);
+        let efs = vec![ef1, ef2, ef3];
+        let joined: Effect<'_, Vec<i32>> = efs.sequence();
+        assert_eq!(joined.run(), vec![1, 2, 3]);
+    }
+}
