@@ -43,7 +43,8 @@ impl Semigroup for Infallible {
     }
 }
 
-/// Semigroup where [`mappend`](Semigroup::mappend) always takes the first option.
+/// Semigroup where [`mappend`](Semigroup::mappend) discards the second
+/// argument, always returning the first.
 ///
 /// ```
 /// # use higher::semigroup::{Semigroup, First};
@@ -88,7 +89,8 @@ impl<A> Semigroup for First<A> {
     }
 }
 
-/// Semigroup where [`mappend`](Semigroup::mappend) always takes the last option.
+/// Semigroup where [`mappend`](Semigroup::mappend) discards the first argument,
+/// always returning the second.
 ///
 /// ```
 /// # use higher::semigroup::{Semigroup, Last};

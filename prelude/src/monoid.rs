@@ -7,6 +7,15 @@ use crate::{algebras::HeytingAlgebra, rings::Semiring, Semigroup};
 ///
 /// - Associativity: `(x + y) + z == x + (y + z)`
 /// - Identity: `0 + a == a + 0 == a`
+///
+/// If you're wondering why this isn't implemented for Rust's primitive
+/// integers, it's because they're essentially two `Monoid`s in a trenchcoat:
+/// both addition and multiplication fulfill the monoid laws. To distinguish
+/// between the two, you can wrap them in the [`Additive`](Additive) and
+/// [`Multiplicative`](Multiplicative) newtypes. It's generally easier to use
+/// [`Semiring`](Semiring) as an abstraction for numbers for this
+/// reason, but the newtypes are there if you just need to use a number as a
+/// monoid.
 pub trait Monoid: Semigroup + Default {}
 
 impl<A> Monoid for A where A: Semigroup + Default {}
@@ -42,6 +51,9 @@ macro_rules! impl_newtype {
 }
 
 /// Monoid and semigroup for semirings under addition.
+///
+/// Wrap a [`Semiring`](Semiring) (such as an integer or float) in this to use
+/// its addition method as a monoid.
 ///
 /// ```
 /// # use higher::{Semigroup, rings::Semiring, monoid::Additive};
@@ -79,6 +91,9 @@ where
 
 /// Monoid and semigroup for semirings under multiplication.
 ///
+/// Wrap a [`Semiring`](Semiring) (such as an integer or float) in this to use
+/// its multiplication method as a monoid.
+///
 /// ```
 /// # use higher::{Semigroup, rings::Semiring, monoid::Multiplicative};
 /// # let x = 5;
@@ -114,6 +129,9 @@ where
 }
 
 /// Monoid and semigroup for conjunction.
+///
+/// Wrap a [`HeytingAlgebra`](HeytingAlgebra) (such as a boolean) in this to use
+/// its conjunction method (logical "and") as a monoid.
 ///
 /// ```
 /// # use higher::{Semigroup, monoid::Conj, algebras::HeytingAlgebra};
@@ -166,6 +184,9 @@ where
 }
 
 /// Monoid and semigroup for disjunction.
+///
+/// Wrap a [`HeytingAlgebra`](HeytingAlgebra) (such as a boolean) in this to use
+/// its disjunction method (logical "or") as a monoid.
 ///
 /// ```
 /// # use higher::{Semigroup, monoid::Disj, algebras::HeytingAlgebra};
