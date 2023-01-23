@@ -3,7 +3,13 @@ use std::{
     convert::identity,
 };
 
-use crate::{apply::ApplyFn, rings::Semiring, Applicative, Apply, Bind, Functor, Monoid, Pure};
+use crate::{
+    algebras::HeytingAlgebra,
+    apply::ApplyFn,
+    monoid::{Conj, Disj},
+    rings::Semiring,
+    Alt, Applicative, Apply, Bind, Functor, Monoid, Plus, Pure,
+};
 
 pub trait Foldable<'a, A>
 where
@@ -108,6 +114,49 @@ where
         A: Semiring + 'a,
     {
         self.foldl(|a, b| a.mul(b), A::ONE)
+    }
+
+    fn one_of<B: 'a>(self) -> A
+    where
+        Self: Sized,
+        A: Plus<'a, B>,
+    {
+        self.foldr(Alt::alt, Default::default())
+    }
+
+    fn one_of_map<B: 'a, GB: 'a, F: 'a>(self, f: F) -> GB
+    where
+        Self: Sized,
+        GB: Plus<'a, B>,
+        F: Fn(A) -> GB,
+    {
+        self.foldr(move |a, bs| f(a).alt(bs), Default::default())
+    }
+
+    fn all<B: 'a, F: 'a>(&'a self, f: F) -> B
+    where
+        Self: Sized,
+        F: Fn(&'a A) -> B,
+        B: HeytingAlgebra,
+    {
+        self.fold_map_ref(move |a| Conj(f(a))).unwrap()
+    }
+
+    fn any<B: 'a, F: 'a>(&'a self, f: F) -> B
+    where
+        Self: Sized,
+        F: Fn(&'a A) -> B,
+        B: HeytingAlgebra,
+    {
+        self.fold_map_ref(move |a| Disj(f(a))).unwrap()
+    }
+
+    fn contains(&'a self, value: &'a A) -> bool
+    where
+        Self: Sized,
+        A: Eq,
+    {
+        self.any(move |item| item == value)
     }
 }
 
