@@ -1081,7 +1081,7 @@
                     .unnamed
                     .iter()
                     .enumerate()
-                    .map(|(index, <span class="kw">_</span>)| Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;arg{}&quot;</span>, index), Span::call_site()))
+                    .map(|(index, <span class="kw">_</span>)| Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;arg{index}&quot;</span>), Span::call_site()))
                     .collect();
                 <span class="kw">let </span>fields = fields.unnamed.iter().zip(args.iter()).map(|(field, arg)| {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(function_name) = match_type_param(generic_types, <span class="kw-2">&amp;</span>field.ty) {

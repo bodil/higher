@@ -843,7 +843,7 @@
 <span class="doccomment">/// Print any value which implements [`Display`](Display) to the console,
 /// followed by a newline.
 </span><span class="kw">pub fn </span>print&lt;<span class="lifetime">&#39;a</span>, S: Display + <span class="lifetime">&#39;a</span>&gt;(s: S) -&gt; IO&lt;<span class="lifetime">&#39;a</span>, (), Error&gt; {
-    put_str_ln(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, s))
+    put_str_ln(<span class="macro">format!</span>(<span class="string">&quot;{s}&quot;</span>))
 }
 
 <span class="doccomment">/// Read a line from the console.
