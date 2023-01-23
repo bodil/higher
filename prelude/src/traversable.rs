@@ -1,4 +1,8 @@
-use std::{convert::identity, iter};
+use std::{
+    collections::{LinkedList, VecDeque},
+    convert::identity,
+    iter,
+};
 
 use crate::{
     apply::{lift2, ApplyFn},
@@ -128,70 +132,34 @@ where
     l.foldl(cons_f, out)
 }
 
-impl<'a, A: 'a> Traversable<'a, A> for Vec<A> {
-    type Target<T: 'a> = Vec<T>;
+macro_rules! impl_traversable_for_extendable {
+    ($type:ident) => {
+        impl<'a, A: 'a> Traversable<'a, A> for $type<A> {
+            type Target<T: 'a> = $type<T>;
 
-    fn traverse<B,  MB, MLB, MF, F>(self, f: F) -> MLB
-    where
-        B: Clone + 'a,
-        <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
-        MB: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB> + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>,
-        MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = MB>
+            fn traverse<B,  MB, MLB, MF, F>(self, f: F) -> MLB
+            where
+            B: Clone + 'a,
+            <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
+            MB: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB> + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>,
+            MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = MB>
             + Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
             + Apply<'a,<Self as Traversable<'a, A>>::Target<B>,Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
             + Functor<'a, <Self as Traversable<'a, A>>::Target<B>, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
             + Pure<<Self as Traversable<'a, A>>::Target<B>>
             + 'a,
-        MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
-    F: Fn(A) -> MB + 'a,
-    {
-        traverse_extend(f, self)
+            MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
+            F: Fn(A) -> MB + 'a,
+            {
+                traverse_extend(f, self)
+            }
+        }
     }
 }
 
-impl<'a, A: 'a> Traversable<'a, A> for std::collections::VecDeque<A> {
-    type Target<T: 'a> = std::collections::VecDeque<T>;
-
-    fn traverse<B, MB, MLB, MF, F>(self, f: F) -> MLB
-    where
-        B: Clone + 'a,
-        <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
-        MB: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Functor<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>,
-        MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = MB>
-            + Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Apply<'a,<Self as Traversable<'a, A>>::Target<B>,Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, <Self as Traversable<'a, A>>::Target<B>, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Pure<<Self as Traversable<'a, A>>::Target<B>>
-            + 'a,
-        MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
-    F: Fn(A) -> MB + 'a{
-        traverse_extend(f, self)
-    }
-}
-
-impl<'a, A: 'a> Traversable<'a, A> for std::collections::LinkedList<A> {
-    type Target<T: 'a> = std::collections::LinkedList<T>;
-
-    fn traverse<B, MB, MLB, MF, F>(self, f: F) -> MLB
-    where
-        B: Clone + 'a,
-        <Self as Traversable<'a, A>>::Target<B>: Foldable<'a, B> + Clone + 'a,
-        MB: Apply<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, B, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Functor<'a, B, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>,
-        MLB: Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<B> = MB>
-            + Apply<'a, <Self as Traversable<'a, A>>::Target<B>, Target<ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>> = MF>
-            + Apply<'a,<Self as Traversable<'a, A>>::Target<B>,Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Functor<'a, <Self as Traversable<'a, A>>::Target<B>, Target<<Self as Traversable<'a, A>>::Target<B>> = MLB>
-            + Pure<<Self as Traversable<'a, A>>::Target<B>>
-            + 'a,
-        MF: Apply<'a, ApplyFn<'a, <Self as Traversable<'a, A>>::Target<B>, <Self as Traversable<'a, A>>::Target<B>>>,
-    F: Fn(A) -> MB + 'a{
-        traverse_extend(f, self)
-    }
-}
+impl_traversable_for_extendable!(Vec);
+impl_traversable_for_extendable!(VecDeque);
+impl_traversable_for_extendable!(LinkedList);
 
 #[cfg(test)]
 mod test {

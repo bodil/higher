@@ -1,4 +1,7 @@
-use std::convert::identity;
+use std::{
+    collections::{LinkedList, VecDeque},
+    convert::identity,
+};
 
 use crate::{apply::ApplyFn, rings::Semiring, Applicative, Apply, Bind, Functor, Monoid, Pure};
 
@@ -280,11 +283,11 @@ impl<'a, A: 'a> Foldable<'a, A> for Vec<A> {
     impl_foldable_from_iter!();
 }
 
-impl<'a, A: 'a> Foldable<'a, A> for std::collections::VecDeque<A> {
+impl<'a, A: 'a> Foldable<'a, A> for VecDeque<A> {
     impl_foldable_from_iter!();
 }
 
-impl<'a, A: 'a> Foldable<'a, A> for std::collections::LinkedList<A> {
+impl<'a, A: 'a> Foldable<'a, A> for LinkedList<A> {
     impl_foldable_from_iter!();
 }
 
