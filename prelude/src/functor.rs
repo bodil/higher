@@ -15,7 +15,11 @@ use crate::repeat;
 ///
 /// You can also use this just to modify the values inside your container value
 /// without changing their type, if the mapping function returns a value of the
-/// same type.  This is called an "endofunctor."
+/// same type.  This is called an "endofunctor." In an ideal Rust, we would be
+/// able to implement this as a special case of [`fmap`](Functor::fmap)
+/// modifying the data in place, but in the Rust we have, beware that using
+/// [`fmap`](Functor::fmap) in this manner is considerably less efficient than
+/// using a mutable reference iterator.
 pub trait Functor<'a, A: 'a> {
     type Target<T: 'a>;
 
@@ -70,6 +74,15 @@ pub trait Functor<'a, A: 'a> {
     }
 }
 
+/// `FunctorRef` is an extension to [`Functor`](Functor) which provides a
+/// non-destructive [`fmap`](Functor::fmap) passing references to the mapping
+/// function.
+///
+/// This trait is separate from [`Functor`](Functor) because it can only be
+/// implemented for types which can be reconstructed using only references and
+/// the function mapping `&A` to `B`. For instance, it can't be implemented for
+/// [`Result<A, E>`](Result) because in the [`Err`](Result::Err) case, we can't
+/// map to another [`Err`](Result::Err) without ownership of the `E`.
 pub trait FunctorRef<'a, A: 'a>: Functor<'a, A> {
     /// Map a functor of `A` to a functor of `B` using a function from `&A` to
     /// `B`.
@@ -79,6 +92,11 @@ pub trait FunctorRef<'a, A: 'a>: Functor<'a, A> {
 
     /// Given a type `A` implementing [`Clone`](Clone), create a new identical
     /// `FunctorRef<A>` by cloning the values inside `self`.
+    ///
+    /// This is mostly useful for data structures which don't necessarily
+    /// implement [`Clone`](Clone). For those which do, you should reimplement
+    /// this method simply as a call to [`Clone::clone()`](Clone) for
+    /// performance.
     fn fclone(&self) -> Self
     where
         Self: Sized + FunctorRef<'a, A, Target<A> = Self>,
@@ -105,6 +123,13 @@ impl<'a, A: 'a> FunctorRef<'a, A> for Option<A> {
         F: Fn(&A) -> B,
     {
         self.as_ref().map(f)
+    }
+
+    fn fclone(&self) -> Self
+    where
+        A: Clone,
+    {
+        self.clone()
     }
 }
 
@@ -141,6 +166,32 @@ impl<'a, A: 'a, const N: usize> Functor<'a, A> for [A; N] {
     }
 }
 
+impl<'a, A: 'a, const N: usize> FunctorRef<'a, A> for [A; N] {
+    #[allow(unsafe_code)]
+    fn fmap_ref<B, F>(&self, f: F) -> Self::Target<B>
+    where
+        B: 'a,
+        F: Fn(&A) -> B + 'a,
+    {
+        let mut out: MaybeUninit<[B; N]> = MaybeUninit::uninit();
+        let mut ptr: *mut B = out.as_mut_ptr().cast();
+        for item in self.into_iter() {
+            unsafe {
+                ptr.write(f(item));
+                ptr = ptr.add(1);
+            }
+        }
+        unsafe { out.assume_init() }
+    }
+
+    fn fclone(&self) -> Self
+    where
+        A: Clone,
+    {
+        self.clone()
+    }
+}
+
 macro_rules! impl_functor_for_collection {
     ($type:ident) => {
         impl<'a, A: 'a> Functor<'a, A> for $type<A> {
@@ -161,6 +212,13 @@ macro_rules! impl_functor_for_collection {
                 F: Fn(&A) -> B,
             {
                 self.iter().map(f).collect()
+            }
+
+            fn fclone(&self) -> Self
+            where
+                A: Clone,
+            {
+                self.clone()
             }
         }
     };
