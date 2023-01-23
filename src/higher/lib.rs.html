@@ -274,7 +274,7 @@
 #![allow(rustdoc::bare_urls)]
 #![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 
-</span><span class="kw">pub use </span>higher_derive::{Bifunctor, Functor};
+</span><span class="kw">pub use </span>higher_derive::{Bifunctor, BifunctorRef, Functor, FunctorRef};
 
 <span class="kw">pub mod </span>semigroup;
 <span class="attribute">#[doc(inline)]
@@ -286,7 +286,7 @@
 
 <span class="kw">pub mod </span>functor;
 <span class="attribute">#[doc(inline)]
-</span><span class="kw">pub use </span><span class="kw">crate</span>::functor::Functor;
+</span><span class="kw">pub use </span><span class="kw">crate</span>::functor::{Functor, FunctorRef};
 
 <span class="kw">pub mod </span>contra;
 <span class="attribute">#[doc(inline)]
@@ -294,7 +294,7 @@
 
 <span class="kw">pub mod </span>bifunctor;
 <span class="attribute">#[doc(inline)]
-</span><span class="kw">pub use </span><span class="kw">crate</span>::bifunctor::Bifunctor;
+</span><span class="kw">pub use </span><span class="kw">crate</span>::bifunctor::{Bifunctor, BifunctorRef};
 
 <span class="kw">pub mod </span>profunctor;
 <span class="attribute">#[doc(inline)]

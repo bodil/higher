@@ -161,28 +161,12 @@
 <span id="161">161</span>
 <span id="162">162</span>
 <span id="163">163</span>
-<span id="164">164</span>
-<span id="165">165</span>
-<span id="166">166</span>
-<span id="167">167</span>
-<span id="168">168</span>
-<span id="169">169</span>
-<span id="170">170</span>
-<span id="171">171</span>
-<span id="172">172</span>
-<span id="173">173</span>
-<span id="174">174</span>
-<span id="175">175</span>
-<span id="176">176</span>
-<span id="177">177</span>
-<span id="178">178</span>
-<span id="179">179</span>
-<span id="180">180</span>
-<span id="181">181</span>
-</pre><pre class="rust"><code><span class="attribute">#[cfg(feature = <span class="string">&quot;futures&quot;</span>)]
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::{LinkedList, VecDeque};
+
+<span class="attribute">#[cfg(feature = <span class="string">&quot;futures&quot;</span>)]
 </span><span class="kw">use </span>futures::{channel::mpsc, stream::LocalBoxStream};
 
-<span class="kw">use crate</span>::{run, Pure};
+<span class="kw">use crate</span>::{run, Functor, Pure};
 
 <span class="doccomment">/// `Bind` lets you chain computations together.
 ///
@@ -195,14 +179,7 @@
 /// [`Applicative`](crate::Applicative), which in turn requires implementations
 /// for [`Functor`](crate::Functor), [`Pure`](crate::Pure) and
 /// [`Apply`](crate::Apply).
-</span><span class="kw">pub trait </span>Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;
-<span class="kw">where
-    </span>A: <span class="lifetime">&#39;a</span>,
-{
-    <span class="kw">type </span>Target&lt;T&gt;
-    <span class="kw">where
-        </span>T: <span class="lifetime">&#39;a</span>;
-
+</span><span class="kw">pub trait </span>Bind&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt;: Functor&lt;<span class="lifetime">&#39;a</span>, A&gt; {
     <span class="doccomment">/// Apply the function `f` to the `A` or `A`s inside the `M&lt;A&gt;` to turn it
     /// into an `M&lt;B&gt;`.
     ///
@@ -212,10 +189,9 @@
     /// return value from `f`, of type `M&lt;B&gt;`, is effectively the original
     /// computation, `M&lt;A&gt;`, followed by the `M&lt;B&gt;` from the callback function
     /// when the result of `M&lt;A&gt;` is ready.
-    </span><span class="kw">fn </span>bind&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
+    </span><span class="kw">fn </span>bind&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
-        </span>B: <span class="lifetime">&#39;a</span>,
-        F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt; + <span class="lifetime">&#39;a</span>;
+        </span>F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;;
 
     <span class="doccomment">/// Turn an `M&lt;A&gt;` into an `M&lt;()&gt;` and a
     /// [`Stream&lt;Item = A&gt;`](futures::stream::Stream) that will yield values of
@@ -243,7 +219,7 @@
     </span><span class="kw">fn </span>into_stream(<span class="self">self</span>) -&gt; (<span class="self">Self</span>::Target&lt;()&gt;, LocalBoxStream&lt;<span class="lifetime">&#39;a</span>, A&gt;)
     <span class="kw">where
         </span><span class="self">Self</span>: Sized + Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;,
-        &lt;<span class="self">Self </span><span class="kw">as </span>Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;()&gt;: Bind&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;A&gt; = <span class="self">Self</span>&gt; + Pure&lt;()&gt;,
+        <span class="self">Self</span>::Target&lt;()&gt;: Bind&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;A&gt; = <span class="self">Self</span>&gt; + Pure&lt;()&gt;,
     {
         <span class="kw">let </span>(giver, receiver) = mpsc::unbounded();
         <span class="kw">let </span>void = <span class="self">self</span>.bind::&lt;(), <span class="kw">_</span>&gt;(<span class="kw">move </span>|a| Pure::pure(giver.unbounded_send(a).unwrap()));
@@ -254,13 +230,11 @@
 <span class="doccomment">/// `lift_m1` provides a default implementation for
 /// [`Functor::fmap`](crate::Functor::fmap) using only [`Bind`](Bind) and
 /// [`Pure`](Pure).
-</span><span class="kw">pub fn </span>lift_m1&lt;<span class="lifetime">&#39;a</span>, MA, MB, A, B, F&gt;(f: F, a: MA) -&gt; MB
+</span><span class="kw">pub fn </span>lift_m1&lt;<span class="lifetime">&#39;a</span>, M, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(f: F, a: M) -&gt; M::Target&lt;B&gt;
 <span class="kw">where
-    </span>A: <span class="lifetime">&#39;a</span>,
-    B: <span class="lifetime">&#39;a</span>,
-    F: Fn(A) -&gt; B + <span class="lifetime">&#39;a</span>,
-    MA: Bind&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;B&gt; = MB&gt;,
-    MB: Pure&lt;B&gt;,
+    </span>F: Fn(A) -&gt; B,
+    M: Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;,
+    M::Target&lt;B&gt;: Pure&lt;B&gt;,
 {
     <span class="macro">run! </span>{
         x &lt;= &lt;B&gt; a;
@@ -268,13 +242,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;A&gt; {
-    <span class="kw">type </span>Target&lt;T&gt; = <span class="prelude-ty">Option</span>&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
-
-    <span class="kw">fn </span>bind&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;A&gt;
+<span class="kw">where
+    </span>A: Clone,
+{
+    <span class="kw">fn </span>bind&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
-        </span>B: <span class="lifetime">&#39;a</span>,
-        F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;,
+        </span>F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;,
     {
         <span class="self">self</span>.and_then(f)
     }
@@ -283,7 +257,7 @@
     </span><span class="kw">fn </span>into_stream(<span class="self">self</span>) -&gt; (<span class="self">Self</span>::Target&lt;()&gt;, LocalBoxStream&lt;<span class="lifetime">&#39;a</span>, A&gt;)
     <span class="kw">where
         </span><span class="self">Self</span>: Sized + Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;,
-        &lt;<span class="self">Self </span><span class="kw">as </span>Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;()&gt;: Pure&lt;()&gt;,
+        <span class="self">Self</span>::Target&lt;()&gt;: Pure&lt;()&gt;,
     {
         (
             Pure::pure(()),
@@ -295,13 +269,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;A, E&gt; {
-    <span class="kw">type </span>Target&lt;T&gt; = <span class="prelude-ty">Result</span>&lt;T, E&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
-
-    <span class="kw">fn </span>bind&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;A, E&gt;
+<span class="kw">where
+    </span>A: Clone,
+{
+    <span class="kw">fn </span>bind&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
-        </span>B: <span class="lifetime">&#39;a</span>,
-        F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;,
+        </span>F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;,
     {
         <span class="self">self</span>.and_then(f)
     }
@@ -310,7 +284,7 @@
     </span><span class="kw">fn </span>into_stream(<span class="self">self</span>) -&gt; (<span class="self">Self</span>::Target&lt;()&gt;, LocalBoxStream&lt;<span class="lifetime">&#39;a</span>, A&gt;)
     <span class="kw">where
         </span><span class="self">Self</span>: Sized + Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;,
-        &lt;<span class="self">Self </span><span class="kw">as </span>Bind&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;()&gt;: Bind&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;A&gt; = <span class="self">Self</span>&gt; + Pure&lt;()&gt;,
+        <span class="self">Self</span>::Target&lt;()&gt;: Bind&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;A&gt; = <span class="self">Self</span>&gt; + Pure&lt;()&gt;,
     {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="prelude-val">Err</span>(err) =&gt; (
@@ -323,31 +297,21 @@
 }
 
 <span class="macro">macro_rules! </span>impl_bind_from_iter {
-    () =&gt; {
-        <span class="kw">fn </span>bind&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
-        <span class="kw">where
-            </span>B: <span class="lifetime">&#39;a</span>,
-            F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;,
-        {
-            <span class="self">self</span>.into_iter().flat_map(|v| f(v).into_iter()).collect()
+    (<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ident</span>) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type</span>&lt;<span class="macro-nonterminal">A</span>&gt; {
+            <span class="kw">fn </span>bind&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
+            <span class="kw">where
+                </span>F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;,
+            {
+                <span class="self">self</span>.into_iter().flat_map(|v| f(v).into_iter()).collect()
+            }
         }
     };
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>Vec&lt;A&gt; {
-    <span class="kw">type </span>Target&lt;T&gt; = Vec&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
-    <span class="macro">impl_bind_from_iter!</span>();
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::VecDeque&lt;A&gt; {
-    <span class="kw">type </span>Target&lt;T&gt; = std::collections::VecDeque&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
-    <span class="macro">impl_bind_from_iter!</span>();
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>std::collections::LinkedList&lt;A&gt; {
-    <span class="kw">type </span>Target&lt;T&gt; = std::collections::LinkedList&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
-    <span class="macro">impl_bind_from_iter!</span>();
-}
+<span class="macro">impl_bind_from_iter!</span>(Vec);
+<span class="macro">impl_bind_from_iter!</span>(VecDeque);
+<span class="macro">impl_bind_from_iter!</span>(LinkedList);
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {

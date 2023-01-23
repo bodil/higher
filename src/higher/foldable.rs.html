@@ -394,25 +394,6 @@
 <span id="394">394</span>
 <span id="395">395</span>
 <span id="396">396</span>
-<span id="397">397</span>
-<span id="398">398</span>
-<span id="399">399</span>
-<span id="400">400</span>
-<span id="401">401</span>
-<span id="402">402</span>
-<span id="403">403</span>
-<span id="404">404</span>
-<span id="405">405</span>
-<span id="406">406</span>
-<span id="407">407</span>
-<span id="408">408</span>
-<span id="409">409</span>
-<span id="410">410</span>
-<span id="411">411</span>
-<span id="412">412</span>
-<span id="413">413</span>
-<span id="414">414</span>
-<span id="415">415</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     collections::{LinkedList, VecDeque},
     convert::identity,
@@ -423,36 +404,29 @@
     apply::ApplyFn,
     monoid::{Conj, Disj},
     rings::Semiring,
-    Alt, Applicative, Apply, Bind, Functor, Monoid, Plus, Pure,
+    Alt, Applicative, Bind, Monoid, Plus, Pure,
 };
 
-<span class="kw">pub trait </span>Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt;
-<span class="kw">where
-    </span>A: <span class="lifetime">&#39;a</span>,
-{
-    <span class="kw">fn </span>foldr&lt;B, F&gt;(<span class="self">self</span>, f: F, init: B) -&gt; B
+<span class="kw">pub trait </span>Foldable&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>foldr&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, f: F, init: B) -&gt; B
     <span class="kw">where
-        </span>B: <span class="lifetime">&#39;a</span>,
-        F: Fn(A, B) -&gt; B + <span class="lifetime">&#39;a</span>;
-    <span class="kw">fn </span>foldr_ref&lt;B, F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F, init: B) -&gt; B
+        </span>F: Fn(A, B) -&gt; B;
+    <span class="kw">fn </span>foldr_ref&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F, init: B) -&gt; B
     <span class="kw">where
-        </span>B: <span class="lifetime">&#39;a</span>,
-        F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A, B) -&gt; B + <span class="lifetime">&#39;a</span>;
-    <span class="kw">fn </span>foldl&lt;B, F&gt;(<span class="self">self</span>, f: F, init: B) -&gt; B
+        </span>F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A, B) -&gt; B;
+    <span class="kw">fn </span>foldl&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, f: F, init: B) -&gt; B
     <span class="kw">where
-        </span>B: <span class="lifetime">&#39;a</span>,
-        F: Fn(B, A) -&gt; B + <span class="lifetime">&#39;a</span>;
-    <span class="kw">fn </span>foldl_ref&lt;B, F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F, init: B) -&gt; B
+        </span>F: Fn(B, A) -&gt; B;
+    <span class="kw">fn </span>foldl_ref&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F, init: B) -&gt; B
     <span class="kw">where
-        </span>B: <span class="lifetime">&#39;a</span>,
-        F: Fn(B, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; B + <span class="lifetime">&#39;a</span>;
-    <span class="kw">fn </span>fold_map&lt;F, M&gt;(<span class="self">self</span>, f: F) -&gt; M
+        </span>F: Fn(B, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; B;
+    <span class="kw">fn </span>fold_map&lt;F: <span class="lifetime">&#39;a</span>, M&gt;(<span class="self">self</span>, f: F) -&gt; M
     <span class="kw">where
-        </span>F: Fn(A) -&gt; M + <span class="lifetime">&#39;a</span>,
+        </span>F: Fn(A) -&gt; M,
         M: Monoid;
-    <span class="kw">fn </span>fold_map_ref&lt;F, M&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F) -&gt; M
+    <span class="kw">fn </span>fold_map_ref&lt;F: <span class="lifetime">&#39;a</span>, M&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F) -&gt; M
     <span class="kw">where
-        </span>F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
+        </span>F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M,
         M: Monoid + <span class="lifetime">&#39;a</span>;
 
     <span class="kw">fn </span>fold(<span class="self">self</span>) -&gt; A
@@ -463,54 +437,42 @@
         <span class="self">self</span>.fold_map(identity)
     }
 
-    <span class="kw">fn </span>traverse_unit&lt;B, MB, MU, MF, F&gt;(<span class="self">self</span>, func: F) -&gt; MU
+    <span class="kw">fn </span>traverse_unit&lt;B: <span class="lifetime">&#39;a</span>, M: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, f: F) -&gt; M::Target&lt;()&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: Sized,
-        A: <span class="lifetime">&#39;a</span>,
-        B: <span class="lifetime">&#39;a</span>,
-        MB: Applicative&lt;<span class="lifetime">&#39;a</span>, B&gt;
-            + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-            + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;()&gt; = MU&gt;,
-        MU: Applicative&lt;<span class="lifetime">&#39;a</span>, ()&gt;
-            + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;B&gt; = MB&gt;
-            + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-            + Functor&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-            + <span class="lifetime">&#39;a</span>,
-        MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;, Target&lt;B&gt; = MB&gt;,
-        F: Fn(A) -&gt; MB + <span class="lifetime">&#39;a</span>,
+        B: Clone,
+        M: Applicative&lt;<span class="lifetime">&#39;a</span>, B&gt;,
+        F: Fn(A) -&gt; M,
+
+        M::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt;: Applicative&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;, Target&lt;B&gt; = M&gt;,
+        M::Target&lt;()&gt;: Applicative&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = M::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt;&gt;
+            + Applicative&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;B&gt; = M&gt;,
     {
-        <span class="attribute">#[allow(clippy::unit_arg)]
-        </span><span class="self">self</span>.foldr(
-            <span class="kw">move </span>|x, y| func(x).apply_second(y),
+        <span class="self">self</span>.foldr(
+            <span class="kw">move </span>|x, y| f(x).apply_second(y),
             Pure::pure(Default::default()),
         )
     }
 
-    <span class="kw">fn </span>sequence_unit&lt;B, MA, MU, MF&gt;(<span class="self">self</span>) -&gt; MU
+    <span class="kw">fn </span>sequence_unit&lt;B: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>) -&gt; A::Target&lt;()&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: Sized,
-        B: <span class="lifetime">&#39;a</span>,
-        A: Applicative&lt;<span class="lifetime">&#39;a</span>, B&gt;
-            + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;()&gt; = MU&gt;
-            + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-            + <span class="lifetime">&#39;a</span>,
-        MU: Applicative&lt;<span class="lifetime">&#39;a</span>, ()&gt;
-            + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;B&gt; = A&gt;
-            + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-            + Functor&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-            + <span class="lifetime">&#39;a</span>,
-        MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;, Target&lt;B&gt; = A&gt;,
+        B: Clone,
+        A: Applicative&lt;<span class="lifetime">&#39;a</span>, B&gt;,
+
+        A::Target&lt;()&gt;: Applicative&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;B&gt; = A&gt;
+            + Applicative&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = A::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt;&gt;,
+        A::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt;: Applicative&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;, Target&lt;B&gt; = A&gt;,
     {
         <span class="self">self</span>.traverse_unit(identity)
     }
 
-    <span class="kw">fn </span>fold_m&lt;M, B, F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, init: B) -&gt; M
+    <span class="kw">fn </span>fold_m&lt;M: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, init: B) -&gt; M
     <span class="kw">where
         </span><span class="self">Self</span>: Sized,
-        A: <span class="lifetime">&#39;a</span>,
-        B: <span class="lifetime">&#39;a</span>,
-        M: Pure&lt;B&gt; + Bind&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;B&gt; = M&gt; + <span class="lifetime">&#39;a</span>,
-        F: Fn(B, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
+        B: Clone,
+        M: Pure&lt;B&gt; + Bind&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;B&gt; = M&gt;,
+        F: Fn(B, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M,
     {
         <span class="self">self</span>.foldl_ref(<span class="kw">move </span>|m, a| m.bind::&lt;B, <span class="kw">_</span>&gt;(<span class="kw">move </span>|b| f(b, a)), M::pure(init))
     }

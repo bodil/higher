@@ -445,7 +445,6 @@
 <span id="445">445</span>
 <span id="446">446</span>
 <span id="447">447</span>
-<span id="448">448</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::identity;
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::fs::File;
@@ -732,9 +731,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt; {
-    <span class="kw">type </span>Target&lt;T&gt; = IO&lt;<span class="lifetime">&#39;a</span>, T, E&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
-
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E: <span class="lifetime">&#39;a</span>&gt; Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt;
+<span class="kw">where
+    </span>A: Clone,
+{
     <span class="kw">fn </span>bind&lt;B, F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
@@ -786,13 +786,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E: <span class="lifetime">&#39;a</span>&gt; Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt; {
-    <span class="kw">type </span>Target&lt;T&gt; = IO&lt;<span class="lifetime">&#39;a</span>, T, E&gt; <span class="kw">where </span>T: <span class="lifetime">&#39;a</span>;
-
-    <span class="kw">fn </span>apply&lt;B&gt;(
-        <span class="self">self</span>,
-        f: &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;,
-    ) -&gt; &lt;<span class="self">Self </span><span class="kw">as </span>Apply&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;::Target&lt;B&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, E: <span class="lifetime">&#39;a</span>&gt; Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>IO&lt;<span class="lifetime">&#39;a</span>, A, E&gt;
+<span class="kw">where
+    </span>A: Clone,
+{
+    <span class="kw">fn </span>apply&lt;B&gt;(<span class="self">self</span>, f: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where
         </span>B: <span class="lifetime">&#39;a</span>,
     {

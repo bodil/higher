@@ -130,6 +130,33 @@
 <span id="130">130</span>
 <span id="131">131</span>
 <span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::identity;
 
 <span class="kw">use </span><span class="kw">crate</span>::Functor;
@@ -141,43 +168,42 @@
 /// with two type parameters. It will convert a `F&lt;_, _&gt;: Bifunctor` from `F&lt;A,
 /// B&gt;` to `F&lt;C, D&gt;` using two functions, one `Fn(A) -&gt; C` and the other `Fn(B)
 /// -&gt; D`.
-</span><span class="kw">pub trait </span>Bifunctor&lt;<span class="lifetime">&#39;a</span>, A, B&gt;
-<span class="kw">where
-    </span>A: <span class="lifetime">&#39;a</span>,
-    B: <span class="lifetime">&#39;a</span>,
-{
-    <span class="kw">type </span>Target&lt;T, U&gt;
-    <span class="kw">where
-        </span>T: <span class="lifetime">&#39;a</span>,
-        U: <span class="lifetime">&#39;a</span>;
+</span><span class="kw">pub trait </span>Bifunctor&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Target&lt;T: <span class="lifetime">&#39;a</span>, U: <span class="lifetime">&#39;a</span>&gt;;
 
     <span class="doccomment">/// Map a `Bifunctor&lt;A, B&gt;` to a `Bifunctor&lt;C, D&gt;` using a function from `A`
     /// to `C` and a function from `B` to `D`.
-    </span><span class="kw">fn </span>bimap&lt;C, D, L, R&gt;(<span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
+    </span><span class="kw">fn </span>bimap&lt;C: <span class="lifetime">&#39;a</span>, D: <span class="lifetime">&#39;a</span>, L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
     <span class="kw">where
-        </span>C: <span class="lifetime">&#39;a</span>,
-        D: <span class="lifetime">&#39;a</span>,
-        L: Fn(A) -&gt; C + <span class="lifetime">&#39;a</span>,
-        R: Fn(B) -&gt; D + <span class="lifetime">&#39;a</span>;
+        </span>L: Fn(A) -&gt; C,
+        R: Fn(B) -&gt; D;
 
     <span class="doccomment">/// Map only the left hand side of the bifunctor from `A` to `C`.
-    </span><span class="kw">fn </span>lmap&lt;C, L&gt;(<span class="self">self</span>, left: L) -&gt; <span class="self">Self</span>::Target&lt;C, B&gt;
+    </span><span class="kw">fn </span>lmap&lt;C: <span class="lifetime">&#39;a</span>, L: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, left: L) -&gt; <span class="self">Self</span>::Target&lt;C, B&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: Sized,
-        C: <span class="lifetime">&#39;a</span>,
-        L: Fn(A) -&gt; C + <span class="lifetime">&#39;a</span>,
+        L: Fn(A) -&gt; C,
     {
         <span class="self">self</span>.bimap(left, identity)
     }
 
     <span class="doccomment">/// Map only the right hand side of the bifunctor from `B` to `D`.
-    </span><span class="kw">fn </span>rmap&lt;D, R&gt;(<span class="self">self</span>, right: R) -&gt; <span class="self">Self</span>::Target&lt;A, D&gt;
+    </span><span class="kw">fn </span>rmap&lt;D: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, right: R) -&gt; <span class="self">Self</span>::Target&lt;A, D&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: Sized,
-        R: Fn(B) -&gt; D + <span class="lifetime">&#39;a</span>,
+        R: Fn(B) -&gt; D,
     {
         <span class="self">self</span>.bimap(identity, right)
     }
+}
+
+<span class="kw">pub trait </span>BifunctorRef&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt;: Bifunctor&lt;<span class="lifetime">&#39;a</span>, A, B&gt; {
+    <span class="doccomment">/// Map a `Bifunctor&lt;A, B&gt;` to a `Bifunctor&lt;C, D&gt;` using a function from `&amp;A`
+    /// to `C` and a function from `&amp;B` to `D`.
+    </span><span class="kw">fn </span>bimap_ref&lt;C: <span class="lifetime">&#39;a</span>, D: <span class="lifetime">&#39;a</span>, L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
+    <span class="kw">where
+        </span>L: Fn(<span class="kw-2">&amp;</span>A) -&gt; C,
+        R: Fn(<span class="kw-2">&amp;</span>B) -&gt; D;
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt; Bifunctor&lt;<span class="lifetime">&#39;a</span>, A, B&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;A, B&gt; {
@@ -189,6 +215,19 @@
         D: <span class="lifetime">&#39;a</span>,
         L: Fn(A) -&gt; C,
         R: Fn(B) -&gt; D,
+    {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="prelude-val">Ok</span>(a) =&gt; <span class="prelude-val">Ok</span>(left(a)),
+            <span class="prelude-val">Err</span>(b) =&gt; <span class="prelude-val">Err</span>(right(b)),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt; BifunctorRef&lt;<span class="lifetime">&#39;a</span>, A, B&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;A, B&gt; {
+    <span class="kw">fn </span>bimap_ref&lt;C: <span class="lifetime">&#39;a</span>, D: <span class="lifetime">&#39;a</span>, L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
+    <span class="kw">where
+        </span>L: Fn(<span class="kw-2">&amp;</span>A) -&gt; C,
+        R: Fn(<span class="kw-2">&amp;</span>B) -&gt; D,
     {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="prelude-val">Ok</span>(a) =&gt; <span class="prelude-val">Ok</span>(left(a)),
@@ -215,19 +254,24 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt; Bifunctor&lt;<span class="lifetime">&#39;a</span>, A, B&gt; <span class="kw">for </span>(A, B) {
-    <span class="kw">type </span>Target&lt;T, U&gt; = (T, U)
-    <span class="kw">where
-        </span>T: <span class="lifetime">&#39;a</span>,
-        U: <span class="lifetime">&#39;a</span>;
+    <span class="kw">type </span>Target&lt;T: <span class="lifetime">&#39;a</span>, U: <span class="lifetime">&#39;a</span>&gt; = (T, U);
 
-    <span class="kw">fn </span>bimap&lt;C, D, L, R&gt;(<span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
+    <span class="kw">fn </span>bimap&lt;C: <span class="lifetime">&#39;a</span>, D: <span class="lifetime">&#39;a</span>, L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
     <span class="kw">where
-        </span>C: <span class="lifetime">&#39;a</span>,
-        D: <span class="lifetime">&#39;a</span>,
-        L: Fn(A) -&gt; C + <span class="lifetime">&#39;a</span>,
-        R: Fn(B) -&gt; D + <span class="lifetime">&#39;a</span>,
+        </span>L: Fn(A) -&gt; C,
+        R: Fn(B) -&gt; D,
     {
         (left(<span class="self">self</span>.<span class="number">0</span>), right(<span class="self">self</span>.<span class="number">1</span>))
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt; BifunctorRef&lt;<span class="lifetime">&#39;a</span>, A, B&gt; <span class="kw">for </span>(A, B) {
+    <span class="kw">fn </span>bimap_ref&lt;C: <span class="lifetime">&#39;a</span>, D: <span class="lifetime">&#39;a</span>, L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
+    <span class="kw">where
+        </span>L: Fn(<span class="kw-2">&amp;</span>A) -&gt; C,
+        R: Fn(<span class="kw-2">&amp;</span>B) -&gt; D,
+    {
+        (left(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>), right(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>))
     }
 }
 
@@ -242,6 +286,16 @@
         R: Fn(B) -&gt; D,
     {
         <span class="self">self</span>.into_iter().map(|(a, b)| (left(a), right(b))).collect()
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt; BifunctorRef&lt;<span class="lifetime">&#39;a</span>, A, B&gt; <span class="kw">for </span>Vec&lt;(A, B)&gt; {
+    <span class="kw">fn </span>bimap_ref&lt;C: <span class="lifetime">&#39;a</span>, D: <span class="lifetime">&#39;a</span>, L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
+    <span class="kw">where
+        </span>L: Fn(<span class="kw-2">&amp;</span>A) -&gt; C,
+        R: Fn(<span class="kw-2">&amp;</span>B) -&gt; D,
+    {
+        <span class="self">self</span>.iter().map(|(a, b)| (left(a), right(b))).collect()
     }
 }
 

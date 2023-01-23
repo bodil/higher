@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"derive":[["Bifunctor",""],["Functor",""]]};
+window.SIDEBAR_ITEMS = {"derive":[["Bifunctor",""],["BifunctorRef",""],["Functor",""],["FunctorRef",""]]};

@@ -5,19 +5,11 @@
 <span id="5">5</span>
 <span id="6">6</span>
 <span id="7">7</span>
-<span id="8">8</span>
-<span id="9">9</span>
-<span id="10">10</span>
-<span id="11">11</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{Apply, Functor, Pure};
 
 <span class="doccomment">/// An `Applicative` functor is anything which implements [`Functor`](Functor),
 /// [`Apply`](Apply) and [`Pure`](Pure).
-</span><span class="kw">pub trait </span>Applicative&lt;<span class="lifetime">&#39;a</span>, A&gt;: Functor&lt;<span class="lifetime">&#39;a</span>, A&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; + Pure&lt;A&gt;
-<span class="kw">where
-    </span>A: <span class="lifetime">&#39;a</span>,
-{
-}
+</span><span class="kw">pub trait </span>Applicative&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt;: Functor&lt;<span class="lifetime">&#39;a</span>, A&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; + Pure&lt;A&gt; {}
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M, A: <span class="lifetime">&#39;a</span>&gt; Applicative&lt;<span class="lifetime">&#39;a</span>, A&gt; <span class="kw">for </span>M <span class="kw">where </span>M: Functor&lt;<span class="lifetime">&#39;a</span>, A&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, A&gt; + Pure&lt;A&gt; {}
 </code></pre></div>
