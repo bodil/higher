@@ -29,6 +29,10 @@ where
     where
         F: Fn(A) -> M + 'a,
         M: Monoid;
+    fn fold_map_ref<F, M>(&'a self, f: F) -> M
+    where
+        F: Fn(&'a A) -> M + 'a,
+        M: Monoid + 'a;
 
     fn fold(self) -> A
     where
@@ -117,6 +121,16 @@ where
     l.foldl(move |acc, x| acc.mappend(f(x)), Default::default())
 }
 
+pub fn fold_map_default_l_ref<'a, A, L, M, F>(f: F, l: &'a L) -> M
+where
+    A: 'a,
+    L: Foldable<'a, A>,
+    M: Monoid + 'a,
+    F: Fn(&'a A) -> M + 'a,
+{
+    l.foldl_ref(move |acc, x| acc.mappend(f(x)), Default::default())
+}
+
 // # Implementations
 
 impl<'a, A: 'a> Foldable<'a, A> for Option<A> {
@@ -167,6 +181,17 @@ impl<'a, A: 'a> Foldable<'a, A> for Option<A> {
     fn fold_map<F, M>(self, f: F) -> M
     where
         F: Fn(A) -> M + 'a,
+        M: Monoid,
+    {
+        match self {
+            Some(value) => f(value),
+            None => M::default(),
+        }
+    }
+
+    fn fold_map_ref<F, M>(&'a self, f: F) -> M
+    where
+        F: Fn(&'a A) -> M + 'a,
         M: Monoid,
     {
         match self {
@@ -231,6 +256,17 @@ impl<'a, A: 'a, E> Foldable<'a, A> for Result<A, E> {
             Err(_) => M::default(),
         }
     }
+
+    fn fold_map_ref<F, M>(&'a self, f: F) -> M
+    where
+        F: Fn(&'a A) -> M + 'a,
+        M: Monoid,
+    {
+        match self {
+            Ok(value) => f(value),
+            Err(_) => M::default(),
+        }
+    }
 }
 
 macro_rules! impl_foldable_from_iter {
@@ -271,6 +307,14 @@ macro_rules! impl_foldable_from_iter {
             F: Fn(B, &'a A) -> B + 'a,
         {
             self.iter().fold(init, f)
+        }
+
+        fn fold_map_ref<F, M>(&'a self, f: F) -> M
+        where
+            F: Fn(&'a A) -> M + 'a,
+            M: Monoid + 'a,
+        {
+            fold_map_default_l_ref(f, self)
         }
     };
 }
