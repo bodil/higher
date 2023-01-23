@@ -316,6 +316,50 @@
 <span id="316">316</span>
 <span id="317">317</span>
 <span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     collections::{LinkedList, VecDeque},
     convert::identity,
@@ -347,6 +391,10 @@
     <span class="kw">where
         </span>F: Fn(A) -&gt; M + <span class="lifetime">&#39;a</span>,
         M: Monoid;
+    <span class="kw">fn </span>fold_map_ref&lt;F, M&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F) -&gt; M
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
+        M: Monoid + <span class="lifetime">&#39;a</span>;
 
     <span class="kw">fn </span>fold(<span class="self">self</span>) -&gt; A
     <span class="kw">where
@@ -355,17 +403,74 @@
     {
         <span class="self">self</span>.fold_map(identity)
     }
-}
 
-<span class="kw">pub fn </span>fold_m&lt;<span class="lifetime">&#39;a</span>, M, L, A, B, F&gt;(f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, init: B, l: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>L) -&gt; M
-<span class="kw">where
-    </span>A: <span class="lifetime">&#39;a</span>,
-    B: <span class="lifetime">&#39;a</span>,
-    L: Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt; + <span class="lifetime">&#39;a</span>,
-    M: Pure&lt;B&gt; + Bind&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;B&gt; = M&gt; + <span class="lifetime">&#39;a</span>,
-    F: Fn(B, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
-{
-    l.foldl_ref(<span class="kw">move </span>|m, a| m.bind::&lt;B, <span class="kw">_</span>&gt;(<span class="kw">move </span>|b| f(b, a)), M::pure(init))
+    <span class="kw">fn </span>traverse_unit&lt;B, MB, MU, MF, F&gt;(<span class="self">self</span>, func: F) -&gt; MU
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized,
+        A: <span class="lifetime">&#39;a</span>,
+        B: <span class="lifetime">&#39;a</span>,
+        MB: Applicative&lt;<span class="lifetime">&#39;a</span>, B&gt;
+            + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
+            + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;()&gt; = MU&gt;,
+        MU: Applicative&lt;<span class="lifetime">&#39;a</span>, ()&gt;
+            + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;B&gt; = MB&gt;
+            + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
+            + Functor&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
+            + <span class="lifetime">&#39;a</span>,
+        MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;, Target&lt;B&gt; = MB&gt;,
+        F: Fn(A) -&gt; MB + <span class="lifetime">&#39;a</span>,
+    {
+        <span class="attribute">#[allow(clippy::unit_arg)]
+        </span><span class="self">self</span>.foldr(
+            <span class="kw">move </span>|x, y| func(x).apply_second(y),
+            Pure::pure(Default::default()),
+        )
+    }
+
+    <span class="kw">fn </span>sequence_unit&lt;B, MA, MU, MF&gt;(<span class="self">self</span>) -&gt; MU
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized,
+        B: <span class="lifetime">&#39;a</span>,
+        A: Applicative&lt;<span class="lifetime">&#39;a</span>, B&gt;
+            + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;()&gt; = MU&gt;
+            + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
+            + <span class="lifetime">&#39;a</span>,
+        MU: Applicative&lt;<span class="lifetime">&#39;a</span>, ()&gt;
+            + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;B&gt; = A&gt;
+            + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
+            + Functor&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
+            + <span class="lifetime">&#39;a</span>,
+        MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;, Target&lt;B&gt; = A&gt;,
+    {
+        <span class="self">self</span>.traverse_unit(identity)
+    }
+
+    <span class="kw">fn </span>fold_m&lt;M, B, F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, init: B) -&gt; M
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized,
+        A: <span class="lifetime">&#39;a</span>,
+        B: <span class="lifetime">&#39;a</span>,
+        M: Pure&lt;B&gt; + Bind&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;B&gt; = M&gt; + <span class="lifetime">&#39;a</span>,
+        F: Fn(B, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
+    {
+        <span class="self">self</span>.foldl_ref(<span class="kw">move </span>|m, a| m.bind::&lt;B, <span class="kw">_</span>&gt;(<span class="kw">move </span>|b| f(b, a)), M::pure(init))
+    }
+
+    <span class="kw">fn </span>sum(<span class="self">self</span>) -&gt; A
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized,
+        A: Semiring + <span class="lifetime">&#39;a</span>,
+    {
+        <span class="self">self</span>.foldl(|a, b| a.add(b), A::ZERO)
+    }
+
+    <span class="kw">fn </span>product(<span class="self">self</span>) -&gt; A
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized,
+        A: Semiring + <span class="lifetime">&#39;a</span>,
+    {
+        <span class="self">self</span>.foldl(|a, b| a.mul(b), A::ONE)
+    }
 }
 
 <span class="kw">pub fn </span>fold_map_default_l&lt;<span class="lifetime">&#39;a</span>, A, L, M, F&gt;(f: F, l: L) -&gt; M
@@ -378,61 +483,14 @@
     l.foldl(<span class="kw">move </span>|acc, x| acc.mappend(f(x)), Default::default())
 }
 
-<span class="kw">pub fn </span>traverse_&lt;<span class="lifetime">&#39;a</span>, A, B, L, MB, MU, MF, F&gt;(func: F, l: L) -&gt; MU
+<span class="kw">pub fn </span>fold_map_default_l_ref&lt;<span class="lifetime">&#39;a</span>, A, L, M, F&gt;(f: F, l: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>L) -&gt; M
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
-    B: <span class="lifetime">&#39;a</span>,
     L: Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt;,
-    MB: Applicative&lt;<span class="lifetime">&#39;a</span>, B&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;()&gt; = MU&gt;,
-    MU: Applicative&lt;<span class="lifetime">&#39;a</span>, ()&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;B&gt; = MB&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-        + Functor&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;&gt; = MF&gt;
-        + <span class="lifetime">&#39;a</span>,
-    MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, ()&gt;, Target&lt;B&gt; = MB&gt;,
-    F: Fn(A) -&gt; MB + <span class="lifetime">&#39;a</span>,
+    M: Monoid + <span class="lifetime">&#39;a</span>,
+    F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
 {
-    <span class="attribute">#[allow(clippy::unit_arg)]
-    </span>l.foldr(
-        <span class="kw">move </span>|x, y| func(x).apply_second(y),
-        Pure::pure(Default::default()),
-    )
-}
-
-<span class="kw">pub fn </span>sequence_&lt;<span class="lifetime">&#39;a</span>, A, L, MA, MU, MF&gt;(l: L) -&gt; MU
-<span class="kw">where
-    </span>A: <span class="lifetime">&#39;a</span>,
-    L: Foldable&lt;<span class="lifetime">&#39;a</span>, MA&gt;,
-    MA: Applicative&lt;<span class="lifetime">&#39;a</span>, A&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;()&gt; = MU&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, ()&gt;&gt; = MF&gt;
-        + <span class="lifetime">&#39;a</span>,
-    MU: Applicative&lt;<span class="lifetime">&#39;a</span>, ()&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;A&gt; = MA&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, ()&gt;&gt; = MF&gt;
-        + Functor&lt;<span class="lifetime">&#39;a</span>, (), Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, ()&gt;&gt; = MF&gt;
-        + <span class="lifetime">&#39;a</span>,
-    MF: Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, ()&gt;&gt; + Apply&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, ()&gt;, Target&lt;A&gt; = MA&gt;,
-{
-    traverse_(identity, l)
-}
-
-<span class="kw">pub fn </span>sum&lt;<span class="lifetime">&#39;a</span>, A, L&gt;(l: L) -&gt; A
-<span class="kw">where
-    </span>A: Semiring + <span class="lifetime">&#39;a</span>,
-    L: Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt;,
-{
-    l.foldl(|a, b| a.add(b), A::ZERO)
-}
-
-<span class="kw">pub fn </span>product&lt;<span class="lifetime">&#39;a</span>, A, L&gt;(l: L) -&gt; A
-<span class="kw">where
-    </span>A: Semiring + <span class="lifetime">&#39;a</span>,
-    L: Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt;,
-{
-    l.foldl(|a, b| a.mul(b), A::ONE)
+    l.foldl_ref(<span class="kw">move </span>|acc, x| acc.mappend(f(x)), Default::default())
 }
 
 <span class="comment">// # Implementations
@@ -485,6 +543,17 @@
     <span class="kw">fn </span>fold_map&lt;F, M&gt;(<span class="self">self</span>, f: F) -&gt; M
     <span class="kw">where
         </span>F: Fn(A) -&gt; M + <span class="lifetime">&#39;a</span>,
+        M: Monoid,
+    {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="prelude-val">Some</span>(value) =&gt; f(value),
+            <span class="prelude-val">None </span>=&gt; M::default(),
+        }
+    }
+
+    <span class="kw">fn </span>fold_map_ref&lt;F, M&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F) -&gt; M
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
         M: Monoid,
     {
         <span class="kw">match </span><span class="self">self </span>{
@@ -549,6 +618,17 @@
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; M::default(),
         }
     }
+
+    <span class="kw">fn </span>fold_map_ref&lt;F, M&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F) -&gt; M
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
+        M: Monoid,
+    {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="prelude-val">Ok</span>(value) =&gt; f(value),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; M::default(),
+        }
+    }
 }
 
 <span class="macro">macro_rules! </span>impl_foldable_from_iter {
@@ -589,6 +669,14 @@
             F: Fn(B, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; B + <span class="lifetime">&#39;a</span>,
         {
             <span class="self">self</span>.iter().fold(init, f)
+        }
+
+        <span class="kw">fn </span>fold_map_ref&lt;F, M&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, f: F) -&gt; M
+        <span class="kw">where
+            </span>F: Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A) -&gt; M + <span class="lifetime">&#39;a</span>,
+            M: Monoid + <span class="lifetime">&#39;a</span>,
+        {
+            fold_map_default_l_ref(f, <span class="self">self</span>)
         }
     };
 }

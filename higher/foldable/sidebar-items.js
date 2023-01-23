@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["fold_m",""],["fold_map_default_l",""],["product",""],["sequence_",""],["sum",""],["traverse_",""]],"trait":[["Foldable",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["fold_map_default_l",""],["fold_map_default_l_ref",""]],"trait":[["Foldable",""]]};

@@ -302,7 +302,7 @@
     <span class="kw">let </span>out: MLB = Pure::pure(Default::default());
     <span class="kw">let </span>cons_f = <span class="kw">move </span>|ys: MLB, x: A| {
         lift2(
-            |item: B, <span class="kw-2">mut </span>list: LB| {
+            <span class="kw-2">&amp;</span>|item: B, <span class="kw-2">mut </span>list: LB| {
                 list.extend(iter::once(item));
                 list
             },
