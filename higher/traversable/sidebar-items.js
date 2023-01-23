@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["traverse_extend","An implementation of `traverse` for anything that implements `Foldable`, `Default` and `Extend`."]],"trait":[["Traversable",""]]};

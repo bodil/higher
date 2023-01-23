@@ -113,6 +113,23 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::identity;
 
 <span class="kw">use </span><span class="kw">crate</span>::Functor;
@@ -194,6 +211,23 @@
         R: Fn(B) -&gt; D + <span class="lifetime">&#39;a</span>,
     {
         <span class="self">self</span>.fmap(|(a, b)| (left(a), right(b)))
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>&gt; Bifunctor&lt;<span class="lifetime">&#39;a</span>, A, B&gt; <span class="kw">for </span>(A, B) {
+    <span class="kw">type </span>Target&lt;T, U&gt; = (T, U)
+    <span class="kw">where
+        </span>T: <span class="lifetime">&#39;a</span>,
+        U: <span class="lifetime">&#39;a</span>;
+
+    <span class="kw">fn </span>bimap&lt;C, D, L, R&gt;(<span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;C, D&gt;
+    <span class="kw">where
+        </span>C: <span class="lifetime">&#39;a</span>,
+        D: <span class="lifetime">&#39;a</span>,
+        L: Fn(A) -&gt; C + <span class="lifetime">&#39;a</span>,
+        R: Fn(B) -&gt; D + <span class="lifetime">&#39;a</span>,
+    {
+        (left(<span class="self">self</span>.<span class="number">0</span>), right(<span class="self">self</span>.<span class="number">1</span>))
     }
 }
 
