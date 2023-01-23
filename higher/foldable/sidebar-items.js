@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["fold_map_default_l",""],["fold_map_default_l_ref",""]],"trait":[["Foldable",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["fold_map_default_l","A default implementation for `fold_map` using `foldl`."],["fold_map_default_l_ref","A default implementation for `fold_map_ref` using `foldl_ref`."]],"trait":[["Foldable",""]]};

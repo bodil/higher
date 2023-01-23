@@ -360,6 +360,10 @@
 <span id="360">360</span>
 <span id="361">361</span>
 <span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     collections::{LinkedList, VecDeque},
     convert::identity,
@@ -473,7 +477,9 @@
     }
 }
 
-<span class="kw">pub fn </span>fold_map_default_l&lt;<span class="lifetime">&#39;a</span>, A, L, M, F&gt;(f: F, l: L) -&gt; M
+<span class="doccomment">/// A default implementation for [`fold_map`](Foldable::fold_map) using
+/// [`foldl`](Foldable::foldl).
+</span><span class="kw">pub fn </span>fold_map_default_l&lt;<span class="lifetime">&#39;a</span>, A, L, M, F&gt;(f: F, l: L) -&gt; M
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
     L: Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt;,
@@ -483,7 +489,9 @@
     l.foldl(<span class="kw">move </span>|acc, x| acc.mappend(f(x)), Default::default())
 }
 
-<span class="kw">pub fn </span>fold_map_default_l_ref&lt;<span class="lifetime">&#39;a</span>, A, L, M, F&gt;(f: F, l: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>L) -&gt; M
+<span class="doccomment">/// A default implementation for [`fold_map_ref`](Foldable::fold_map_ref) using
+/// [`foldl_ref`](Foldable::foldl_ref).
+</span><span class="kw">pub fn </span>fold_map_default_l_ref&lt;<span class="lifetime">&#39;a</span>, A, L, M, F&gt;(f: F, l: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>L) -&gt; M
 <span class="kw">where
     </span>A: <span class="lifetime">&#39;a</span>,
     L: Foldable&lt;<span class="lifetime">&#39;a</span>, A&gt;,
