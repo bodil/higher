@@ -62,6 +62,22 @@ pub mod error;
 #[doc(inline)]
 pub use crate::error::{ApplicativeError, MonadError};
 
+pub mod alt;
+#[doc(inline)]
+pub use crate::alt::Alt;
+
+pub mod plus;
+#[doc(inline)]
+pub use crate::plus::Plus;
+
+pub mod alternative;
+#[doc(inline)]
+pub use crate::alternative::Alternative;
+
+pub mod monadplus;
+#[doc(inline)]
+pub use crate::monadplus::MonadPlus;
+
 pub mod algebras;
 pub mod rings;
 
