@@ -37,17 +37,74 @@ where
     {
         self.fold_map(identity)
     }
-}
 
-pub fn fold_m<'a, M, L, A, B, F>(f: &'a F, init: B, l: &'a L) -> M
-where
-    A: 'a,
-    B: 'a,
-    L: Foldable<'a, A> + 'a,
-    M: Pure<B> + Bind<'a, B, Target<B> = M> + 'a,
-    F: Fn(B, &'a A) -> M + 'a,
-{
-    l.foldl_ref(move |m, a| m.bind::<B, _>(move |b| f(b, a)), M::pure(init))
+    fn traverse_unit<B, MB, MU, MF, F>(self, func: F) -> MU
+    where
+        Self: Sized,
+        A: 'a,
+        B: 'a,
+        MB: Applicative<'a, B>
+            + Apply<'a, B, Target<ApplyFn<'a, B, ()>> = MF>
+            + Apply<'a, B, Target<()> = MU>,
+        MU: Applicative<'a, ()>
+            + Apply<'a, (), Target<B> = MB>
+            + Apply<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
+            + Functor<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
+            + 'a,
+        MF: Apply<'a, ApplyFn<'a, B, ()>, Target<B> = MB>,
+        F: Fn(A) -> MB + 'a,
+    {
+        #[allow(clippy::unit_arg)]
+        self.foldr(
+            move |x, y| func(x).apply_second(y),
+            Pure::pure(Default::default()),
+        )
+    }
+
+    fn sequence_unit<B, MA, MU, MF>(self) -> MU
+    where
+        Self: Sized,
+        B: 'a,
+        A: Applicative<'a, B>
+            + Apply<'a, B, Target<()> = MU>
+            + Apply<'a, B, Target<ApplyFn<'a, B, ()>> = MF>
+            + 'a,
+        MU: Applicative<'a, ()>
+            + Apply<'a, (), Target<B> = A>
+            + Apply<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
+            + Functor<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
+            + 'a,
+        MF: Apply<'a, ApplyFn<'a, B, ()>> + Apply<'a, ApplyFn<'a, B, ()>, Target<B> = A>,
+    {
+        self.traverse_unit(identity)
+    }
+
+    fn fold_m<M, B, F>(&'a self, f: &'a F, init: B) -> M
+    where
+        Self: Sized,
+        A: 'a,
+        B: 'a,
+        M: Pure<B> + Bind<'a, B, Target<B> = M> + 'a,
+        F: Fn(B, &'a A) -> M + 'a,
+    {
+        self.foldl_ref(move |m, a| m.bind::<B, _>(move |b| f(b, a)), M::pure(init))
+    }
+
+    fn sum(self) -> A
+    where
+        Self: Sized,
+        A: Semiring + 'a,
+    {
+        self.foldl(|a, b| a.add(b), A::ZERO)
+    }
+
+    fn product(self) -> A
+    where
+        Self: Sized,
+        A: Semiring + 'a,
+    {
+        self.foldl(|a, b| a.mul(b), A::ONE)
+    }
 }
 
 pub fn fold_map_default_l<'a, A, L, M, F>(f: F, l: L) -> M
@@ -58,63 +115,6 @@ where
     F: Fn(A) -> M + 'a,
 {
     l.foldl(move |acc, x| acc.mappend(f(x)), Default::default())
-}
-
-pub fn traverse_<'a, A, B, L, MB, MU, MF, F>(func: F, l: L) -> MU
-where
-    A: 'a,
-    B: 'a,
-    L: Foldable<'a, A>,
-    MB: Applicative<'a, B>
-        + Apply<'a, B, Target<ApplyFn<'a, B, ()>> = MF>
-        + Apply<'a, B, Target<()> = MU>,
-    MU: Applicative<'a, ()>
-        + Apply<'a, (), Target<B> = MB>
-        + Apply<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
-        + Functor<'a, (), Target<ApplyFn<'a, B, ()>> = MF>
-        + 'a,
-    MF: Apply<'a, ApplyFn<'a, B, ()>, Target<B> = MB>,
-    F: Fn(A) -> MB + 'a,
-{
-    #[allow(clippy::unit_arg)]
-    l.foldr(
-        move |x, y| func(x).apply_second(y),
-        Pure::pure(Default::default()),
-    )
-}
-
-pub fn sequence_<'a, A, L, MA, MU, MF>(l: L) -> MU
-where
-    A: 'a,
-    L: Foldable<'a, MA>,
-    MA: Applicative<'a, A>
-        + Apply<'a, A, Target<()> = MU>
-        + Apply<'a, A, Target<ApplyFn<'a, A, ()>> = MF>
-        + 'a,
-    MU: Applicative<'a, ()>
-        + Apply<'a, (), Target<A> = MA>
-        + Apply<'a, (), Target<ApplyFn<'a, A, ()>> = MF>
-        + Functor<'a, (), Target<ApplyFn<'a, A, ()>> = MF>
-        + 'a,
-    MF: Apply<'a, ApplyFn<'a, A, ()>> + Apply<'a, ApplyFn<'a, A, ()>, Target<A> = MA>,
-{
-    traverse_(identity, l)
-}
-
-pub fn sum<'a, A, L>(l: L) -> A
-where
-    A: Semiring + 'a,
-    L: Foldable<'a, A>,
-{
-    l.foldl(|a, b| a.add(b), A::ZERO)
-}
-
-pub fn product<'a, A, L>(l: L) -> A
-where
-    A: Semiring + 'a,
-    L: Foldable<'a, A>,
-{
-    l.foldl(|a, b| a.mul(b), A::ONE)
 }
 
 // # Implementations
