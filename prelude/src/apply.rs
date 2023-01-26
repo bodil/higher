@@ -79,8 +79,7 @@ pub trait Apply<'a, A: 'a>: Functor<'a, A> {
             + Functor<'a, B, Target<ApplyFn<'a, B, A>> = Self::Target<ApplyFn<'a, B, A>>>
             + Functor<'a, B, Target<A> = Self>,
     {
-        let mapped: Self::Target<ApplyFn<'a, B, A>> = self.fmap(|x: A| ApplyFn::from(repeat(x)));
-        b.apply(mapped)
+        b.apply(self.fmap(|x: A| ApplyFn::from(repeat(x))))
     }
 
     fn apply_second<B: 'a>(self, b: Self::Target<B>) -> Self::Target<B>
@@ -149,6 +148,16 @@ where
     }
 }
 
+/// `lift2` lifts a function of two arguments into an applicative.
+///
+/// "Lifting into" in this case means it converts a function which takes two
+/// values of types `A` and `B` and returns another value of type `C` into a
+/// function which takes `Apply<A>` and `Apply<B>` and returns an `Apply<C>` by
+/// applying the function to the values inside the applicatives.
+///
+/// This generic implmentation requires that the type `A` implements
+/// [`Clone`](Clone), as each value of `A` may need to be passed to the function
+/// multiple times, depending on the structure of the applicative.
 pub fn lift2<'a, A: 'a, B: 'a, C: 'a, F: 'a, M>(f: &'a F, a: M, b: M::Target<B>) -> M::Target<C>
 where
     A: Clone,

@@ -15,6 +15,7 @@ pub trait Traversable<'a, A: 'a>: Functor<'a, A> + Foldable<'a, A> {
         Self::Target<B>: Traversable<'a, B>,
         B: Clone,
         M: Applicative<'a, B>,
+        F: Fn(A) -> M,
 
         M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>
             + Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = M::Target<Self::Target<B>>>
@@ -29,8 +30,7 @@ pub trait Traversable<'a, A: 'a>: Functor<'a, A> + Foldable<'a, A> {
             'a,
             ApplyFn<'a, B, Self::Target<B>>,
             Target<Self::Target<B>> = M::Target<Self::Target<B>>,
-        >,
-        F: Fn(A) -> M;
+        >;
 
     fn sequence<B: 'a>(self) -> A::Target<Self::Target<B>>
     where
