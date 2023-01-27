@@ -12,35 +12,26 @@ use crate::{
 pub trait Traversable<'a, A: 'a>: Functor<'a, A> + Foldable<'a, A> {
     fn traverse<B: 'a, M: 'a, F: 'a>(self, f: F) -> M::Target<Self::Target<B>>
     where
-        Self::Target<B>: Traversable<'a, B>,
         B: Clone,
         M: Applicative<'a, B>,
         F: Fn(A) -> M,
 
-        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>
-            + Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = M::Target<Self::Target<B>>>
+        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = M::Target<Self::Target<B>>>
             + Applicative<
                 'a,
                 Self::Target<B>,
                 Target<ApplyFn<'a, B, Self::Target<B>>> = M::Target<
                     ApplyFn<'a, B, Self::Target<B>>,
                 >,
-            >,
-        M::Target<ApplyFn<'a, B, Self::Target<B>>>: Applicative<
-            'a,
-            ApplyFn<'a, B, Self::Target<B>>,
-            Target<Self::Target<B>> = M::Target<Self::Target<B>>,
-        >;
+            >;
 
     fn sequence<B: 'a>(self) -> A::Target<Self::Target<B>>
     where
         Self: Sized,
-        Self::Target<B>: Traversable<'a, B>,
         A: Applicative<'a, B>,
         B: Clone,
 
-        A::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = A>
-            + Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = A::Target<Self::Target<B>>>
+        A::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = A::Target<Self::Target<B>>>
             + Applicative<
                 'a,
                 Self::Target<B>,
@@ -48,11 +39,6 @@ pub trait Traversable<'a, A: 'a>: Functor<'a, A> + Foldable<'a, A> {
                     ApplyFn<'a, B, Self::Target<B>>,
                 >,
             >,
-        A::Target<ApplyFn<'a, B, Self::Target<B>>>: Applicative<
-            'a,
-            ApplyFn<'a, B, Self::Target<B>>,
-            Target<Self::Target<B>> = A::Target<Self::Target<B>>,
-        >,
     {
         self.traverse(identity)
     }
@@ -64,11 +50,7 @@ impl<'a, A: 'a> Traversable<'a, A> for Option<A> {
         Self::Target<B>: Traversable<'a, B>,
         M: Applicative<'a, B>,
 
-        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>
-            + Applicative<'a, Self::Target<B>>
-            + Applicative<'a, Self::Target<B>, Target<Self::Target<B>> = M::Target<Self::Target<B>>>,
-        M::Target<ApplyFn<'a, B, Self::Target<B>>>:
-            Applicative<'a, ApplyFn<'a, B, Self::Target<B>>>,
+        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>>,
         F: Fn(A) -> M,
     {
         match self {
@@ -84,9 +66,7 @@ impl<'a, A: 'a, E: 'a> Traversable<'a, A> for Result<A, E> {
         Self::Target<B>: Traversable<'a, B>,
         M: Applicative<'a, B>,
 
-        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>,
-        M::Target<ApplyFn<'a, B, Self::Target<B>>>:
-            Applicative<'a, ApplyFn<'a, B, Self::Target<B>>>,
+        M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>>,
         F: Fn(A) -> M,
     {
         match self {
@@ -105,18 +85,12 @@ where
     L::Target<B>: Foldable<'a, B> + Extend<B> + Default + Clone,
     M: Applicative<'a, B>,
 
-    M::Target<L::Target<B>>: Applicative<'a, L::Target<B>, Target<B> = M>
-        + Applicative<'a, L::Target<B>, Target<L::Target<B>> = M::Target<L::Target<B>>>
+    M::Target<L::Target<B>>: Applicative<'a, L::Target<B>, Target<L::Target<B>> = M::Target<L::Target<B>>>
         + Applicative<
             'a,
             L::Target<B>,
             Target<ApplyFn<'a, B, L::Target<B>>> = M::Target<ApplyFn<'a, B, L::Target<B>>>,
         >,
-    M::Target<ApplyFn<'a, B, L::Target<B>>>: Applicative<
-        'a,
-        ApplyFn<'a, B, L::Target<B>>,
-        Target<L::Target<B>> = M::Target<L::Target<B>>,
-    >,
     F: Fn(A) -> M,
 {
     fn snoc<L: Extend<A>, A>(mut l: L, a: A) -> L {
@@ -139,8 +113,7 @@ macro_rules! impl_traversable_for_extendable {
                 M: Applicative<'a, B>,
                 B: Clone,
 
-                M::Target<Self::Target<B>>: Applicative<'a, Self::Target<B>, Target<B> = M>
-                    + Applicative<
+                M::Target<Self::Target<B>>: Applicative<
                         'a,
                         Self::Target<B>,
                         Target<Self::Target<B>> = M::Target<Self::Target<B>>,
@@ -151,11 +124,6 @@ macro_rules! impl_traversable_for_extendable {
                             ApplyFn<'a, B, Self::Target<B>>,
                         >,
                     >,
-                M::Target<ApplyFn<'a, B, Self::Target<B>>>: Applicative<
-                    'a,
-                    ApplyFn<'a, B, Self::Target<B>>,
-                    Target<Self::Target<B>> = M::Target<Self::Target<B>>,
-                >,
                 F: Fn(A) -> M,
             {
                 traverse_extend(f, self)

@@ -55,11 +55,11 @@ pub trait Bind<'a, A: 'a>: Functor<'a, A> {
     #[cfg(feature = "futures")]
     fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
     where
-        Self: Sized + Bind<'a, A>,
-        Self::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
+        Self: Sized,
+        Self::Target<()>: Pure<()>,
     {
         let (giver, receiver) = mpsc::unbounded();
-        let void = self.bind::<(), _>(move |a| {
+        let void = self.bind(move |a| {
             giver.unbounded_send(a).unwrap();
             Pure::pure(())
         });
@@ -77,7 +77,7 @@ where
     M::Target<B>: Pure<B>,
 {
     run! {
-        x <= <B> a;
+        x <= a;
         yield f(x)
     }
 }
@@ -93,7 +93,7 @@ impl<'a, A: 'a> Bind<'a, A> for Option<A> {
     #[cfg(feature = "futures")]
     fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
     where
-        Self: Sized + Bind<'a, A>,
+        Self: Sized,
         Self::Target<()>: Pure<()>,
     {
         (
@@ -117,12 +117,12 @@ impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
     #[cfg(feature = "futures")]
     fn into_stream(self) -> (Self::Target<()>, LocalBoxStream<'a, A>)
     where
-        Self: Sized + Bind<'a, A>,
-        Self::Target<()>: Bind<'a, (), Target<A> = Self> + Pure<()>,
+        Self: Sized,
+        Self::Target<()>: Pure<()>,
     {
         match self {
             Err(err) => (
-                Err(err).bind(|_| Pure::pure(())),
+                Err(err).bind(|_: A| Pure::pure(())),
                 Box::pin(futures::stream::empty()),
             ),
             Ok(a) => (Pure::pure(()), Box::pin(futures::stream::once(async { a }))),

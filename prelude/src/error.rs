@@ -142,13 +142,12 @@ pub trait MonadError<'a, A: 'a, E: 'a>: ApplicativeError<'a, A, E> + Bind<'a, A>
         FE: Fn(E) -> Self::Target<B>,
         FA: Fn(A) -> Self::Target<B>,
 
-        Self::Target<B>: Bind<'a, B, Target<A> = Self>,
         Self::Target<Result<A, E>>: Bind<'a, Result<A, E>, Target<B> = Self::Target<B>>
             + Pure<Result<A, E>>
             + ApplicativeError<'a, A, E>,
     {
         run! {
-            result <= <B>self.attempt();
+            result <= <B> self.attempt();
             result.map_or_else(&recover, &bind)
         }
     }

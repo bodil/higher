@@ -21,7 +21,7 @@ use crate::repeat;
 /// [`fmap`](Functor::fmap) in this manner is considerably less efficient than
 /// using a mutable reference iterator.
 pub trait Functor<'a, A: 'a> {
-    type Target<T: 'a>;
+    type Target<T: 'a>: Functor<'a, T, Target<A> = Self>;
 
     /// Map a functor of `A` to a functor of `B` using a function from `A`
     /// to `B`.

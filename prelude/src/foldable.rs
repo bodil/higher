@@ -48,9 +48,8 @@ pub trait Foldable<'a, A: 'a> {
         M: Applicative<'a, B>,
         F: Fn(A) -> M,
 
-        M::Target<ApplyFn<'a, B, ()>>: Applicative<'a, ApplyFn<'a, B, ()>, Target<B> = M>,
-        M::Target<()>: Applicative<'a, (), Target<ApplyFn<'a, B, ()>> = M::Target<ApplyFn<'a, B, ()>>>
-            + Applicative<'a, (), Target<B> = M>,
+        M::Target<()>:
+            Applicative<'a, (), Target<ApplyFn<'a, B, ()>> = M::Target<ApplyFn<'a, B, ()>>>,
     {
         self.foldr(move |x, y| f(x).apply_second(y), Pure::pure(()))
     }
@@ -61,9 +60,8 @@ pub trait Foldable<'a, A: 'a> {
         B: Clone,
         A: Applicative<'a, B>,
 
-        A::Target<()>: Applicative<'a, (), Target<B> = A>
-            + Applicative<'a, (), Target<ApplyFn<'a, B, ()>> = A::Target<ApplyFn<'a, B, ()>>>,
-        A::Target<ApplyFn<'a, B, ()>>: Applicative<'a, ApplyFn<'a, B, ()>, Target<B> = A>,
+        A::Target<()>:
+            Applicative<'a, (), Target<ApplyFn<'a, B, ()>> = A::Target<ApplyFn<'a, B, ()>>>,
     {
         self.traverse_unit(identity)
     }

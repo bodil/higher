@@ -10,7 +10,7 @@ use crate::Functor;
 /// B>` to `F<C, D>` using two functions, one `Fn(A) -> C` and the other `Fn(B)
 /// -> D`.
 pub trait Bifunctor<'a, A: 'a, B: 'a> {
-    type Target<T: 'a, U: 'a>;
+    type Target<T: 'a, U: 'a>: Bifunctor<'a, T, U, Target<A, B> = Self>;
 
     /// Map a `Bifunctor<A, B>` to a `Bifunctor<C, D>` using a function from `A`
     /// to `C` and a function from `B` to `D`.

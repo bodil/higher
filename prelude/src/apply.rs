@@ -75,9 +75,7 @@ pub trait Apply<'a, A: 'a>: Functor<'a, A> {
         Self: Sized,
         A: Clone,
 
-        Self::Target<B>: Apply<'a, B>
-            + Functor<'a, B, Target<ApplyFn<'a, B, A>> = Self::Target<ApplyFn<'a, B, A>>>
-            + Functor<'a, B, Target<A> = Self>,
+        Self::Target<B>: Apply<'a, B, Target<ApplyFn<'a, B, A>> = Self::Target<ApplyFn<'a, B, A>>>,
     {
         b.apply(self.fmap(|x: A| ApplyFn::from(repeat(x))))
     }
@@ -87,9 +85,7 @@ pub trait Apply<'a, A: 'a>: Functor<'a, A> {
         Self: Sized,
         B: Clone,
 
-        Self::Target<B>: Apply<'a, B>
-            + Functor<'a, B, Target<ApplyFn<'a, A, B>> = Self::Target<ApplyFn<'a, A, B>>>
-            + Functor<'a, B, Target<A> = Self>,
+        Self::Target<B>: Apply<'a, B, Target<ApplyFn<'a, A, B>> = Self::Target<ApplyFn<'a, A, B>>>,
     {
         self.apply(b.fmap(|x: B| ApplyFn::from(repeat(x))))
     }
@@ -137,9 +133,8 @@ pub fn ap<'a, A: 'a, B: 'a, M: 'a>(mf: M::Target<ApplyFn<'a, A, B>>, ma: M) -> M
 where
     M: Bind<'a, A> + Pure<A> + FunctorRef<'a, A, Target<A> = M> + Clone,
 
-    M::Target<B>: Bind<'a, B> + Pure<B>,
-    M::Target<ApplyFn<'a, A, B>>:
-        Bind<'a, ApplyFn<'a, A, B>, Target<B> = M::Target<B>> + Pure<ApplyFn<'a, A, B>>,
+    M::Target<B>: Pure<B>,
+    M::Target<ApplyFn<'a, A, B>>: Bind<'a, ApplyFn<'a, A, B>, Target<B> = M::Target<B>>,
 {
     run! {
         f <= <B> mf;
@@ -166,8 +161,6 @@ where
 
     M::Target<B>: Apply<'a, B, Target<C> = M::Target<C>>
         + Apply<'a, B, Target<ApplyFn<'a, B, C>> = M::Target<ApplyFn<'a, B, C>>>,
-    M::Target<C>: Apply<'a, C, Target<B> = M::Target<B>>
-        + Apply<'a, C, Target<ApplyFn<'a, B, C>> = M::Target<ApplyFn<'a, B, C>>>,
 {
     b.apply(a.fmap(move |x: A| ApplyFn::from(move |y: B| f(x.clone(), y))))
 }
