@@ -239,6 +239,15 @@
 <span id="239">239</span>
 <span id="240">240</span>
 <span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     collections::{LinkedList, VecDeque},
     rc::Rc,
@@ -320,8 +329,7 @@
             + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt;&gt;
             + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;A&gt; = <span class="self">Self</span>&gt;,
     {
-        <span class="kw">let </span>mapped: <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = <span class="self">self</span>.fmap(|x: A| ApplyFn::from(repeat(x)));
-        b.apply(mapped)
+        b.apply(<span class="self">self</span>.fmap(|x: A| ApplyFn::from(repeat(x))))
     }
 
     <span class="kw">fn </span>apply_second&lt;B: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, b: <span class="self">Self</span>::Target&lt;B&gt;) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
@@ -390,7 +398,17 @@
     }
 }
 
-<span class="kw">pub fn </span>lift2&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>, C: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>, M&gt;(f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, a: M, b: M::Target&lt;B&gt;) -&gt; M::Target&lt;C&gt;
+<span class="doccomment">/// `lift2` lifts a function of two arguments into an applicative.
+///
+/// &quot;Lifting into&quot; in this case means it converts a function which takes two
+/// values of types `A` and `B` and returns another value of type `C` into a
+/// function which takes `Apply&lt;A&gt;` and `Apply&lt;B&gt;` and returns an `Apply&lt;C&gt;` by
+/// applying the function to the values inside the applicatives.
+///
+/// This generic implmentation requires that the type `A` implements
+/// [`Clone`](Clone), as each value of `A` may need to be passed to the function
+/// multiple times, depending on the structure of the applicative.
+</span><span class="kw">pub fn </span>lift2&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>, C: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>, M&gt;(f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, a: M, b: M::Target&lt;B&gt;) -&gt; M::Target&lt;C&gt;
 <span class="kw">where
     </span>A: Clone,
     F: Fn(A, B) -&gt; C,

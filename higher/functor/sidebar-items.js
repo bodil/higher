@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["Functor","A `Functor` lets you change the type parameter of a generic type."],["FunctorRef",""]]};
+window.SIDEBAR_ITEMS = {"trait":[["Functor","A `Functor` lets you change the type parameter of a generic type."],["FunctorRef","`FunctorRef` is an extension to `Functor` which provides a non-destructive `fmap` passing references to the mapping function."]]};

@@ -203,6 +203,7 @@
         </span><span class="self">Self</span>::Target&lt;B&gt;: Traversable&lt;<span class="lifetime">&#39;a</span>, B&gt;,
         B: Clone,
         M: Applicative&lt;<span class="lifetime">&#39;a</span>, B&gt;,
+        F: Fn(A) -&gt; M,
 
         M::Target&lt;<span class="self">Self</span>::Target&lt;B&gt;&gt;: Applicative&lt;<span class="lifetime">&#39;a</span>, <span class="self">Self</span>::Target&lt;B&gt;, Target&lt;B&gt; = M&gt;
             + Applicative&lt;<span class="lifetime">&#39;a</span>, <span class="self">Self</span>::Target&lt;B&gt;, Target&lt;<span class="self">Self</span>::Target&lt;B&gt;&gt; = M::Target&lt;<span class="self">Self</span>::Target&lt;B&gt;&gt;&gt;
@@ -217,8 +218,7 @@
             <span class="lifetime">&#39;a</span>,
             ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, <span class="self">Self</span>::Target&lt;B&gt;&gt;,
             Target&lt;<span class="self">Self</span>::Target&lt;B&gt;&gt; = M::Target&lt;<span class="self">Self</span>::Target&lt;B&gt;&gt;,
-        &gt;,
-        F: Fn(A) -&gt; M;
+        &gt;;
 
     <span class="kw">fn </span>sequence&lt;B: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>) -&gt; A::Target&lt;<span class="self">Self</span>::Target&lt;B&gt;&gt;
     <span class="kw">where
