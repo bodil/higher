@@ -94,11 +94,7 @@ pub trait ApplicativeError<'a, A: 'a, E: 'a>: Functor<'a, A> + Pure<A> {
     }
 }
 
-pub trait MonadError<'a, A: 'a, E: 'a>: ApplicativeError<'a, A, E> + Bind<'a, A>
-where
-    A: Clone,
-    E: Clone,
-{
+pub trait MonadError<'a, A: 'a, E: 'a>: ApplicativeError<'a, A, E> + Bind<'a, A> {
     fn rethrow(mr: Self::Target<Result<A, E>>) -> Self
     where
         Self: Sized,
@@ -143,7 +139,6 @@ where
     fn redeem_with<B: 'a, FA: 'a, FE: 'a>(self, recover: FE, bind: FA) -> Self::Target<B>
     where
         Self: Sized + Bind<'a, A, Target<A> = Self>,
-        B: Clone,
         FE: Fn(E) -> Self::Target<B>,
         FA: Fn(A) -> Self::Target<B>,
 
@@ -159,11 +154,8 @@ where
     }
 }
 
-impl<'a, A: 'a, E: 'a, M> MonadError<'a, A, E> for M
-where
-    A: Clone,
-    E: Clone,
-    M: ApplicativeError<'a, A, E> + Bind<'a, A>,
+impl<'a, A: 'a, E: 'a, M> MonadError<'a, A, E> for M where
+    M: ApplicativeError<'a, A, E> + Bind<'a, A>
 {
 }
 

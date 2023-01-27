@@ -82,10 +82,7 @@ where
     }
 }
 
-impl<'a, A: 'a> Bind<'a, A> for Option<A>
-where
-    A: Clone,
-{
+impl<'a, A: 'a> Bind<'a, A> for Option<A> {
     fn bind<B: 'a, F: 'a>(self, f: F) -> Self::Target<B>
     where
         F: Fn(A) -> Self::Target<B>,
@@ -109,10 +106,7 @@ where
     }
 }
 
-impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E>
-where
-    A: Clone,
-{
+impl<'a, A: 'a, E> Bind<'a, A> for Result<A, E> {
     fn bind<B: 'a, F: 'a>(self, f: F) -> Self::Target<B>
     where
         F: Fn(A) -> Self::Target<B>,
