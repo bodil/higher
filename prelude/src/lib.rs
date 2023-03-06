@@ -288,8 +288,3 @@ mod test {
         );
     }
 }
-
-// trait MappyBoi<A> {
-//     type Target<T>: MappyBoi<T, Target<A> = Self>;
-//     fn map_it<B, F: Fn(A) -> B>(self, f: F) -> Self::Target<B>;
-// }
