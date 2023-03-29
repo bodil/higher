@@ -146,14 +146,23 @@ pub mod rings;
 /// }
 /// # , None);
 /// ```
+
 #[macro_export]
 macro_rules! run {
-    ($binding:ident <= <$coerce:ident> $comp:expr; $($tail:tt)*) => {
-        $crate::Bind::bind::<$coerce, _>($comp, move |$binding| run!($($tail)*))
+    //matching against a token tree, because a pattern cannot be followed by "<=".
+    //To still get good error messages, a nested macro is used, that matches against pat.
+    ($binding:tt <= <$coerce:ident> $comp:expr; $($tail:tt)*) => {
+        {
+            macro_rules! verify_pat { ($_:pat) => {}; } verify_pat!($binding);
+            $crate::Bind::bind::<$coerce, _>($comp, move |$binding| run!($($tail)*))
+        }
     };
 
-    ($binding:ident <= $comp:expr; $($tail:tt)*) => {
-        $crate::Bind::bind($comp, move |$binding| run!($($tail)*))
+    ($binding:tt <= $comp:expr; $($tail:tt)*) => {
+        {
+            macro_rules! verify_pat { ($_:pat) => {}; } verify_pat!($binding);
+            $crate::Bind::bind($comp, move |$binding| run!($($tail)*))
+        }
     };
 
     (<$coerce:ident> $comp:expr; $($tail:tt)*) => {
@@ -173,6 +182,7 @@ macro_rules! run {
     };
 
 }
+
 
 /// Construct a function that ignores its argument and returns the same value
 /// every time you call it.
@@ -236,6 +246,16 @@ mod test {
                 Some(x + y + z)
             },
             Some(18)
+        );
+
+        // Option with tuple destructure.
+        assert_eq!(
+            run! {
+                (a,b) <= Some((3u32, 32.0f32));
+                (a,_b) <= Some((b as u32, a));
+                yield a
+            },
+            Some(32u32)
         );
 
         // Option without binding.
