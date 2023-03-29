@@ -153,14 +153,14 @@ macro_rules! run {
     //To still get good error messages, a nested macro is used, that matches against pat.
     ($binding:tt <= <$coerce:ident> $comp:expr; $($tail:tt)*) => {
         {
-            macro_rules! verify_pat { ($_:pat) => {}; } verify_pat!($binding);
+            macro_rules! verify_pat { ($_:pat_param) => {}; } verify_pat!($binding);
             $crate::Bind::bind::<$coerce, _>($comp, move |$binding| run!($($tail)*))
         }
     };
 
     ($binding:tt <= $comp:expr; $($tail:tt)*) => {
         {
-            macro_rules! verify_pat { ($_:pat) => {}; } verify_pat!($binding);
+            macro_rules! verify_pat { ($_:pat_param) => {}; } verify_pat!($binding);
             $crate::Bind::bind($comp, move |$binding| run!($($tail)*))
         }
     };
