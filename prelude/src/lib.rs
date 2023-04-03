@@ -102,6 +102,25 @@ pub mod rings;
 /// variable <= expression;
 /// ```
 ///
+/// Expressions my be preceded with a list of values one wants to explicitly
+/// clone before entering the expression. You can think of it being akin to
+/// C++ capture-by-value, which also inspired the syntax:
+/// ```text
+/// [a, b] expression;   //here a and b would be cloned
+/// c <= [a] expression; //here a is cloned
+/// ```
+///
+/// Another syntax peculiarity is the ability to add a type parameter to the
+/// desugared bind() calls. This is sadly needed sometimes if Rust fails to decuce
+/// a type. It can be done using the following syntax:
+/// ```text
+/// [clones] <TypeParam> expression;
+/// ```
+/// This desugars to
+/// ```text
+/// { let clones = clones.clone(); expression.bind<TypeParam,_>(...) }
+/// ```
+///
 /// # Examples
 ///
 /// The simplest example of monadic do notation is using the [`Option`](Option)
@@ -145,6 +164,36 @@ pub mod rings;
 ///     // returns None
 /// }
 /// # , None);
+/// ```
+///
+/// To illustrate the usage of explicit cloning, consider this (broken) example:
+/// ```compile_fail
+/// # use higher::run;
+/// # #[derive(PartialEq, Debug)]
+/// #[derive(Clone)] struct NoCopy<A>(A);
+/// # assert_eq!(
+/// run! {
+///     x <= Some(NoCopy(5_u32));
+///     Some(3_i64);   //here x is owned, everything is still OK.
+///     Some(0.3_f32); //here x would be moved an unspecified number of times.
+///     yield x
+/// }
+/// # , Some(NoCopy(5_u32)));
+/// ```
+///
+/// The previous example can be fixed by explicitly cloning x as-needed:
+/// ```
+/// # use higher::run;
+/// # #[derive(PartialEq, Debug)]
+/// #[derive(Clone)] struct NoCopy<A>(A);
+/// # assert_eq!(
+/// run! {
+///     x <= Some(NoCopy(5_u32));
+///     Some(3_i64);       //here x is owned, no need to clone.
+///     [x] Some(0.3_f32); //here x would be moved an unspecified number of times.
+///     [x] yield x        //therefore it needs to be cloned.
+/// }
+/// # , Some(NoCopy(5_u32)));
 /// ```
 
 #[macro_export]
