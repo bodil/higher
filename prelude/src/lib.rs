@@ -151,36 +151,61 @@ pub mod rings;
 macro_rules! run {
     //matching against a token tree, because a pattern cannot be followed by "<=".
     //To still get good error messages, a nested macro is used, that matches against pat.
-    ($binding:tt <= <$coerce:ident> $comp:expr; $($tail:tt)*) => {
+    ($binding:tt <= <$coerce:ty> $comp:expr; $($tail:tt)*) => { run!{$binding <= [] <$coerce> $comp; $($tail)*} };
+
+    ($binding:tt <= [$($shadow_clone:ident),*] <$coerce:ty> $comp:expr; $($tail:tt)*) => {
         {
             macro_rules! verify_pat { ($_:pat_param) => {}; } verify_pat!($binding);
+            $(let $shadow_clone = $shadow_clone.clone();)*
             $crate::Bind::bind::<$coerce, _>($comp, move |$binding| run!($($tail)*))
         }
     };
 
-    ($binding:tt <= $comp:expr; $($tail:tt)*) => {
+    ($binding:tt <= $comp:expr; $($tail:tt)*) => { run!{$binding <= [] $comp; $($tail)*} };
+
+    ($binding:tt <= [$($shadow_clone:ident),*] $comp:expr; $($tail:tt)*) => {
         {
             macro_rules! verify_pat { ($_:pat_param) => {}; } verify_pat!($binding);
+            $(let $shadow_clone = $shadow_clone.clone();)*
             $crate::Bind::bind($comp, move |$binding| run!($($tail)*))
         }
     };
 
-    (<$coerce:ident> $comp:expr; $($tail:tt)*) => {
-        $crate::Bind::bind::<$coerce, _>($comp, move |_| run!($($tail)*))
+    (<$coerce:ty> $comp:expr; $($tail:tt)*) => { run!{[] <$coerce> $comp; $($tail)*} };
+
+    ([$($shadow_clone:ident),*] <$coerce:ty> $comp:expr; $($tail:tt)*) => {
+        {
+            $(let $shadow_clone = $shadow_clone.clone();)*
+            $crate::Bind::bind::<$coerce, _>($comp, move |_| run!($($tail)*))
+        }
     };
 
-    ($comp:expr; $($tail:tt)*) => {
-        $crate::Bind::bind($comp, move |_| run!($($tail)*))
+    ($comp:expr; $($tail:tt)*) => {run!{[] $comp; $($tail)*}};
+
+    ([$($shadow_clone:ident),*] $comp:expr; $($tail:tt)*) => {
+        {
+            $(let $shadow_clone = $shadow_clone.clone();)*
+            $crate::Bind::bind($comp, move |_| run!($($tail)*))
+        }
     };
 
-    (yield $result:expr) => {
-        $crate::Pure::pure($result)
+    (yield $result:expr) => { run!{[] yield $result} };
+
+    ([$($shadow_clone:ident),*] yield $result:expr) => {
+        {
+            $(let $shadow_clone = $shadow_clone.clone();)*
+            $crate::Pure::pure($result)
+        }
     };
 
-    ($result:expr) => {
-        $result
-    };
+    ($result:expr) => { run!{[] $result} };
 
+    ([$($shadow_clone:ident),*] $result:expr) => {
+        {
+            $(let $shadow_clone = $shadow_clone.clone();)*
+            $result
+        }
+    };
 }
 
 
@@ -286,5 +311,31 @@ mod test {
             },
             Some(32)
         );
+
+        // Explicit clone in do-notation
+        #[derive(Clone,PartialEq, Debug)] struct NoCopy<A>(A);
+        assert_eq!(
+            run!{
+                t <= run! {
+                    t <= Some(NoCopy(5u32)); //tests the syntax of assign without explicit clone.
+                    Some(3i32); //here ownership of t is still clear, no clone needed. Tests syntax of non-assigning without clone.
+                    [t] Some(4i32); //here t would need multiple owners already. Explicit clone.
+                    v <= [t] <NoCopy<u32>> Some(t); //test for the syntax with coerce, clone and assign.
+                    g <= <NoCopy<u32>> Some(v.clone()); //test for the syntax with coerce and assign.
+                    h <= [v] Some(NoCopy(v.0+1)); // tests the syntax of assign with explicit clone.
+                    [g] Some(g); //test the syntax of not-assigning with clone.
+                    [h] yield h //yield with explicit clone.
+                };
+                t <= run!{Some(t)}; //tests the syntax of returning an expression without explicit clone.
+                t <= run!{
+                    t <= Some(t);
+                    Some(4);
+                    [t] Some(t) //tests the syntax of returning an expression with explicit clone.
+                };
+                run!{yield t} //yield without explicit clone.
+            },
+            Some(NoCopy(6u32))
+        );
+
     }
 }
