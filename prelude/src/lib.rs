@@ -257,7 +257,6 @@ macro_rules! run {
     };
 }
 
-
 /// Construct a function that ignores its argument and returns the same value
 /// every time you call it.
 ///
@@ -362,9 +361,10 @@ mod test {
         );
 
         // Explicit clone in do-notation
-        #[derive(Clone,PartialEq, Debug)] struct NoCopy<A>(A);
+        #[derive(Clone, PartialEq, Debug)]
+        struct NoCopy<A>(A);
         assert_eq!(
-            run!{
+            run! {
                 t <= run! {
                     t <= Some(NoCopy(5u32)); //tests the syntax of assign without explicit clone.
                     Some(3i32); //here ownership of t is still clear, no clone needed. Tests syntax of non-assigning without clone.
@@ -385,6 +385,5 @@ mod test {
             },
             Some(NoCopy(6u32))
         );
-
     }
 }
