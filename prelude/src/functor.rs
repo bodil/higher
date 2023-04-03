@@ -175,7 +175,7 @@ impl<'a, A: 'a, const N: usize> FunctorRef<'a, A> for [A; N] {
     {
         let mut out: MaybeUninit<[B; N]> = MaybeUninit::uninit();
         let mut ptr: *mut B = out.as_mut_ptr().cast();
-        for item in self.into_iter() {
+        for item in self.iter() {
             unsafe {
                 ptr.write(f(item));
                 ptr = ptr.add(1);
