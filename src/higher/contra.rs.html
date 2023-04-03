@@ -8,7 +8,7 @@
 <a href="#8" id="8">8</a>
 </pre><pre class="rust"><code><span class="doccomment">/// A `Contravariant` functor.
 </span><span class="kw">pub trait </span>Contravariant&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">type </span>Target&lt;T: <span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Target&lt;T: <span class="lifetime">&#39;a</span>&gt;: Contravariant&lt;<span class="lifetime">&#39;a</span>, T, Target&lt;A&gt; = <span class="self">Self</span>&gt;;
 
     <span class="kw">fn </span>contramap&lt;B: <span class="lifetime">&#39;a</span>, F: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;
     <span class="kw">where

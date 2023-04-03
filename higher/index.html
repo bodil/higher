@@ -30,7 +30,147 @@ able to immediately infer every function’s purpose from its type signature.</l
 some extremely elaborate type signatures. If you think this is actually useful (and I’m mildly
 horrified to find that I’m starting to think it might be), you may wish to step up to help maintain
 it, because I doubt I’ll keep giving it much attention once the novelty wears off.</p>
-<p>Together we can ruin Rust!</p>
+<h3 id="is-rust-actually-capable-of-this"><a href="#is-rust-actually-capable-of-this">Is Rust actually capable of this?</a></h3>
+<p>To everyone’s surprise, with
+<a href="https://blog.rust-lang.org/2022/10/28/gats-stabilization.html">generic associated types</a> we can now
+express a subset of what higher kinded types give us in Rust. This subset turns out to be sufficient
+to implement the abstractions found in the functor hierarchy, but the language still has its
+limitations which have a significant impact on the usefulness of these abstractions.</p>
+<h4 id="no-constraint-kinds"><a href="#no-constraint-kinds">No constraint kinds</a></h4>
+<p>The first is the absence of constraint kinds. In Rust, when implementing a trait, we’re unable to
+require stricter constraint bounds in our implementations than the trait itself specifies. While
+this has implications outside of GATs too, we run into it very quickly when trying to implement the
+most basic part of the functor hierarchy: <code>Functor</code> itself.</p>
+<p>We can express <code>Functor</code> as simply as possible like this:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">trait </span>Functor&lt;A&gt; {
+    <span class="kw">type </span>Target&lt;T&gt;;
+    <span class="kw">fn </span>fmap&lt;B, F: Fn(A) -&gt; B&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;;
+}</code></pre></div>
+<p>We can also implement it for the most basic types, such as <code>Vec</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">impl</span>&lt;A&gt; Functor&lt;A&gt; <span class="kw">for </span>Vec&lt;A&gt; {
+    <span class="kw">type </span>Target&lt;T&gt; = Vec&lt;T&gt;;
+    <span class="kw">fn </span>fmap&lt;B, F: Fn(A) -&gt; B&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt; {
+        <span class="self">self</span>.into_iter().map(f).collect()
+    }
+}</code></pre></div>
+<p>But we immediately run into a problem when trying to implement it for a type with constraints on its
+type arguments, like <code>HashSet</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">impl</span>&lt;A: Hash + Eq&gt; Functor&lt;A&gt; <span class="kw">for </span>HashSet&lt;A&gt; {
+    <span class="kw">type </span>Target&lt;T&gt; = HashSet&lt;T&gt;;
+    <span class="kw">fn </span>fmap&lt;B: Hash + Eq, F: Fn(A) -&gt; B&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt; {
+        <span class="self">self</span>.into_iter().map(f).collect()
+    }
+}</code></pre></div>
+<p>Here, rustc will complain that the bounds on <code>B</code> are stricter than they are in the trait and refuse
+to proceed, but we do need those bounds to be able to implement <code>fmap</code> for <code>HashSet</code>. There’s no
+trick available to us, even if we venture into nightly rustc’s feature flags, to allow us to express
+this properly, so we’re left entirely unable to implement <code>Functor</code> for <code>HashSet</code>, or for anything
+requiring bounds on <code>A</code>, as we have no way to express that they should carry over to the target
+type.</p>
+<p>There’s an <a href="https://github.com/rust-lang/rfcs/issues/2190">open issue</a> to address this situation
+which has been going since 2017 without as much as a concrete proposal, so I don’t think one should
+allow oneself to feel too hopeful about a quick resolution to this problem.</p>
+<h4 id="gats-arent-higher-kinded-types-and-using-them-as-such-gets-messy"><a href="#gats-arent-higher-kinded-types-and-using-them-as-such-gets-messy">GATs aren’t higher kinded types and using them as such gets messy</a></h4>
+<p>We all knew GATs wouldn’t be quite as flexible as higher kinded types, but in some specific ways
+they can be <em>more</em> flexible, and not necessarily in a good way for our purposes. Let’s illustrate
+with an implementation of <code>Bind</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">trait </span>Bind&lt;A&gt; {
+    <span class="kw">type </span>Target&lt;T&gt;;
+    <span class="kw">fn </span>then&lt;B, F: Fn(A) -&gt; <span class="self">Self</span>::Target&lt;B&gt;&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self</span>::Target&lt;B&gt;;
+}</code></pre></div>
+<p>If we’d like to write a function that composes two <code>Bind</code>s into a third, we’d expect it to look like
+this:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>compose_binds&lt;A, B, C, M, F1, F2&gt;(ma: M, f1: F1, f2: F2) -&gt; M::Target&lt;C&gt;
+<span class="kw">where
+    </span>M: Bind&lt;A&gt;,
+    F1: Fn(A) -&gt; M::Target&lt;B&gt;,
+    F2: Fn(B) -&gt; M::Target&lt;C&gt;,
+{
+    ma.then(|a| f1(a).then(|b| f2(b)))
+}</code></pre></div>
+<p>However, we have no guarantee that <code>M::Target&lt;B&gt;</code> actually resolves to anything that even implements
+<code>Bind</code> in turn, even though we mean the <code>type Target&lt;T&gt;</code> in the trait to always refer back to the
+original type constructor. This is just a convention on our part, a GAT in an of itself isn’t
+required to follow any such convention. We need to add trait bounds to clarify this in both cases:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>compose_binds&lt;A, B, C, M, F1, F2&gt;(ma: M, f1: F1, f2: F2) -&gt; M::Target&lt;C&gt;
+<span class="kw">where
+    </span>M: Bind&lt;A&gt;,
+    M::Target&lt;B&gt;: Bind&lt;B&gt;,
+    M::Target&lt;C&gt;: Bind&lt;C&gt;,
+    F1: Fn(A) -&gt; M::Target&lt;B&gt;,
+    F2: Fn(B) -&gt; M::Target&lt;C&gt;,
+{
+    ma.then(|a| f1(a).then(|b| f2(b)))
+}</code></pre></div>
+<p>This is fair, and expected. However, we’re not done yet, and this is where it gets hairy. We also
+can’t be sure that <code>&lt;M::Target&lt;B&gt; as Thenable&lt;B&gt;&gt;::Target&lt;C&gt;</code> will resolve to the same type as
+<code>M::Target&lt;C&gt;</code>, so we have to modify our constraints to clarify that this should also be the case:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>compose_binds&lt;A, B, C, M, F1, F2&gt;(ma: M, f1: F1, f2: F2) -&gt; M::Target&lt;C&gt;
+<span class="kw">where
+    </span>M: Bind&lt;A&gt;,
+    M::Target&lt;B&gt;: Bind&lt;B, Target&lt;C&gt; = M::Target&lt;C&gt;&gt;,
+    M::Target&lt;C&gt;: Bind&lt;C&gt;,
+    F1: Fn(A) -&gt; M::Target&lt;B&gt;,
+    F2: Fn(B) -&gt; M::Target&lt;C&gt;,
+{
+    ma.then(|a| f1(a).then(|b| f2(b)))
+}</code></pre></div>
+<p>In the above, one might think we could clarify it by specifying
+<code>&lt;M::Target&lt;B&gt; as Thenable&lt;B&gt;&gt;::Target&lt;C&gt;</code> instead of <code>M::Target&lt;C&gt;</code> throughout, but this leads
+nowhere better, as it turns out.</p>
+<p>Finally, the type checker at this point fails to infer that the result type of the second bind call
+should be <code>C</code>, so we need to explicitly provide it.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>compose_binds&lt;A, B, C, M, F1, F2&gt;(ma: M, f1: F1, f2: F2) -&gt; M::Target&lt;C&gt;
+<span class="kw">where
+    </span>M: Bind&lt;A&gt;,
+    M::Target&lt;B&gt;: Bind&lt;B, Target&lt;C&gt; = M::Target&lt;C&gt;&gt;,
+    M::Target&lt;C&gt;: Bind&lt;C&gt;,
+    F1: Fn(A) -&gt; M::Target&lt;B&gt;,
+    F2: Fn(B) -&gt; M::Target&lt;C&gt;,
+{
+    ma.then(|a| f1(a).then::&lt;C, <span class="kw">_</span>&gt;(|b| f2(b)))
+}</code></pre></div>
+<p>This happens quite frequently, and is the reason the <code>run!</code> macro includes syntax for specifying the
+type of a binding. Correct me if I’m wrong, but this part I can’t excuse the type checker for, it
+should have been able to figure this out for itself based on the function’s return type.</p>
+<p>In conclusion, GATs require considerably more effort to express everyday HTKs than you’d expect from
+a language with HKTs, even though you <em>can</em> express these things. This isn’t a shortcoming of GATs
+(in fact, it’s a feature that HKTs don’t provide), but it’s a real problem when you’re trying to
+express abstractions like these which on the surface should have been much simpler. There’s also the
+added problem that the more you compensate for this behaviour, the more your implementation details
+leak out into the type signature in ways they really shouldn’t. This is especially unfortunate when
+you’re dealing with traits, where you’ll need to predict ahead of time all the ways in which your
+implementers will need this kind of extra support in the type signatures.</p>
+<h4 id="conclusion"><a href="#conclusion">Conclusion</a></h4>
+<p>So, is Rust ready for the functor hierarchy? We’re frustratingly close, but I think in the end the
+answer is no.</p>
+<p>Basic abstractions like <code>Functor</code> would work well if we had constraint kinds, but as soon as you
+step outside the basic use casees, you begin to see where GATs aren’t an adequate substitute for
+higher kinded types. That is to say, they solve a <em>different</em> problem from HKTs, and it’s not
+straightforward to attempt to use them as a substitute. There are improvements which could be made
+to Rust’s type checker which could alleviate some, but not all or even most of these issues.</p>
+<p>This entire crate should therefore be considered as an exercise, and perhaps as a guide towards new
+language features, more than as a practical implementation. I do really see a genuine need for
+constraint kinds in Rust beyond this crate. I also suspect Rust would have been better off with
+actual higher kinded types, but that’s a lost cause at this point.</p>
+<p>Interestingly, though, while I was expecting Rust’s borrow checker and the fact that it
+differentiates so clearly between owned values and mutable and immutable references to be a primary
+barrier to the implementation of this crate, this turned out to be more of an issue of API design
+than anything else. The primary problem here was the inability to refine <code>Clone</code> requirements where
+needed because of the absence of constraint kinds.</p>
+<p>It’s also unfortunate that I couldn’t implement <code>Apply</code> for anything but boxed functions (as bare
+functions with the same type signature on the surface aren’t consistently typed in Rust, nor can
+they be <code>Sized</code>), making it decidedly less than a zero cost abstraction, but I consider this a minor
+issue even if it should make one cautious when describing Rust as a functional programming language
+(which I don’t think one should).</p>
 <h3 id="licence"><a href="#licence">Licence</a></h3>
 <p>Copyright 2019 Bodil Stokke</p>
 <p>This software is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL

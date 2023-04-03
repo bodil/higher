@@ -241,13 +241,6 @@
 <a href="#241" id="241">241</a>
 <a href="#242" id="242">242</a>
 <a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     collections::{LinkedList, VecDeque},
     rc::Rc,
@@ -325,9 +318,7 @@
         </span><span class="self">Self</span>: Sized,
         A: Clone,
 
-        <span class="self">Self</span>::Target&lt;B&gt;: Apply&lt;<span class="lifetime">&#39;a</span>, B&gt;
-            + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt;&gt;
-            + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;A&gt; = <span class="self">Self</span>&gt;,
+        <span class="self">Self</span>::Target&lt;B&gt;: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt; = <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, A&gt;&gt;&gt;,
     {
         b.apply(<span class="self">self</span>.fmap(|x: A| ApplyFn::from(repeat(x))))
     }
@@ -337,9 +328,7 @@
         </span><span class="self">Self</span>: Sized,
         B: Clone,
 
-        <span class="self">Self</span>::Target&lt;B&gt;: Apply&lt;<span class="lifetime">&#39;a</span>, B&gt;
-            + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;&gt;
-            + Functor&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;A&gt; = <span class="self">Self</span>&gt;,
+        <span class="self">Self</span>::Target&lt;B&gt;: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt; = <span class="self">Self</span>::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;&gt;,
     {
         <span class="self">self</span>.apply(b.fmap(|x: B| ApplyFn::from(repeat(x))))
     }
@@ -387,9 +376,8 @@
 <span class="kw">where
     </span>M: Bind&lt;<span class="lifetime">&#39;a</span>, A&gt; + Pure&lt;A&gt; + FunctorRef&lt;<span class="lifetime">&#39;a</span>, A, Target&lt;A&gt; = M&gt; + Clone,
 
-    M::Target&lt;B&gt;: Bind&lt;<span class="lifetime">&#39;a</span>, B&gt; + Pure&lt;B&gt;,
-    M::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;:
-        Bind&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;, Target&lt;B&gt; = M::Target&lt;B&gt;&gt; + Pure&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;,
+    M::Target&lt;B&gt;: Pure&lt;B&gt;,
+    M::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;&gt;: Bind&lt;<span class="lifetime">&#39;a</span>, ApplyFn&lt;<span class="lifetime">&#39;a</span>, A, B&gt;, Target&lt;B&gt; = M::Target&lt;B&gt;&gt;,
 {
     <span class="macro">run! </span>{
         f &lt;= &lt;B&gt; mf;
@@ -416,8 +404,6 @@
 
     M::Target&lt;B&gt;: Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;C&gt; = M::Target&lt;C&gt;&gt;
         + Apply&lt;<span class="lifetime">&#39;a</span>, B, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, C&gt;&gt; = M::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, C&gt;&gt;&gt;,
-    M::Target&lt;C&gt;: Apply&lt;<span class="lifetime">&#39;a</span>, C, Target&lt;B&gt; = M::Target&lt;B&gt;&gt;
-        + Apply&lt;<span class="lifetime">&#39;a</span>, C, Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, C&gt;&gt; = M::Target&lt;ApplyFn&lt;<span class="lifetime">&#39;a</span>, B, C&gt;&gt;&gt;,
 {
     b.apply(a.fmap(<span class="kw">move </span>|x: A| ApplyFn::from(<span class="kw">move </span>|y: B| f(x.clone(), y))))
 }

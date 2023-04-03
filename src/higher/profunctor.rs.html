@@ -34,7 +34,7 @@
 <span class="doccomment">/// A `Profunctor` is just a `Bifunctor` that is contravariant over its first
 /// argument and covariant over its second argument. What&#39;s the problem?
 </span><span class="kw">pub trait </span>Profunctor&lt;<span class="lifetime">&#39;a</span>, B: <span class="lifetime">&#39;a</span>, C: <span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">type </span>Target&lt;T: <span class="lifetime">&#39;a</span>, U: <span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Target&lt;T: <span class="lifetime">&#39;a</span>, U: <span class="lifetime">&#39;a</span>&gt;: Profunctor&lt;<span class="lifetime">&#39;a</span>, T, U, Target&lt;B, C&gt; = <span class="self">Self</span>&gt;;
 
     <span class="doccomment">/// Map a function over both arguments of the profunctor.
     </span><span class="kw">fn </span>dimap&lt;A: <span class="lifetime">&#39;a</span>, D: <span class="lifetime">&#39;a</span>, L: <span class="lifetime">&#39;a</span>, R: <span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>, left: L, right: R) -&gt; <span class="self">Self</span>::Target&lt;A, D&gt;

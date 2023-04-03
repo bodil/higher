@@ -290,7 +290,7 @@
 /// [`fmap`](Functor::fmap) in this manner is considerably less efficient than
 /// using a mutable reference iterator.
 </span><span class="kw">pub trait </span>Functor&lt;<span class="lifetime">&#39;a</span>, A: <span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">type </span>Target&lt;T: <span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Target&lt;T: <span class="lifetime">&#39;a</span>&gt;: Functor&lt;<span class="lifetime">&#39;a</span>, T, Target&lt;A&gt; = <span class="self">Self</span>&gt;;
 
     <span class="doccomment">/// Map a functor of `A` to a functor of `B` using a function from `A`
     /// to `B`.
@@ -444,7 +444,7 @@
     {
         <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;[B; N]&gt; = MaybeUninit::uninit();
         <span class="kw">let </span><span class="kw-2">mut </span>ptr: <span class="kw-2">*mut </span>B = out.as_mut_ptr().cast();
-        <span class="kw">for </span>item <span class="kw">in </span><span class="self">self</span>.into_iter() {
+        <span class="kw">for </span>item <span class="kw">in </span><span class="self">self</span>.iter() {
             <span class="kw">unsafe </span>{
                 ptr.write(f(item));
                 ptr = ptr.add(<span class="number">1</span>);
